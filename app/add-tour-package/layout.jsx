@@ -1,4 +1,4 @@
-import BlogNavbar from '../../components/BlogNavbar' 
+import TourNavbar from '../../components/TourNavbar' 
 
 export const metadata = {
   title: "Create Next App",
@@ -9,8 +9,8 @@ export default function RootLayout({
   children
 }) {
   return (
-        <div className='w-full bg-slate-200'>
-            <BlogNavbar/>
+        <div className='w-full h-full bg-slate-200 overflow-y-auto'>
+            <TourNavbar/>
           {children}
         </div>
     

@@ -4,7 +4,7 @@ import React from "react";
 function Navbar() {
   return (
     <>
-      <div className="bg-[#344955] h-[100vh] w-[120px] hidden lg:flex md:flex-col pl-1 relative">
+      <div className="bg-[#344955] h-[100vh] w-[120px] hidden lg:flex md:flex-col pl-1 relative ">
         <div className="m-auto flex items-center">
           <ul className="text-[#344955] flex flex-col absolute left-5 items-center justify-center">
             <li>
