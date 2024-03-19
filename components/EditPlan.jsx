@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import baseURL from '@/apiConfig'; // Import the baseURL
 
-function AddTourPlan() {
+function AddTourPlan({tourId}) {
   const [formData, setFormData] = useState({
     title1: '',
     description1: '',
@@ -49,9 +49,23 @@ function AddTourPlan() {
         console.error('Error fetching tours:', error);
       }
     };
+
+
+  const fetchTourDetail = async () => {
+    try {
+      const response = await axios.get(`${baseURL}/plans/${tourId}`); // Fetch tour detail data by ID
+      setFormData(response.data); // Update form data with fetched data
+    } catch (error) {
+      console.error('Error fetching tour detail:', error);
+    }
+  };
+
+  fetchTours(); // Call the fetchTours function
+  fetchTourDetail(); // Call the fetchTourDetail function
+}, [tourId]);
+
+
   
-    fetchTours(); // Call the fetchTours function
-  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -63,40 +77,9 @@ function AddTourPlan() {
 
   const handleSubmit = async () => {
     try {
-      const response = await axios.post(`${baseURL}/plan`, formData); // Use the baseURL
+      const response = await axios.patch(`${baseURL}/plans/${tourId}`, formData); // Use the baseURL
       console.log('Data submitted:', response.data);
       alert('Tour plan saved successfully!');
-      // Reset form after successful submission
-      setFormData({
-        title1: '',
-        description1: '',
-        link1: '',
-        title2: '',
-        description2: '',
-        link2: '',
-        title3: '',
-        description3: '',
-        link3: '',
-        title4: '',
-        description4: '',
-        link4: '',
-        title5: '',
-        description5: '',
-        link5: '',
-        title6: '',
-        description6: '',
-        link6: '',
-        title7: '',
-        description7: '',
-        link7: '',
-        title8: '',
-        description8: '',
-        link8: '',
-        title9: '',
-        description9: '',
-        link9: '',
-        tourId: ''
-      });
     } catch (error) {
       console.error('Error submitting form:', error);
       if (error.response) {

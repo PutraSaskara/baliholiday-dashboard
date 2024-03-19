@@ -1,8 +1,8 @@
 "use client"
-import Link from 'next/link'
+import Link from 'next/link';
 import { useState } from 'react';
 import axios from 'axios'; 
-import baseURL from '@/apiConfig'
+import baseURL from '@/apiConfig';
 
 function AddTour() {
   const [formData, setFormData] = useState({
@@ -23,20 +23,34 @@ function AddTour() {
     }));
   };
 
-
   const handleSubmit = async () => {
     try {
       const response = await axios.post(`${baseURL}/tours`, formData); // Use the baseURL
       console.log('Data submitted:', response.data);
-      // Reset form after successful submission if needed
+      alert('Data saved successfully!');
+      setFormData({
+        title: '',
+        price1: '',
+        pricenote1: '',
+        price2: '',
+        pricenote2: '',
+        price3: '',
+        pricenote3: ''
+      });
     } catch (error) {
       console.error('Error submitting form:', error);
       if (error.response) {
-        // The request was made and the server responded with a status code that falls out of the range of 2xx
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
         console.error('Server responded with error status:', error.response.status);
-        console.error('Error message from server:', error.response.data);
-        const errorMessage = JSON.stringify(error.response.data);
-        alert(`Server responded with an error: ${error.response.status}. ${errorMessage}`);
+        if (error.response.status === 400) {
+          // Handle specific error status codes
+          alert('Bad request: Please check your input data.');
+        } else if (error.response.status === 404) {
+          alert('Resource not found.');
+        } else {
+          alert('An error occurred. Please try again later.');
+        }
       } else if (error.request) {
         // The request was made but no response was received
         console.error('No response received:', error.request);
@@ -44,10 +58,11 @@ function AddTour() {
       } else {
         // Something happened in setting up the request that triggered an error
         console.error('Error setting up the request:', error.message);
-        alert(`An error occurred: ${error.message}`);
+        alert('An error occurred. Please try again later.');
       }
     }
   };
+  
   return (
     <div className='max-w-screen-lg mx-auto'>
       <h1 className='my-10 text-xl font-bold'>Please input Tour Title and Tour Price</h1>

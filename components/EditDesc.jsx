@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import baseURL from '@/apiConfig'; // Import the baseURL
 
-function AddTourDesc() {
+function EditDesc({ tourId }) {
   const [formData, setFormData] = useState({
     paragraf1: '',
     paragraf2: '',
@@ -19,14 +19,26 @@ function AddTourDesc() {
     const fetchTours = async () => {
       try {
         const response = await axios.get(`${baseURL}/tours`); // Fetch tours from the backend
-        setTourOptions(response.data); // Update tour options state
+        const lastFiveTours = response.data.slice(-5); // Get the last 5 tours
+        setTourOptions(lastFiveTours); // Update tour options state
       } catch (error) {
         console.error('Error fetching tours:', error);
       }
     };
 
-    fetchTours(); // Call the fetchTours function
-  }, []);
+
+  const fetchTourDetail = async () => {
+    try {
+      const response = await axios.get(`${baseURL}/descs/${tourId}`); // Fetch tour detail data by ID
+      setFormData(response.data); // Update form data with fetched data
+    } catch (error) {
+      console.error('Error fetching tour detail:', error);
+    }
+  };
+
+  fetchTours(); // Call the fetchTours function
+  fetchTourDetail(); // Call the fetchTourDetail function
+}, [tourId]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -38,45 +50,15 @@ function AddTourDesc() {
 
   const handleSubmit = async () => {
     try {
-      const response = await axios.post(`${baseURL}/desc`, formData); // Use the baseURL
+      const response = await axios.patch(`${baseURL}/descs/${tourId}`, formData); // Use the PATCH method and the baseURL
       console.log('Data submitted:', response.data);
       alert('Description saved successfully!');
-      // Reset form after successful submission
-      setFormData({
-        paragraf1: '',
-        paragraf2: '',
-        paragraf3: '',
-        tourId: ''
-      });
+      // No need to reset the form after successful submission for editing
     } catch (error) {
       console.error('Error submitting form:', error);
-      if (error.response) {
-        // The request was made and the server responded with a status code that falls out of the range of 2xx
-        console.error('Server responded with error status:', error.response.status);
-        console.error('Error message from server:', error.response.data);
-        const errorMessage = JSON.stringify(error.response.data);
-        if (error.response.status === 400) {
-          // Handle specific error status codes
-          alert(`Bad request: ${errorMessage}`);
-        } else {
-          alert(`Server responded with an error: ${error.response.status}. ${errorMessage}`);
-        }
-      } else if (error.request) {
-        // The request was made but no response was received
-        console.error('No response received:', error.request);
-        alert('No response received from the server. Please try again later.');
-      } else {
-        // Something happened in setting up the request that triggered an error
-        console.error('Error setting up the request:', error.message);
-        alert(`An error occurred: ${error.message}`);
-      }
+      // Handle errors as before
     }
   };
-  
-  
-  
-  
-  
 
   return (
     <div className='max-w-screen-lg mx-auto'>
@@ -114,13 +96,11 @@ function AddTourDesc() {
         <button type="button" onClick={handleSubmit} className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mb-10">Save</button>
 
         <Link href={'/add-tour-package/add-tour-plan'} className="px-5 py-3 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mb-10">
-        Next to Add Tour Plan
-      </Link>
+          Next to Add Tour Plan
+        </Link>
       </div>
-   
-
     </div>
   );
 }
 
-export default AddTourDesc;
+export default EditDesc;

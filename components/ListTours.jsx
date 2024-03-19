@@ -34,7 +34,9 @@ function ListTours() {
 //         console.error("Error deleting blog:", error);
 //       }
 //     }
-//   };
+//   };\
+
+console.log('data tour', tours)
 
   return (
     <div className="w-[100%] grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-y-2 justify-items-center">
@@ -43,8 +45,8 @@ function ListTours() {
           key={tour.id}
           title={tour.title}
           author={tour.price1}
-          img={tour.image.imageUrl1}
-          desc={tour.tour_description.paragraf1}
+          img={tour.image?.imageUrl1}
+          desc={tour.tour_description?.paragraf1}
           link={`/${tour.id}`}
           link2={`/article/${tour.id}`}
         //   onDelete={() => handleDelete(tour.id)} // Pass the delete function as a prop
