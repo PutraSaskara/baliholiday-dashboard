@@ -21,20 +21,20 @@ function ListArticle() {
     }
   };
 
-//   const handleDelete = async (blogId) => {
-//     // Show a confirmation dialog before deleting
-//     const confirmDelete = window.confirm("Are you sure you want to delete this blog post?");
+  const handleDelete = async (blogId) => {
+    // Show a confirmation dialog before deleting
+    const confirmDelete = window.confirm("Are you sure you want to delete this blog post?");
     
-//     if (confirmDelete) {
-//       try {
-//         await axios.delete(`https://server.saskaraputra.com/blogs/${blogId}`);
-//         // After successful deletion, update the list of blogs by refetching them
-//         fetchBlogs();
-//       } catch (error) {
-//         console.error("Error deleting blog:", error);
-//       }
-//     }
-//   };\
+    if (confirmDelete) {
+      try {
+        await axios.delete(`${baseURL}/single-blog/${blogId}`);
+        // After successful deletion, update the list of blogs by refetching them
+        fetchTours();
+      } catch (error) {
+        console.error("Error deleting blog:", error);
+      }
+    }
+  };
 
 console.log('data tour', tours)
 
@@ -49,7 +49,7 @@ console.log('data tour', tours)
           desc={tour.blog_paragraf?.paragraf1}
           link={`/edit-article/${tour.id}`}
           link2={`/article/${tour.id}`}
-        //   onDelete={() => handleDelete(tour.id)} // Pass the delete function as a prop
+          onDelete={() => handleDelete(tour.id)} // Pass the delete function as a prop
         />
       ))}
     </div>
