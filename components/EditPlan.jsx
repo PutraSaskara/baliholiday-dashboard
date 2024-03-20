@@ -102,7 +102,7 @@ function AddTourPlan({tourId}) {
   
   return (
     <div className='max-w-screen-lg mx-auto'>
-      <h1 className='my-10 text-xl font-bold'>Please input Tour Plan and Plan Description</h1>
+      <h1 className='my-10 text-xl font-bold'>Please Edit Tour Plan and Plan Description</h1>
 
       <div className='my-5'>
         <h3>Note</h3>
@@ -137,7 +137,7 @@ function AddTourPlan({tourId}) {
         <button type="button" onClick={handleSubmit} className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mb-10">Save</button>
 
         <Link href={'/add-tour-package/add-tour-image'} className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mb-10">
-        Next to Add Tour Image
+        Next to Edit Tour Image
       </Link>
       </div>
 

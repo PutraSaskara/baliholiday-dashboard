@@ -1,11 +1,11 @@
 import React from 'react'
-import Navigation from '../../components/Navigation'
-import EditTour from '../../components/EditTour'
-import EditDetail from '../../components/EditDetail'
-import EditDesc from '../../components/EditDesc'
-import EditPlan from '../../components/EditPlan'
-import EditImage from '../../components/EditImage'
-import EditOther from '../../components/EditOther'
+import Navigation from '../../../components/Navigation'
+import EditTour from '../../../components/EditTour'
+import EditDetail from '../../../components/EditDetail'
+import EditDesc from '../../../components/EditDesc'
+import EditPlan from '../../../components/EditPlan'
+import EditImage from '../../../components/EditImage'
+import EditOther from '../../../components/EditOther'
 function page(tourId) {
     console.log('tourId data', tourId)
     let params = tourId.params.tourId

@@ -167,7 +167,7 @@ function AddOther({Id}) {
 
   return (
     <div className='max-w-screen-lg mx-auto'>
-      <h1 className='my-10 text-xl font-bold'>Please input Tour Include, Not Include, and Cancellation</h1>
+      <h1 className='my-10 text-xl font-bold'>Please Edit Tour Include, Not Include, and Cancellation</h1>
 
       {/* Include Form */}
       <div className="mb-6">

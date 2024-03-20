@@ -4,8 +4,8 @@ import axios from "axios";
 import baseURL from "@/apiConfig";
 import Link from "next/link";
 
-function EditTourImage({Id}) {
-  const [tourId, setTourId] = useState("");
+function AddArticleImage() {
+  const [blogId, setBlogId] = useState("");
   const [images1, setImages1] = useState([]);
   const [images2, setImages2] = useState([]);
   const [images3, setImages3] = useState([]);
@@ -14,12 +14,11 @@ function EditTourImage({Id}) {
   const [preview1, setPreview1] = useState("");
   const [preview2, setPreview2] = useState("");
   const [preview3, setPreview3] = useState("");
-  const [existingData, setExistingData] = useState(null);
 
   useEffect(() => {
     const fetchTours = async () => {
       try {
-        const response = await axios.get(`${baseURL}/tours`);
+        const response = await axios.get(`${baseURL}/single-blog`);
         setTourOptions(response.data);
       } catch (error) {
         console.error("Error fetching tours:", error);
@@ -29,32 +28,8 @@ function EditTourImage({Id}) {
     fetchTours();
   }, []);
 
-
-  useEffect(() => {
-    const fetchExistingData = async () => {
-      try {
-        if (!Id.trim()) return;
-
-        const response = await axios.get(`${baseURL}/images/${Id}`);
-        setExistingData(response.data);
-        // Populate input fields with existing data
-        setTourId(response.data.tourId)
-        setPreview1(response.data.imageUrl1);
-        setPreview2(response.data.imageUrl2);
-        setPreview3(response.data.imageUrl3);
-      } catch (error) {
-        console.error("Error fetching existing data:", error);
-      }
-    };
-
-
-    fetchExistingData();    
-  }, [Id]);
-
-  console.log('data existingdata:', existingData)
-
   const handleTourIdChange = (event) => {
-    setTourId(event.target.value);
+    setBlogId(event.target.value);
   };
 
   const validateImage = (file) => {
@@ -95,7 +70,7 @@ function EditTourImage({Id}) {
     event.preventDefault();
   
     try {
-      if (!Id.trim()) {
+      if (!blogId.trim()) {
         setError("Tour ID is required");
         return;
       }
@@ -110,18 +85,27 @@ function EditTourImage({Id}) {
       }
   
       const formData = new FormData();
-      formData.append("tourId", tourId);
+      formData.append("blogId", blogId);
       formData.append("image", images1[0]);
       formData.append("image", images2[0]);
       formData.append("image", images3[0]);
   
-      const response = await axios.patch(`${baseURL}/image/${Id}`, formData, {
+      const response = await axios.post(`${baseURL}/blog-image`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
   
       console.log("Images uploaded successfully:", response.data);
+      // Optionally, reset form fields
+      setBlogId("");
+      setImages1([]);
+      setImages2([]);
+      setImages3([]);
+      setError("");
+      setPreview1("");
+      setPreview2("");
+      setPreview3("");
       alert("Images uploaded successfully");
     } catch (error) {
       console.error("Error uploading images:", error);
@@ -146,12 +130,12 @@ function EditTourImage({Id}) {
 
   return (
     <div className="px-10">
-      <h2 className="mt-10 text-center font-bold text-3xl">Edit Tour Image</h2>
+      <h2 className="mt-10 text-center font-bold text-3xl">Add Article Image</h2>
       <form onSubmit={handleSubmit}>
-        <div className="bg-slate-300 max-w-fit px-2 py-3 mt-5">
-          <label htmlFor="tourId" className="font-bold">Choose Tour Title for This Image:</label>
-          <select id="tourId" value={tourId} onChange={handleTourIdChange}>
-            <option value="">Select a Tour</option>
+        <div>
+          <label htmlFor="blogId">Choose Title for This Image:</label>
+          <select id="blogId" value={blogId} onChange={handleTourIdChange}>
+            <option value="">Select a Article</option>
             {tourOptions.map((tour) => (
               <option key={tour.id} value={tour.id}>
                 {tour.title}
@@ -226,12 +210,12 @@ function EditTourImage({Id}) {
       </form>
       <div className="flex justify-between items-center">
         <button type="submit" onClick={handleSubmit} className="bg-green-500 px-5 py-2 rounded-xl mt-10 mb-10 hover:bg-green-600">Upload Images</button>
-        <Link href={'/add-tour-package/add-other'} className="px-5 py-2.5  text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-        Next to Edit Other Information
+        <Link href={'/'} className="px-5 py-2.5  text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+        Back to Dashboard
       </Link>
       </div>
     </div>
   );
 }
 
-export default EditTourImage;
+export default AddArticleImage;

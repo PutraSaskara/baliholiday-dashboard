@@ -5,7 +5,7 @@ import Card from "./Card";
 import baseURL from '@/apiConfig'
 
 
-function ListTours() {
+function ListArticle() {
   const [tours, setTours] = useState([]);
 
   useEffect(() => {
@@ -14,7 +14,7 @@ function ListTours() {
 
   const fetchTours = async () => {
     try {
-      const response = await axios.get(`${baseURL}/tours`);
+      const response = await axios.get(`${baseURL}/single-blog`);
       setTours(response.data);
     } catch (error) {
       console.error("Error fetching blogs:", error);
@@ -44,10 +44,10 @@ console.log('data tour', tours)
         <Card
           key={tour.id}
           title={tour.title}
-          author={tour.price1}
-          img={tour.image?.imageUrl1}
-          desc={tour.tour_description?.paragraf1}
-          link={`edit-tour-package/${tour.id}`}
+          author={tour.author}
+          img={tour.blogimage?.imageUrl1}
+          desc={tour.blog_paragraf?.paragraf1}
+          link={`/edit-article/${tour.id}`}
           link2={`/article/${tour.id}`}
         //   onDelete={() => handleDelete(tour.id)} // Pass the delete function as a prop
         />
@@ -56,4 +56,4 @@ console.log('data tour', tours)
   );
 }
 
-export default ListTours;
+export default ListArticle;

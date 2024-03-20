@@ -1,0 +1,63 @@
+@import url('https://fonts.googleapis.com/css?family=Abril+Fatface&display=swap');
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, to {
+        transform: translateZ(-2px) translateY(5px);
+    }
+
+    40% {
+        transform: rotateY(180deg) translateZ(-2px) translateY(-35px);
+    }
+
+    60% {
+        transform: translateZ(-2px) translateY(-25px);
+    }
+}
+
+.body {
+    background-color: #1a1a1a;
+    background: radial-gradient(circle at center, #1a1a1a, #040411 40%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    width: 100%;
+    perspective: 1000px;
+}
+
+.title {
+    font-size: 3.5vw; /* Adjusted font size to be relative */
+    line-height: 80%;
+    transform: rotateX(0) rotateY(-25deg);
+    text-transform: uppercase;
+    width: 90%; /* Adjusted width to be relative */
+    text-align: center;
+    color: #ccc; /* Adjusted text color to light gray */
+    font-family: 'Abril Fatface', sans-serif;
+    margin: 3vh auto; /* Adjusted margin to be relative */
+    position: relative;
+    padding: 2rem 0 9rem;
+    text-shadow: 0 0 2vw #000, 0 0 4vw #000, 0 0 6vw #000, 0 0 8vw #000, 0 0 14vw #000, 0 0 16vw #000; /* Adjusted text shadow to be relative */
+}
+
+.title span {
+    display: inline-block;
+}
+
+.scroll-more {
+    color: #ccc; /* Adjusted scroll color to light gray */
+    text-align: center;
+    width: 90%; /* Adjusted width to be relative */
+    position: absolute;
+    bottom: 8vh; /* Adjusted bottom position to be relative */
+    left: 5%; /* Adjusted left position to be relative */
+    margin: 0 auto;
+    font-size: 2.5vw; /* Adjusted font size to be relative */
+    opacity: 1;
+    transition: opacity 0.3s ease;
+    font-family: monospace;
+    pointer-events: none;
+    z-index: -1;
+    transform-origin: center;
+    animation: bounce 3s cubic-bezier(0.37, 0, 0.21, 1.02) infinite, fonts 5s linear infinite;
+}
