@@ -51,11 +51,11 @@ function Navbar() {
             </li>
             <li>
               <Link
-                href={"/add-blog"}
+                href={"/add-article"}
                 type="button"
                 className="text-white bg-gradient-to-r from-teal-400 via-teal-500 to-teal-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-teal-300 dark:focus:ring-white  shadow-lg shadow-teal-500/50 dark:shadow-lg dark:shadow-teal-800/80 font-medium rounded-lg text-[10px] px-2 py-2.5 text-center me-2 mb-2"
               >
-                Add Blog
+                Add Article
               </Link>
             </li>
             <li>

@@ -58,7 +58,7 @@ function EditTour({ id }) {
       </h1>
       <div className="mb-6">
         <label
-          for="default-input"
+          htmlFor="default-input"
           className="block mb-2 text-sm font-medium text-gray-900 "
         >
           Tour title
@@ -74,7 +74,7 @@ function EditTour({ id }) {
       </div>
       <div className="mb-6">
         <label
-          for="default-input"
+          htmlFor="default-input"
           className="block mb-2 text-sm font-medium text-gray-900 "
         >
           Tour Price 1
@@ -90,7 +90,7 @@ function EditTour({ id }) {
       </div>
       <div className="mb-6">
         <label
-          for="default-input"
+          htmlFor="default-input"
           className="block mb-2 text-sm font-medium text-gray-900 "
         >
           Price Note 1
@@ -106,7 +106,7 @@ function EditTour({ id }) {
       </div>
       <div className="mb-6">
         <label
-          for="default-input"
+          htmlFor="default-input"
           className="block mb-2 text-sm font-medium text-gray-900 "
         >
           Tour Price 2
@@ -122,7 +122,7 @@ function EditTour({ id }) {
       </div>
       <div className="mb-6">
         <label
-          for="default-input"
+          htmlFor="default-input"
           className="block mb-2 text-sm font-medium text-gray-900 "
         >
           Price Note 2
@@ -138,7 +138,7 @@ function EditTour({ id }) {
       </div>
       <div className="mb-6">
         <label
-          for="default-input"
+          htmlFor="default-input"
           className="block mb-2 text-sm font-medium text-gray-900 "
         >
           Tour Price 3
@@ -154,7 +154,7 @@ function EditTour({ id }) {
       </div>
       <div className="mb-6">
         <label
-          for="default-input"
+          htmlFor="default-input"
           className="block mb-2 text-sm font-medium text-gray-900 "
         >
           Price Note 3

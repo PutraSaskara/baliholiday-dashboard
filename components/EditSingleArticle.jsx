@@ -85,7 +85,7 @@ function AddSingleArticle({ id }) {
       </h1>
       <div className="mb-6">
         <label
-          for="default-input"
+          htmlFor="default-input"
           className="block mb-2 text-sm font-medium text-gray-900 "
         >
           Blog title
@@ -101,7 +101,7 @@ function AddSingleArticle({ id }) {
       </div>
       <div className="mb-6">
         <label
-          for="default-input"
+          htmlFor="default-input"
           className="block mb-2 text-sm font-medium text-gray-900 "
         >
           Author
