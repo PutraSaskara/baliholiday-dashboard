@@ -6,7 +6,6 @@ import Link from "next/link";
 
 function EditTour({ id }) {
   const [formData, setFormData] = useState({
-    tour: {
       title: "",
       price1: "",
       pricenote1: "",
@@ -14,7 +13,6 @@ function EditTour({ id }) {
       pricenote2: "",
       price3: "",
       pricenote3: "",
-    },
   });
 
   useEffect(() => {
@@ -25,7 +23,7 @@ function EditTour({ id }) {
 
   const fetchTourData = async () => {
     try {
-      const response = await axios.get(`${baseURL}/tours/${id}`);
+      const response = await axios.get(`${baseURL}/tourssimple/${id}`);
       setFormData(response.data);
     } catch (error) {
       console.error("Error fetching tour data:", error);
@@ -45,11 +43,16 @@ function EditTour({ id }) {
     try {
       await axios.patch(`${baseURL}/tours/${id}`, formData);
       console.log("Tour data updated successfully!");
-      // Optionally, redirect the user to a different page after successful submission
+      alert("Tour data updated successfully!");
     } catch (error) {
       console.error("Error updating tour data:", error);
+      if (error.response && error.response.data && error.response.data.error) {
+        console.error("Server Error:", error.response.data.error);
+      }
+      alert("Failed to update tour data. Please try again later.");
     }
   };
+  
 
   return (
     <div className="max-w-screen-lg mx-auto">
@@ -67,7 +70,7 @@ function EditTour({ id }) {
           type="text"
           id="title"
           name="title"
-          value={formData.tour.title}
+          value={formData.title}
           onChange={handleChange}
           className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
         />
@@ -83,7 +86,7 @@ function EditTour({ id }) {
           type="text"
           id="price1"
           name="price1"
-          value={formData.tour.price1}
+          value={formData.price1}
           onChange={handleChange}
           className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
         />
@@ -99,7 +102,7 @@ function EditTour({ id }) {
           type="text"
           id="pricenote1"
           name="pricenote1"
-          value={formData.tour.pricenote1}
+          value={formData.pricenote1}
           onChange={handleChange}
           className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
         />
@@ -115,7 +118,7 @@ function EditTour({ id }) {
           type="text"
           id="price2"
           name="price2"
-          value={formData.tour.price2}
+          value={formData.price2}
           onChange={handleChange}
           className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
         />
@@ -131,7 +134,7 @@ function EditTour({ id }) {
           type="text"
           id="pricenote2"
           name="pricenote2"
-          value={formData.tour.pricenote2}
+          value={formData.pricenote2}
           onChange={handleChange}
           className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
         />
@@ -147,7 +150,7 @@ function EditTour({ id }) {
           type="text"
           id="price3"
           name="price3"
-          value={formData.tour.price3}
+          value={formData.price3}
           onChange={handleChange}
           className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
         />
@@ -163,7 +166,7 @@ function EditTour({ id }) {
           type="text"
           id="pricenote3"
           name="pricenote3"
-          value={formData.tour.pricenote3}
+          value={formData.pricenote3}
           onChange={handleChange}
           className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
         />
