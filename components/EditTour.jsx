@@ -37,19 +37,31 @@ function EditTour({ id }) {
     const { name, value } = e.target;
     setFormData((prevState) => ({
       ...prevState,
-      [name]: value,
+      tour: {
+        ...prevState.tour,
+        [name]: value,
+      },
     }));
   };
+  
 
   const handleSubmit = async () => {
     try {
-      await axios.patch(`${baseURL}/tours/${id}`, formData);
-      console.log("Tour data updated successfully!");
-      // Optionally, redirect the user to a different page after successful submission
+      const response = await axios.patch(`${baseURL}/tours/${id}`, formData);
+      if (response.status === 200) {
+        console.log("Tour data updated successfully!");
+        alert("Tour data updated successfully!");
+        // Optionally, redirect the user to a different page after successful submission
+      } else {
+        console.error("Failed to update tour data. Server returned status:", response.status);
+        alert("Failed to update tour data. Please try again later.");
+      }
     } catch (error) {
       console.error("Error updating tour data:", error);
+      alert("Error updating tour data. Please try again later.");
     }
   };
+    
 
   return (
     <div className="max-w-screen-lg mx-auto">
