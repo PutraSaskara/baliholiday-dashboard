@@ -36,23 +36,25 @@ function EditArticleParagraf({id}) {
     const fetchTours = async () => {
       try {
         const response = await axios.get(`${baseURL}/single-blog`); // Fetch tours from the backend
-        const lastFiveTours = response.data.slice(-5); // Get the last 5 tours
-        setTourOptions(lastFiveTours); // Update tour options state
+        if (response.data.length > 0) {
+          setTourOptions(response.data); // Update tour options state
+        }
       } catch (error) {
         console.error('Error fetching tours:', error);
       }
     };
+  
     const fetchTourDetail = async () => {
-        try {
-          const response = await axios.get(`${baseURL}/paragraf/${id}`); // Fetch tour detail data by ID
-          setFormData(response.data); // Update form data with fetched data
-        } catch (error) {
-          console.error('Error fetching tour detail:', error);
-        }
-      };
+      try {
+        const response = await axios.get(`${baseURL}/paragrafs/${id}`); // Fetch tour detail data by ID
+        setFormData(response.data); // Update form data with fetched data
+      } catch (error) {
+        console.error('Error fetching tour detail:', error);
+      }
+    };
   
     fetchTours(); // Call the fetchTours function
-    fetchTourDetail()
+    fetchTourDetail();
   }, [id]);
 
   const handleChange = (e) => {
