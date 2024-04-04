@@ -1,12 +1,12 @@
-"use client"
+"use client";
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Card from "./Card";
-import baseURL from '@/apiConfig'
-
+import baseURL from "@/apiConfig";
 
 function ListTours() {
   const [tours, setTours] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     fetchTours();
@@ -23,8 +23,10 @@ function ListTours() {
 
   const handleDelete = async (Id) => {
     // Show a confirmation dialog before deleting
-    const confirmDelete = window.confirm("Are you sure you want to delete this blog post?");
-    
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this blog post?"
+    );
+
     if (confirmDelete) {
       try {
         await axios.delete(`${baseURL}/tours/${Id}`);
@@ -36,22 +38,38 @@ function ListTours() {
     }
   };
 
-console.log('data tour', tours)
+  console.log("data tour", tours);
 
   return (
-    <div className="w-[100%] grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-y-2 justify-items-center">
-      {tours?.map((tour) => (
-        <Card
-          key={tour.id}
-          title={tour.title}
-          author={tour.price1}
-          img={tour.image?.imageUrl1}
-          desc={tour.tour_description?.paragraf1}
-          link={`edit-tour-package/${tour.id}`}
-          link2={`/article/${tour.id}`}
-          onDelete={() => handleDelete(tour.id)} // Pass the delete function as a prop
-        />
-      ))}
+    <div>
+      <h1 className="text-center font-bold text-xl mb-10">
+        This is Tours List
+      </h1>
+      <input
+        type="text"
+        placeholder="Search tours..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        className="w-full p-2 border rounded-md mb-4"
+      />
+      <div className="w-[100%] grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-y-2 justify-items-center">
+        {tours
+          .filter((tour) =>
+            tour.title.toLowerCase().includes(searchQuery.toLowerCase())
+          )
+          .map((tour) => (
+            <Card
+              key={tour.id}
+              title={tour.title}
+              author={tour.price1}
+              img={tour.image?.imageUrl1}
+              desc={tour.tour_description?.paragraf1}
+              link={`edit-tour-package/${tour.id}`}
+              link2={`/article/${tour.id}`}
+              onDelete={() => handleDelete(tour.id)} // Pass the delete function as a prop
+            />
+          ))}
+      </div>
     </div>
   );
 }
