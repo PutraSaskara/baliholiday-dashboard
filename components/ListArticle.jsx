@@ -29,7 +29,7 @@ function ListArticle() {
 
     if (confirmDelete) {
       try {
-        await axios.delete(`${baseURL}/tours/${Id}`);
+        await axios.delete(`${baseURL}/single-blog/${Id}`);
         // After successful deletion, update the list of blogs by refetching them
         fetchTours();
       } catch (error) {
