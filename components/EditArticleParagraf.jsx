@@ -67,7 +67,7 @@ function EditArticleParagraf({id}) {
 
   const handleSubmit = async () => {
     try {
-      const response = await axios.patch(`${baseURL}/paragraf/${id}`, formData); // Use the baseURL
+      const response = await axios.patch(`${baseURL}/paragrafs/${id}`, formData); // Use the baseURL
       console.log('Data submitted:', response.data);
       alert('Tour plan saved successfully!');
     } catch (error) {

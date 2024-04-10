@@ -21,7 +21,22 @@ function ListArticle() {
     }
   };
 
-  // ...
+  const handleDelete = async (Id) => {
+    // Show a confirmation dialog before deleting
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this blog post?"
+    );
+
+    if (confirmDelete) {
+      try {
+        await axios.delete(`${baseURL}/single-blog/${Id}`);
+        // After successful deletion, update the list of blogs by refetching them
+        fetchTours();
+      } catch (error) {
+        console.error("Error deleting blog:", error);
+      }
+    }
+  };
 
   return (
     <div>
