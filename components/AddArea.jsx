@@ -87,7 +87,7 @@ function AddArea() {
     data.append("image", image);
 
     try {
-      const response = await axios.post(`${baseURL}/pickup-areas`, data, {
+      const response = await axios.post(`${baseURL}/api/pickup-areas`, data, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       // Optionally, you can use a toast notification here instead of alert
@@ -215,6 +215,8 @@ function AddArea() {
                 src={imagePreview}
                 alt="Image Preview"
                 className="w-full h-64 object-cover rounded border"
+                width={100}
+                height={100}
               />
             </div>
           )}

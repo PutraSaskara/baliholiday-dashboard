@@ -69,7 +69,7 @@ function AddDestination() {
     data.append("image", image);
 
     try {
-      const response = await axios.post(`${baseURL}/destinations`, data, {
+      const response = await axios.post(`${baseURL}/api/destinations`, data, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       alert("Destination added successfully!");
