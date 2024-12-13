@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-function NavList({ ListArticle, ListTour }) {
+function NavList({ ListArticle, ListTour, DestinationsList, ListArea }) {
   const [activeItem, setActiveItem] = useState("ListArticle");
 
   const handleItemClick = (itemName) => {
@@ -36,10 +36,36 @@ function NavList({ ListArticle, ListTour }) {
             <p>Tour Package List</p>
           </button>
         </li>
+        <li
+          className={`text-black font-bold text-[10px] sm:text-[16px] hover:text-primary ${
+            activeItem === "DestinationsList"
+              ? "text-primary border-b-2 border-b-primary transition duration-500"
+              : ""
+          }`}
+          onClick={() => handleItemClick("DestinationsList")}
+        >
+          <button>
+            <p>Destinations List</p>
+          </button>
+        </li>
+        <li
+          className={`text-black font-bold text-[10px] sm:text-[16px] hover:text-primary ${
+            activeItem === "ListArea"
+              ? "text-primary border-b-2 border-b-primary transition duration-500"
+              : ""
+          }`}
+          onClick={() => handleItemClick("ListArea")}
+        >
+          <button>
+            <p>Area List</p>
+          </button>
+        </li>
       </ul>
 
       {activeItem === "ListArticle" && ListArticle}
       {activeItem === "ListTour" && ListTour}
+      {activeItem === "DestinationsList" && DestinationsList}
+      {activeItem === "ListArea" && ListArea}
     </div>
   );
 }

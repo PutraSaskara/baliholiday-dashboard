@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import baseURL from "@/apiConfig";
 import Link from "next/link";
+import Image from "next/image";
 
 function AddTourImage() {
   const [tourId, setTourId] = useState("");
@@ -161,10 +162,12 @@ function AddTourImage() {
             />
             <p className="mt-1 text-sm text-black font-semibold" id="images1_help">.webp only (max size 5mb. and please choose minimum full Hd image 1920x1080 pixel).</p>
             {preview1 && (
-                <img
+                <Image
                 src={preview1}
                 alt="Preview"
                 className="w-[300px] mt-5"
+                width={100}
+                height={100}
                 />
             )}
             </div>
@@ -179,10 +182,12 @@ function AddTourImage() {
             />
             <p className="mt-1 text-sm text-black font-semibold" id="images1_help">webp only (max size 5mb. and please choose minimum full Hd image 1920x1080 pixel).</p>
             {preview2 && (
-                <img
+                <Image
                 src={preview2}
                 alt="Preview"
                 className="w-[300px] mt-5"
+                width={100}
+                height={100}
                 />
             )}
             </div>
@@ -197,10 +202,12 @@ function AddTourImage() {
             />
             <p className="mt-1 text-sm text-black font-semibold" id="images1_help">webp only (max size 5mb. and please choose minimum full Hd image 1920x1080 pixel).</p>
             {preview3 && (
-                <img
+                <Image
                 src={preview3}
                 alt="Preview"
                 className="w-[300px] mt-5"
+                width={100}
+                height={100}
                 />
             )}
             </div>
