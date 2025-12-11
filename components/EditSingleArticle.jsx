@@ -8,23 +8,23 @@ function AddSingleArticle({ id }) {
   const [formData, setFormData] = useState({
     title: "",
     author: "",
-    keywords: ""
+    keywords: "",
   });
 
-  const fetchTourData = useCallback(async () => {
+  const fetchBlogData = useCallback(async () => {
     try {
       const response = await axios.get(`${baseURL}/single-blog/${id}`);
       setFormData(response.data.blog);
     } catch (error) {
-      console.error("Error fetching tour data:", error);
+      console.error("Error fetching blog data:", error);
     }
   }, [id]);
 
   useEffect(() => {
     if (id) {
-      fetchTourData();
+      fetchBlogData();
     }
-  }, [id, fetchTourData]);
+  }, [id, fetchBlogData]);
 
   console.log("data fetch", formData);
 
@@ -40,14 +40,14 @@ function AddSingleArticle({ id }) {
     try {
       const response = await axios.patch(
         `${baseURL}/single-blog/${id}`,
-        formData
+        formData // Include title, author, keywords
       );
       console.log("Data submitted:", response.data);
       alert("Data saved successfully!");
       setFormData({
         title: "",
         author: "",
-        keywords: ""
+        keywords: "",
       });
     } catch (error) {
       console.error("Error submitting form:", error);
