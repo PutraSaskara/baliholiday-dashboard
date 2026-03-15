@@ -96,7 +96,7 @@ function ListAreas() {
                   <td className="py-2 px-4 border-b text-center">{area.lng}</td>
                   <td className="py-2 px-4 border-b flex justify-center">
                     <Image
-                      src={`${baseURL}${area.image}`}
+                      src={area.image}
                       alt={area.name}
                       className="w-16 h-16 object-cover rounded"
                       width={100}

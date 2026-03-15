@@ -104,7 +104,7 @@ function ListDestinations() {
                   <td className="py-2 px-4 border-b text-center">{destination.lng}</td>
                   <td className="py-2 px-4 border-b flex justify-center">
                     <Image
-                      src={`${baseURL}${destination.image}`}
+                      src={destination.image}
                       alt={destination.name}
                       className="w-16 h-16 object-cover rounded"
                       width={100}

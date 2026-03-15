@@ -7,6 +7,7 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import { FaSpinner } from "react-icons/fa";
 import Image from "next/image";
+import baseURL from "@/apiConfig";
 
 interface Destination {
   id: string;
@@ -56,14 +57,14 @@ const DestinationForm: React.FC<DestinationFormProps> = ({ isEditMode, existingD
       }
 
       if (isEditMode) {
-        await axios.put(`http://localhost:5000/api/destinations/${existingData.id}`, formData, {
+        await axios.put(`${baseURL}/api/destinations/${existingData.id}`, formData, {
           headers: {
             "Content-Type": "multipart/form-data",
           },
         });
         alert("Destination updated successfully.");
       } else {
-        await axios.post(`http://localhost:5000/api/destinations`, formData, {
+        await axios.post(`${baseURL}/api/destinations`, formData, {
           headers: {
             "Content-Type": "multipart/form-data",
           },
@@ -164,7 +165,7 @@ const DestinationForm: React.FC<DestinationFormProps> = ({ isEditMode, existingD
           <p className="text-sm text-gray-500 mt-1">Only WEBP format is allowed.</p>
           {isEditMode && existingData?.image && (
             <Image
-              src={`http://localhost:5000${existingData.image}`}
+              src={existingData.image}
               alt={existingData.name}
               className="mt-2 w-32 h-32 object-cover rounded"
               width={128} // Specify width and height for optimization

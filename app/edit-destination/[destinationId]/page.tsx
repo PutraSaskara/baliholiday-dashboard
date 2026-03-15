@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback } from "react";
 import DestinationForm from "../../../components/DestinationForm";
 import Navbar from "../../../components/Navbar";
 import axios from "axios";
+import baseURL from "@/apiConfig";
 
 interface PageProps {
   params: {
@@ -32,7 +33,7 @@ const Page: React.FC<PageProps> = ({ params }) => {
   const fetchDestination = useCallback(async () => {
     try {
       setIsLoading(true);
-      const res = await axios.get<Destination>(`http://localhost:5000/api/destinations/${destinationId}`);
+      const res = await axios.get<Destination>(`${baseURL}/api/destinations/${destinationId}`);
       setExistingData(res.data);
       setError(null);
     } catch (err: any) {

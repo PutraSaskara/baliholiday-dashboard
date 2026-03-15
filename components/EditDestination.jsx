@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import baseURL from '@/apiConfig';
 import { useRouter, useParams } from 'next/navigation';
+import Image from 'next/image';
 
 function EditDestination() {
   const [formData, setFormData] = useState({
@@ -11,6 +12,8 @@ function EditDestination() {
     lng: '',
   });
   const [image, setImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [existingImage, setExistingImage] = useState(null);
   const router = useRouter();
   const { id } = useParams();
 
@@ -18,8 +21,9 @@ function EditDestination() {
   const fetchDestination = useCallback(async () => {
     try {
       const response = await axios.get(`${baseURL}/api/destinations/${id}`);
-      const { name, description, lat, lng } = response.data;
+      const { name, description, lat, lng, image } = response.data;
       setFormData({ name, description, lat, lng });
+      setExistingImage(image);
     } catch (error) {
       console.error('Error fetching destination:', error);
       alert('Failed to fetch destination details.');
@@ -30,7 +34,10 @@ function EditDestination() {
     if (id) {
       fetchDestination();
     }
-  }, [id, fetchDestination]); // Dependencies: `id` and `fetchDestination`
+    return () => {
+      if (imagePreview) URL.revokeObjectURL(imagePreview);
+    };
+  }, [id, fetchDestination, imagePreview]); // Dependencies: `id` and `fetchDestination`
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -41,6 +48,7 @@ function EditDestination() {
     const file = e.target.files[0];
     if (file && file.type === 'image/webp') {
       setImage(file);
+      setImagePreview(URL.createObjectURL(file));
     } else {
       alert('Please upload an image in WEBP format.');
     }
@@ -130,6 +138,18 @@ function EditDestination() {
             className="w-full"
           />
           <p className="text-sm text-gray-500">Leave blank to keep the current image.</p>
+          {(imagePreview || existingImage) && (
+            <div className="mt-4">
+              <p className="mb-2">{imagePreview ? 'New Preview:' : 'Current Image:'}</p>
+              <Image
+                src={imagePreview || existingImage}
+                alt="Destination Preview"
+                className="w-full h-64 object-cover rounded border"
+                width={800}
+                height={400}
+              />
+            </div>
+          )}
         </div>
         <button type="submit" className="w-full bg-yellow-500 text-white py-2 rounded">
           Update Destination

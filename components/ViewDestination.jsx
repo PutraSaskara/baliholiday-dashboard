@@ -74,7 +74,7 @@ function ViewDestination() {
       <h1 className="text-3xl font-bold mb-4">{destination.name}</h1>
       {/* Ensure that the image URL is valid. Adjust the base URL if necessary */}
       <Image
-        src={`${baseURL}${destination.image}`}
+        src={destination.image}
         alt={destination.name}
         width={800}  // Specify width and height for Next.js Image optimization
         height={400}

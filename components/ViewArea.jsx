@@ -34,7 +34,7 @@ function ViewArea() {
   return (
     <div className="max-w-2xl mx-auto p-5">
       <h1 className="text-3xl font-bold mb-4">{area.name}</h1>
-      <Image src={`${baseURL}${area.image}`} alt={area.name} className="w-full h-64 object-cover mb-4" width={100} height={100} />
+      <Image src={area.image} alt={area.name} className="w-full h-64 object-cover mb-4" width={100} height={100} />
       <p className="mb-2"><strong>Description:</strong> {area.description}</p>
       <p className="mb-2"><strong>Latitude:</strong> {area.lat}</p>
       <p className="mb-2"><strong>Longitude:</strong> {area.lng}</p>

@@ -24,7 +24,7 @@ const DestinationItem = ({ destination, isSelected, onSelect, onShowDetails }) =
       {/* Destination Image */}
       <div className="w-16 h-16 relative mr-4">
         <Image
-          src={`${baseURL}/api${destination.image}`}
+          src={destination.image}
           alt={destination.name}
           layout="fill"
           objectFit="cover"
@@ -99,7 +99,7 @@ const DestinationItem = ({ destination, isSelected, onSelect, onShowDetails }) =
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         title={destination.name}
-        imageSrc={`http://localhost:5000${destination.image}`}
+        imageSrc={destination.image}
         description={destination.description}
         additionalInfo={[
           { label: "Latitude", value: destination.lat },

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import baseURL from '@/apiConfig';
 import { useRouter, useParams } from 'next/navigation';
+import Image from 'next/image';
 
 function EditArea() {
   const [formData, setFormData] = useState({
@@ -13,14 +14,17 @@ function EditArea() {
     lng: '',
   });
   const [image, setImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null); // State for new image preview
+  const [existingImage, setExistingImage] = useState(null); // State for current image URL
   const router = useRouter();
   const { id } = useParams();
 
   const fetchArea = useCallback(async () => {
     try {
       const response = await axios.get(`${baseURL}/api/pickup-areas/${id}`);
-      const { name, description, lat, lng } = response.data;
+      const { name, description, lat, lng, image } = response.data;
       setFormData({ name, description, lat, lng });
+      setExistingImage(image);
     } catch (error) {
       console.error('Error fetching pickup area:', error);
       alert('Failed to fetch pickup area details.');
@@ -31,7 +35,10 @@ function EditArea() {
     if (id) {
       fetchArea();
     }
-  }, [id, fetchArea]); // Adding fetchArea as a dependency to useEffect
+    return () => {
+      if (imagePreview) URL.revokeObjectURL(imagePreview);
+    };
+  }, [id, fetchArea, imagePreview]); // Adding cleanup for preview URL
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -42,6 +49,7 @@ function EditArea() {
     const file = e.target.files[0];
     if (file && file.type === 'image/webp') {
       setImage(file);
+      setImagePreview(URL.createObjectURL(file));
     } else {
       alert('Please upload an image in WEBP format.');
     }
@@ -143,6 +151,18 @@ function EditArea() {
             className="w-full"
           />
           <p className="text-sm text-gray-500">Leave blank to keep the current image.</p>
+          {(imagePreview || existingImage) && (
+            <div className="mt-4">
+              <p className="mb-2">{imagePreview ? 'New Preview:' : 'Current Image:'}</p>
+              <Image
+                src={imagePreview || existingImage}
+                alt="Area Preview"
+                className="w-full h-64 object-cover rounded border"
+                width={800}
+                height={400}
+              />
+            </div>
+          )}
         </div>
         <button type="submit" className="w-full bg-yellow-500 text-white py-2 rounded">
           Update Pickup Area
