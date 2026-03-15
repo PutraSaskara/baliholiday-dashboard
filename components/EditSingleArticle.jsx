@@ -1,24 +1,26 @@
 "use client";
 import Link from "next/link";
 import { useState, useEffect, useCallback } from "react";
-import axios from "axios";
-import baseURL from "@/apiConfig";
+import useArticleStore from "../stores/useArticleStore";
 
-function AddSingleArticle({ id }) {
+function EditSingleArticle({ id }) {
   const [formData, setFormData] = useState({
     title: "",
     author: "",
     keywords: "",
   });
 
+  const { fetchArticleById, updateArticle } = useArticleStore();
+
   const fetchBlogData = useCallback(async () => {
-    try {
-      const response = await axios.get(`${baseURL}/single-blog/${id}`);
-      setFormData(response.data.blog);
-    } catch (error) {
-      console.error("Error fetching blog data:", error);
+    if (!id) return;
+    const data = await fetchArticleById(id);
+    if (data && data.blog) {
+      setFormData(data.blog);
+    } else if (data) {
+      setFormData(data);
     }
-  }, [id]);
+  }, [id, fetchArticleById]);
 
   useEffect(() => {
     if (id) {
@@ -37,37 +39,28 @@ function AddSingleArticle({ id }) {
   };
 
   const handleSubmit = async () => {
-    try {
-      const response = await axios.patch(
-        `${baseURL}/single-blog/${id}`,
-        formData // Include title, author, keywords
-      );
-      console.log("Data submitted:", response.data);
+    const { success, status, data, message } = await updateArticle(id, formData);
+
+    if (success) {
+      console.log("Data submitted:", data);
       alert("Data saved successfully!");
       setFormData({
         title: "",
         author: "",
         keywords: "",
       });
-    } catch (error) {
-      console.error("Error submitting form:", error);
-      if (error.response) {
-        console.error(
-          "Server responded with error status:",
-          error.response.status
-        );
-        if (error.response.status === 400) {
+    } else {
+      console.error("Error submitting form:", message);
+      if (status) {
+        console.error("Server responded with error status:", status);
+        if (status === 400) {
           alert("Bad request: Please check your input data.");
-        } else if (error.response.status === 404) {
+        } else if (status === 404) {
           alert("Resource not found.");
         } else {
-          alert("An error occurred. Please try again later.");
+          alert(`An error occurred. ${message}`);
         }
-      } else if (error.request) {
-        console.error("No response received:", error.request);
-        alert("No response received from the server. Please try again later.");
       } else {
-        console.error("Error setting up the request:", error.message);
         alert("An error occurred. Please try again later.");
       }
     }
@@ -147,4 +140,4 @@ function AddSingleArticle({ id }) {
   );
 }
 
-export default AddSingleArticle;
+export default EditSingleArticle;

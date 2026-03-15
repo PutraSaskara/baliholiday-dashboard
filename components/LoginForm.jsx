@@ -3,38 +3,24 @@
 'use client';
 
 import { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import useAuthStore from '../stores/useAuthStore';
 
-export default function LoginForm() {
+export default function LoginForm({ onLoginSuccess }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const { handleLoginSuccess } = useAuth();
+  const { login } = useAuthStore();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    try {
-      const res = await fetch('/api/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, password }),
-      });
+    const { success, message } = await login(username, password);
 
-      if (res.ok) {
-        console.log('Login successful');
-        handleLoginSuccess();
-      } else {
-        const data = await res.json();
-        console.error('Login failed:', data.message);
-        setError(data.message || 'Login failed');
-      }
-    } catch (err) {
-      console.error('Login error:', err);
-      setError('An error occurred during login.');
+    if (success) {
+      if (onLoginSuccess) onLoginSuccess();
+    } else {
+      setError(message);
     }
   };
 

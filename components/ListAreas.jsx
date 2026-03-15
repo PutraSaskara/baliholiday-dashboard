@@ -2,90 +2,37 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import axios from 'axios';
-import baseURL from '@/apiConfig';
+import useAreaStore from '../stores/useAreaStore';
 import Link from 'next/link';
 import Image from 'next/image';
+import baseURL from '@/apiConfig';
 
 function ListAreas() {
-  const [areas, setAreas] = useState([]);
-  const [totalPages, setTotalPages] = useState(1);
-  const [currentPage, setCurrentPage] = useState(1);
+  const { areas, totalPages, currentPage, loading, fetchAreas, searchAreas, deleteArea } = useAreaStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  // Fetch paginated areas
-  const fetchAreas = async (page = 1) => {
-    setLoading(true);
-    setIsSearching(false);
-    try {
-      const response = await axios.get(`${baseURL}/api/pickup-areas`, {
-        params: { page, limit: 10 },
-      });
-      setAreas(response.data.areas);
-      setTotalPages(response.data.totalPages);
-      setCurrentPage(response.data.currentPage);
-    } catch (error) {
-      console.error('Error fetching areas:', error);
-      alert('Failed to fetch pickup areas.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Fetch search results
-  const fetchSearchResults = async (query) => {
-    if (!query.trim()) {
-      // If query is empty, fetch paginated areas
-      fetchAreas();
-      return;
-    }
-
-    setLoading(true);
-    setIsSearching(true);
-    try {
-      const response = await axios.get(`${baseURL}/api/pickup-areas/search`, {
-        params: { query },
-      });
-      setAreas(response.data);
-      setTotalPages(1);
-      setCurrentPage(1);
-    } catch (error) {
-      console.error('Error searching areas:', error);
-      alert('Failed to search pickup areas.');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
     fetchAreas();
-  }, []);
+  }, [fetchAreas]);
 
-  const handleSearch = (e) => {
+  const handleSearch = async (e) => {
     e.preventDefault();
-    fetchSearchResults(searchQuery);
+    if (!searchQuery.trim()) {
+      setIsSearching(false);
+      await fetchAreas(1);
+    } else {
+      setIsSearching(true);
+      await searchAreas(searchQuery);
+    }
   };
 
   const handleDelete = async (id) => {
     if (!confirm('Are you sure you want to delete this area?')) return;
-    try {
-      await axios.delete(`${baseURL}/api/pickup-areas/${id}`);
+    const success = await deleteArea(id);
+    if (success) {
       alert('Area deleted successfully.');
-      // Refresh the list after deletion
-      if (isSearching) {
-        fetchSearchResults(searchQuery);
-      } else {
-        // If the last item on the current page is deleted, go to the previous page
-        if (areas.length === 1 && currentPage > 1) {
-          fetchAreas(currentPage - 1);
-        } else {
-          fetchAreas(currentPage);
-        }
-      }
-    } catch (error) {
-      console.error('Error deleting area:', error);
+    } else {
       alert('Failed to delete area.');
     }
   };

@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from 'react';
-import axios from 'axios';
+import useDestinationStore from '../stores/useDestinationStore';
 import baseURL from '@/apiConfig';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
@@ -14,20 +14,21 @@ function ViewDestination() {
   const [error, setError] = useState(null);     // Optional: Error state
   const { id } = useParams();
 
-  // Memoize fetchDestination to prevent it from changing on every render
+  const { fetchDestinationById } = useDestinationStore();
+
   const fetchDestination = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${baseURL}/api/destinations/${id}`);
-      setDestination(response.data);
-      setError(null); // Reset error if fetch is successful
+      const data = await fetchDestinationById(id);
+      setDestination(data);
+      setError(null);
     } catch (err) {
       console.error('Error fetching destination:', err);
       setError('Failed to fetch destination details.');
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, fetchDestinationById]);
 
   useEffect(() => {
     if (id) {
@@ -78,7 +79,7 @@ function ViewDestination() {
         width={800}  // Specify width and height for Next.js Image optimization
         height={400}
         className="w-full h-64 object-cover mb-4"
-        
+
       />
       <p className="mb-2"><strong>Description:</strong> {destination.description}</p>
       <p className="mb-2"><strong>Latitude:</strong> {destination.lat}</p>

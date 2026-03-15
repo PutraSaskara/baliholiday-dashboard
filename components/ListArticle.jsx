@@ -1,27 +1,18 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import Card from "./Card"; // Make sure to import the Card component
-import baseURL from "@/apiConfig";
+import useArticleStore from "../stores/useArticleStore";
 
 function ListArticle() {
-  const [tours, setTours] = useState([]);
+  // Original codebase uses "tours" state for articles, alias articles -> tours
+  const { articles: tours, loading, error, fetchArticles, deleteArticle } = useArticleStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6; // Define how many items per page
 
   useEffect(() => {
-    fetchTours();
-  }, []);
-
-  const fetchTours = async () => {
-    try {
-      const response = await axios.get(`${baseURL}/single-blog`);
-      setTours(response.data);
-    } catch (error) {
-      console.error("Error fetching blogs:", error);
-    }
-  };
+    fetchArticles();
+  }, [fetchArticles]);
 
   const handleDelete = async (Id) => {
     const confirmDelete = window.confirm(
@@ -29,12 +20,7 @@ function ListArticle() {
     );
 
     if (confirmDelete) {
-      try {
-        await axios.delete(`${baseURL}/single-blog/${Id}`);
-        fetchTours(); // Refetch after deletion
-      } catch (error) {
-        console.error("Error deleting blog:", error);
-      }
+      await deleteArticle(Id);
     }
   };
 

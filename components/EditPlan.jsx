@@ -1,10 +1,9 @@
 "use client"
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
-import axios from 'axios';
-import baseURL from '@/apiConfig'; // Import the baseURL
+import { useState, useEffect, useCallback } from 'react';
+import useTourStore from '../stores/useTourStore';
 
-function AddTourPlan({tourId}) {
+function AddTourPlan({ tourId }) {
   const [formData, setFormData] = useState({
     title1: '',
     coordinatesleft1: '',
@@ -54,36 +53,26 @@ function AddTourPlan({tourId}) {
     tourId: ''
   });
 
-  const [tourOptions, setTourOptions] = useState([]); // State to store fetched tour options
+  const { tours: tourOptions, fetchTours, fetchTourPlan, updateTourPlan } = useTourStore();
 
   useEffect(() => {
-    // Fetch tour options from the backend when the component mounts
-    const fetchTours = async () => {
-      try {
-        const response = await axios.get(`${baseURL}/tours`); // Fetch tours from the backend
-        const lastFiveTours = response.data.slice(-5); // Get the last 5 tours
-        setTourOptions(lastFiveTours); // Update tour options state
-      } catch (error) {
-        console.error('Error fetching tours:', error);
-      }
-    };
+    fetchTours();
+  }, [fetchTours]);
 
-
-  const fetchTourDetail = async () => {
-    try {
-      const response = await axios.get(`${baseURL}/plans/${tourId}`); // Fetch tour detail data by ID
-      setFormData(response.data); // Update form data with fetched data
-    } catch (error) {
-      console.error('Error fetching tour detail:', error);
+  const loadTourPlanData = useCallback(async () => {
+    if (!tourId) return;
+    const data = await fetchTourPlan(tourId);
+    if (data && Object.keys(data).length > 0) {
+      setFormData(data);
     }
-  };
+  }, [tourId, fetchTourPlan]);
 
-  fetchTours(); // Call the fetchTours function
-  fetchTourDetail(); // Call the fetchTourDetail function
-}, [tourId]);
+  useEffect(() => {
+    loadTourPlanData();
+  }, [loadTourPlanData]);
 
 
-  
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -94,30 +83,22 @@ function AddTourPlan({tourId}) {
   };
 
   const handleSubmit = async () => {
-    try {
-      const response = await axios.patch(`${baseURL}/plans/${tourId}`, formData); // Use the baseURL
-      console.log('Data submitted:', response.data);
+    const { success, status, data, message } = await updateTourPlan(tourId, formData);
+
+    if (success) {
+      console.log('Data submitted:', data);
       alert('Tour plan saved successfully!');
-    } catch (error) {
-      console.error('Error submitting form:', error);
-      if (error.response) {
-        // The request was made and the server responded with a status code that falls out of the range of 2xx
-        console.error('Server responded with error status:', error.response.status);
-        console.error('Error message from server:', error.response.data);
-        const errorMessage = JSON.stringify(error.response.data);
-        alert(`Server responded with an error: ${error.response.status}. ${errorMessage}`);
-      } else if (error.request) {
-        // The request was made but no response was received
-        console.error('No response received:', error.request);
-        alert('No response received from the server. Please try again later.');
+    } else {
+      if (status) {
+        console.error('Server responded with error status:', status);
+        const errorMessage = data ? JSON.stringify(data) : message;
+        alert(`Server responded with an error: ${status}. ${errorMessage}`);
       } else {
-        // Something happened in setting up the request that triggered an error
-        console.error('Error setting up the request:', error.message);
-        alert(`An error occurred: ${error.message}`);
+        alert(message || 'An error occurred during update.');
       }
     }
   };
-  
+
   return (
     <div className='max-w-screen-lg mx-auto'>
       <h1 className='my-10 text-xl font-bold'>Please Edit Tour Plan and Plan Description</h1>
@@ -147,9 +128,9 @@ function AddTourPlan({tourId}) {
 
           <label htmlFor={`coordinatesright${index + 1}`} className="block text-sm font-medium text-gray-900">Plan coordinatesright {index + 1}</label>
           <input id={`coordinatesright${index + 1}`} name={`coordinatesright${index + 1}`} value={formData[`coordinatesright${index + 1}`]} onChange={handleChange} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
-          
-          
-          
+
+
+
           <label htmlFor={`description${index + 1}`} className="block text-sm font-medium text-gray-900">Plan description {index + 1}</label>
           <textarea id={`description${index + 1}`} name={`description${index + 1}`} value={formData[`description${index + 1}`]} onChange={handleChange} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
 
@@ -162,8 +143,8 @@ function AddTourPlan({tourId}) {
         <button type="button" onClick={handleSubmit} className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mb-10">Save</button>
 
         <Link href={'/add-tour-package/add-tour-image'} className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mb-10">
-        Next to Edit Tour Image
-      </Link>
+          Next to Edit Tour Image
+        </Link>
       </div>
 
     </div>

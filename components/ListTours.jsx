@@ -1,27 +1,17 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import Card from "./Card";
-import baseURL from "@/apiConfig";
+import useTourStore from "../stores/useTourStore";
 
 function ListTours() {
-  const [tours, setTours] = useState([]);
+  const { tours, loading, error, fetchTours, deleteTour } = useTourStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6; // Define how many items per page
 
   useEffect(() => {
     fetchTours();
-  }, []);
-
-  const fetchTours = async () => {
-    try {
-      const response = await axios.get(`${baseURL}/tours`);
-      setTours(response.data);
-    } catch (error) {
-      console.error("Error fetching tours:", error);
-    }
-  };
+  }, [fetchTours]);
 
   const handleDelete = async (Id) => {
     const confirmDelete = window.confirm(
@@ -29,12 +19,7 @@ function ListTours() {
     );
 
     if (confirmDelete) {
-      try {
-        await axios.delete(`${baseURL}/tours/${Id}`);
-        fetchTours(); // Refetch after deletion
-      } catch (error) {
-        console.error("Error deleting tour:", error);
-      }
+      await deleteTour(Id);
     }
   };
 

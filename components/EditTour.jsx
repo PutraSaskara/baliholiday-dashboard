@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import axios from "axios";
-import baseURL from "@/apiConfig";
+import useTourStore from "../stores/useTourStore";
 import Link from "next/link";
 
 function EditTour({ id }) {
@@ -19,18 +18,18 @@ function EditTour({ id }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  const { fetchTourById, updateTour } = useTourStore();
+
   const fetchTourData = useCallback(async () => {
     setLoading(true);
-    try {
-      const response = await axios.get(`${baseURL}/tourssimple/${id}`);
-      setFormData(response.data);
-    } catch (error) {
-      console.error("Error fetching tour data:", error);
+    const data = await fetchTourById(id);
+    if (data) {
+      setFormData(data);
+    } else {
       setError("Failed to fetch tour data. Please try again later.");
-    } finally {
-      setLoading(false);
     }
-  }, [id]);
+    setLoading(false);
+  }, [id, fetchTourById]);
 
   useEffect(() => {
     if (id) {
@@ -48,25 +47,13 @@ function EditTour({ id }) {
 
   const handleSubmit = async () => {
     setLoading(true);
-    try {
-      const response = await axios.patch(`${baseURL}/tours/${id}`, formData);
-      if (response.status === 200) {
-        console.log("Tour data updated successfully!");
-        alert("Tour data updated successfully!");
-        // Optionally, redirect the user to a different page after successful submission
-      } else {
-        console.error(
-          "Failed to update tour data. Server returned status:",
-          response.status
-        );
-        alert("Failed to update tour data. Please try again later.");
-      }
-    } catch (error) {
-      console.error("Error updating tour data:", error);
-      alert("Error updating tour data. Please try again later.");
-    } finally {
-      setLoading(false);
+    const { success } = await updateTour(id, formData);
+    if (success) {
+      alert("Tour data updated successfully!");
+    } else {
+      alert("Failed to update tour data. Please try again later.");
     }
+    setLoading(false);
   };
 
   if (loading) {

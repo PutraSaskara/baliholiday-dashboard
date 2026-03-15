@@ -2,90 +2,37 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import axios from "axios";
-import baseURL from "@/apiConfig";
+import useDestinationStore from "../stores/useDestinationStore";
 import Link from "next/link";
 import Image from "next/image";
+import baseURL from "@/apiConfig";
 
 function ListDestinations() {
-  const [destinations, setDestinations] = useState([]);
-  const [totalPages, setTotalPages] = useState(1);
-  const [currentPage, setCurrentPage] = useState(1);
+  const { destinations, totalPages, currentPage, loading, fetchDestinations, searchDestinations, deleteDestination } = useDestinationStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  // Fetch paginated destinations
-  const fetchDestinations = async (page = 1) => {
-    setLoading(true);
-    setIsSearching(false);
-    try {
-      const response = await axios.get(`${baseURL}/api/destinations`, {
-        params: { page, limit: 10 },
-      });
-      setDestinations(response.data.destinations);
-      setTotalPages(response.data.totalPages);
-      setCurrentPage(response.data.currentPage);
-    } catch (error) {
-      console.error("Error fetching destinations:", error);
-      alert("Failed to fetch destinations.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Fetch search results
-  const fetchSearchResults = async (query) => {
-    if (!query.trim()) {
-      // If query is empty, fetch paginated destinations
-      fetchDestinations();
-      return;
-    }
-
-    setLoading(true);
-    setIsSearching(true);
-    try {
-      const response = await axios.get(`${baseURL}/api/destinations/search`, {
-        params: { query },
-      });
-      setDestinations(response.data);
-      setTotalPages(1);
-      setCurrentPage(1);
-    } catch (error) {
-      console.error("Error searching destinations:", error);
-      alert("Failed to search destinations.");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
     fetchDestinations();
-  }, []);
+  }, [fetchDestinations]);
 
-  const handleSearch = (e) => {
+  const handleSearch = async (e) => {
     e.preventDefault();
-    fetchSearchResults(searchQuery);
+    if (!searchQuery.trim()) {
+      setIsSearching(false);
+      await fetchDestinations(1);
+    } else {
+      setIsSearching(true);
+      await searchDestinations(searchQuery);
+    }
   };
 
   const handleDelete = async (id) => {
     if (!confirm("Are you sure you want to delete this destination?")) return;
-    try {
-      await axios.delete(`${baseURL}/destinations/${id}`);
+    const success = await deleteDestination(id);
+    if (success) {
       alert("Destination deleted successfully.");
-      // Refresh the list after deletion
-      if (isSearching) {
-        fetchSearchResults(searchQuery);
-      } else {
-        // If the last item on the current page is deleted, go to the previous page
-        if (destinations.length === 1 && currentPage > 1) {
-          fetchDestinations(currentPage - 1);
-        } else {
-          fetchDestinations(currentPage);
-        }
-      }
-    } catch (error) {
-      console.error("Error deleting destination:", error);
+    } else {
       alert("Failed to delete destination.");
     }
   };
@@ -205,11 +152,10 @@ function ListDestinations() {
             <button
               key={page}
               onClick={() => fetchDestinations(page)}
-              className={`px-3 py-1 rounded ${
-                currentPage === page
+              className={`px-3 py-1 rounded ${currentPage === page
                   ? "bg-blue-600 text-white"
                   : "bg-gray-200 text-gray-700 hover:bg-gray-300 transition"
-              }`}
+                }`}
             >
               {page}
             </button>

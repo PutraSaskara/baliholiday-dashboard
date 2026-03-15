@@ -1,43 +1,33 @@
 "use client";
 import Link from "next/link";
-import { useState, useEffect } from "react";
-import axios from "axios";
-import baseURL from "@/apiConfig"; // Import the baseURL
+import { useState, useEffect, useCallback } from "react";
+import useTourStore from "../stores/useTourStore";
 
 function EditDesc({ tourId }) {
   const [formData, setFormData] = useState({
     paragraf1: "",
     paragraf2: "",
     paragraf3: "",
-    tourId: "", // Initialize tourId as an empty string
+    tourId: "",
   });
 
-  const [tourOptions, setTourOptions] = useState([]); // State to store fetched tour options
+  const { tours: tourOptions, fetchTours, fetchTourDesc, updateTourDesc } = useTourStore();
 
   useEffect(() => {
-    // Fetch tour options from the backend when the component mounts
-    const fetchTours = async () => {
-      try {
-        const response = await axios.get(`${baseURL}/tours`); // Fetch tours from the backend
-        const lastFiveTours = response.data.slice(-5); // Get the last 5 tours
-        setTourOptions(lastFiveTours); // Update tour options state
-      } catch (error) {
-        console.error("Error fetching tours:", error);
-      }
-    };
+    fetchTours();
+  }, [fetchTours]);
 
-    const fetchTourDetail = async () => {
-      try {
-        const response = await axios.get(`${baseURL}/descs/${tourId}`); // Fetch tour detail data by ID
-        setFormData(response.data); // Update form data with fetched data
-      } catch (error) {
-        console.error("Error fetching tour detail:", error);
-      }
-    };
+  const loadTourDescData = useCallback(async () => {
+    if (!tourId) return;
+    const data = await fetchTourDesc(tourId);
+    if (data && Object.keys(data).length > 0) {
+      setFormData(data);
+    }
+  }, [tourId, fetchTourDesc]);
 
-    fetchTours(); // Call the fetchTours function
-    fetchTourDetail(); // Call the fetchTourDetail function
-  }, [tourId]);
+  useEffect(() => {
+    loadTourDescData();
+  }, [loadTourDescData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -48,17 +38,19 @@ function EditDesc({ tourId }) {
   };
 
   const handleSubmit = async () => {
-    try {
-      const response = await axios.patch(
-        `${baseURL}/descs/${tourId}`,
-        formData
-      ); // Use the PATCH method and the baseURL
-      console.log("Data submitted:", response.data);
+    const { success, status, data, message } = await updateTourDesc(tourId, formData);
+
+    if (success) {
+      console.log("Data submitted:", data);
       alert("Description saved successfully!");
-      // No need to reset the form after successful submission for editing
-    } catch (error) {
-      console.error("Error submitting form:", error);
-      // Handle errors as before
+    } else {
+      if (status) {
+        console.error('Server responded with error status:', status);
+        const errorMessage = data ? JSON.stringify(data) : message;
+        alert(`Server responded with an error: ${status}. ${errorMessage}`);
+      } else {
+        alert(message || 'An error occurred during update.');
+      }
     }
   };
 

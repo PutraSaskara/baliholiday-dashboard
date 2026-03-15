@@ -4,11 +4,11 @@
 
 import Link from "next/link";
 import React from "react";
-import { useAuth } from "../contexts/AuthContext";
+import useAuthStore from "../stores/useAuthStore";
 
 
 function Navbar() {
-  const { isAuthenticated, handleLogout } = useAuth();
+  const { isAuthenticated, logout: handleLogout } = useAuthStore();
 
   if (!isAuthenticated) {
     // Don't render Navbar if not authenticated
@@ -55,18 +55,18 @@ function Navbar() {
             </li>
           </ul>
           <button
-                onClick={handleLogout}
-                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
-              >
-                Logout
-              </button>
+            onClick={handleLogout}
+            className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
+          >
+            Logout
+          </button>
         </div>
       </div>
       {/* Navbar for small screens */}
       <div className="bg-[#344955] w-full flex lg:hidden">
         <div className="m-auto">
           <ul className="text-white flex justify-center items-center mt-4">
-          
+
             <li className="mx-2 mb-2">
               <Link
                 href="/"

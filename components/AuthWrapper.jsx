@@ -2,67 +2,38 @@
 
 'use client';
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import LoginForm from "./LoginForm";
+import useAuthStore from "../stores/useAuthStore";
 
 export default function AuthWrapper({ children }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(null);
+  const { isAuthenticated, checkAuth, logout } = useAuthStore();
   const router = useRouter();
 
   useEffect(() => {
-    const checkAuth = async () => {
-      console.log('Checking authentication status...');
-      try {
-        const res = await fetch('/api/check-auth', {
-          method: 'GET',
-          credentials: 'include',
-        });
-        console.log('Check auth response status:', res.status);
-        if (res.ok) {
-          const data = await res.json();
-          console.log('Authenticated:', data.authenticated);
-          setIsAuthenticated(data.authenticated);
-        } else {
-          console.log('Not authenticated');
-          setIsAuthenticated(false);
-        }
-      } catch (error) {
-        console.error('Error checking authentication:', error);
-        setIsAuthenticated(false);
-      }
-    };
-
+    // Check auth on mount
     checkAuth();
-  }, [router]);
+  }, [checkAuth]);
+
+  // Optionally handle redirect if not authenticated when it's determined
+  useEffect(() => {
+    if (isAuthenticated === false && router.pathname !== '/login') {
+      // router.push('/login'); // AuthWrapper renders LoginForm anyway
+    }
+  }, [isAuthenticated, router]);
 
   const handleLoginSuccess = () => {
     console.log('Login successful');
-    setIsAuthenticated(true);
     router.push('/'); // Redirect to dashboard or home page
   };
 
   const handleLogout = async () => {
     console.log('Attempting to log out...');
-    try {
-      const res = await fetch('/api/logout', {
-        method: 'POST',
-        credentials: 'include',
-      });
-
-      console.log('Logout response status:', res.status);
-
-      if (res.ok) {
-        console.log('Logout successful');
-        setIsAuthenticated(false);
-        router.push('/login'); // Redirect to login page
-      } else {
-        console.error('Failed to logout');
-        const errorData = await res.json();
-        console.error('Error message:', errorData.message);
-      }
-    } catch (error) {
-      console.error('Logout error:', error);
+    const success = await logout();
+    if (success) {
+      console.log('Logout successful');
+      router.push('/login'); // Redirect to login page
     }
   };
 

@@ -1,8 +1,8 @@
 import React from "react";
-import { useAuth } from "../contexts/AuthContext";
+import useAuthStore from "../stores/useAuthStore";
 
 function Logout() {
-  const { isAuthenticated, handleLogout } = useAuth();
+  const { isAuthenticated, logout: handleLogout } = useAuthStore();
   if (!isAuthenticated) {
     // Don't render Navbar if not authenticated
     return null;

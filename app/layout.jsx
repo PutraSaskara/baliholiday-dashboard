@@ -2,7 +2,6 @@
 
 import { Inter } from "next/font/google";
 import "./globals.css";
-import AuthProvider from "../contexts/AuthContext";
 import Navbar from "../components/Navbar";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -16,11 +15,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={inter.className}>
-        <AuthProvider>
-          {/** Conditionally render Navbar only if authenticated */}
-          <Navbar />
-          {children}
-        </AuthProvider>
+        {/** Conditionally render Navbar only if authenticated */}
+        <Navbar />
+        {children}
       </body>
     </html>
   );

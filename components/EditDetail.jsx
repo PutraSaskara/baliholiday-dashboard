@@ -1,8 +1,7 @@
 "use client";
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
-import axios from 'axios';
-import baseURL from '@/apiConfig'; // Import the baseURL
+import { useState, useEffect, useCallback } from 'react';
+import useTourStore from '../stores/useTourStore';
 
 function EditDetail({ tourDetailId }) {
   const [formData, setFormData] = useState({
@@ -18,33 +17,21 @@ function EditDetail({ tourDetailId }) {
     tourId: ''
   });
 
-  const [tourOptions, setTourOptions] = useState([]); // State to store fetched tour options
+  const { tours: tourOptions, fetchTours, fetchTourDetail, updateTourDetail } = useTourStore();
 
   useEffect(() => {
-    // Fetch tour options from the backend when the component mounts
-    const fetchTours = async () => {
-      try {
-        const response = await axios.get(`${baseURL}/tours`); // Fetch tours from the backend
-        const lastFiveTours = response.data.slice(-5); // Get the last 5 tours
-        setTourOptions(lastFiveTours); // Update tour options state
-      } catch (error) {
-        console.error('Error fetching tours:', error);
-      }
-    };
+    fetchTours();
+  }, [fetchTours]);
 
-    // Fetch tour detail data when the component mounts
-    const fetchTourDetail = async () => {
-      try {
-        const response = await axios.get(`${baseURL}/details/${tourDetailId}`); // Fetch tour detail data by ID
-        setFormData(response.data); // Update form data with fetched data
-      } catch (error) {
-        console.error('Error fetching tour detail:', error);
-      }
-    };
+  const loadTourDetailData = useCallback(async () => {
+    if (!tourDetailId) return;
+    const data = await fetchTourDetail(tourDetailId);
+    if (data) Object.keys(data).length > 0 && setFormData(data);
+  }, [tourDetailId, fetchTourDetail]);
 
-    fetchTours(); // Call the fetchTours function
-    fetchTourDetail(); // Call the fetchTourDetail function
-  }, [tourDetailId]);
+  useEffect(() => {
+    loadTourDetailData();
+  }, [loadTourDetailData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -55,15 +42,19 @@ function EditDetail({ tourDetailId }) {
   };
 
   const handleSubmit = async () => {
-    try {
-      const response = await axios.patch(`${baseURL}/details/${tourDetailId}`, formData); // Use the baseURL and PATCH method
-      console.log('Data updated:', response.data);
-      
-      // Show alert for successful update
+    const { success, status, data, message } = await updateTourDetail(tourDetailId, formData);
+
+    if (success) {
+      console.log('Data updated:', data);
       alert('Tour details successfully updated.');
-    } catch (error) {
-      console.error('Error updating tour detail:', error);
-      // Handle error as needed
+    } else {
+      if (status) {
+        console.error('Server responded with error status:', status);
+        const errorMessage = data ? JSON.stringify(data) : message;
+        alert(`Server responded with an error: ${status}. ${errorMessage}`);
+      } else {
+        alert(message || 'An error occurred during update.');
+      }
     }
   };
 
@@ -98,7 +89,7 @@ function EditDetail({ tourDetailId }) {
 
         <Link href={'/edit-tour-package/edit-tour-desc'} className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mb-10">
           Next to Edit Tour Description
-        </Link>     
+        </Link>
       </div>
 
     </div>

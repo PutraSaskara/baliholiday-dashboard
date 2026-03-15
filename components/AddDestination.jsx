@@ -2,8 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import axios from "axios";
-import baseURL from "@/apiConfig";
+import useDestinationStore from "../stores/useDestinationStore";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
@@ -17,6 +16,8 @@ function AddDestination() {
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null); // State for image preview
   const router = useRouter();
+
+  const { createDestination } = useDestinationStore();
 
   // Cleanup the object URL to prevent memory leaks
   useEffect(() => {
@@ -68,19 +69,13 @@ function AddDestination() {
     data.append("lng", formData.lng);
     data.append("image", image);
 
-    try {
-      const response = await axios.post(`${baseURL}/api/destinations`, data, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+    const { success, message } = await createDestination(data);
+
+    if (success) {
       alert("Destination added successfully!");
       router.push("/destinations");
-    } catch (error) {
-      console.error("Error adding destination:", error);
-      if (error.response && error.response.data && error.response.data.message) {
-        alert(`Failed to add destination: ${error.response.data.message}`);
-      } else {
-        alert("Failed to add destination.");
-      }
+    } else {
+      alert(message || "Failed to add destination.");
     }
   };
 

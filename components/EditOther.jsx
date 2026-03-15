@@ -1,10 +1,9 @@
 "use client"
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
-import axios from 'axios';
-import baseURL from '@/apiConfig'; // Import the baseURL
+import { useState, useEffect, useCallback } from 'react';
+import useTourStore from '../stores/useTourStore';
 
-function AddOther({Id}) {
+function EditOther({ Id }) {
   const [formData1, setFormData1] = useState({
     include1: '',
     include2: '',
@@ -23,50 +22,38 @@ function AddOther({Id}) {
     tourId: ''
   });
 
-  const [tourOptions, setTourOptions] = useState([]); // State to store fetched tour options
+  const {
+    tours: tourOptions,
+    fetchTours,
+    fetchTourInclude,
+    fetchTourNotInclude,
+    fetchTourCancellation,
+    updateTourInclude,
+    updateTourNotInclude,
+    updateTourCancellation
+  } = useTourStore();
 
   useEffect(() => {
-    // Fetch tour options from the backend when the component mounts
-    const fetchTours = async () => {
-      try {
-        const response = await axios.get(`${baseURL}/tours`); // Fetch tours from the backend
-        const lastFiveTours = response.data.slice(-5); // Get the last 5 tours
-        setTourOptions(lastFiveTours); // Update tour options state
-      } catch (error) {
-        console.error('Error fetching tours:', error);
-      }
-    };
-    const fetchTourInclude = async () => {
-        try {
-          const response = await axios.get(`${baseURL}/includes/${Id}`); // Fetch tour detail data by ID
-          setFormData1(response.data); // Update form data with fetched data
-        } catch (error) {
-          console.error('Error fetching tour detail:', error);
-        }
-      };
-    const fetchTourNotInclude = async () => {
-        try {
-          const response = await axios.get(`${baseURL}/not-includes/${Id}`); // Fetch tour detail data by ID
-          setFormData2(response.data); // Update form data with fetched data
-        } catch (error) {
-          console.error('Error fetching tour detail:', error);
-        }
-      };
-    const fetchTourCancellation = async () => {
-        try {
-          const response = await axios.get(`${baseURL}/cancellations/${Id}`); // Fetch tour detail data by ID
-          setFormData3(response.data); // Update form data with fetched data
-        } catch (error) {
-          console.error('Error fetching tour detail:', error);
-        }
-      };
-  
-      fetchTours();
-  
-      fetchTourInclude(); // Call the fetchTours function
-      fetchTourNotInclude(); // Call the fetchTours function
-      fetchTourCancellation(); // Call the fetchTours function
-  }, [Id]);
+    fetchTours();
+  }, [fetchTours]);
+
+  const loadData = useCallback(async () => {
+    if (!Id) return;
+
+    const includeData = await fetchTourInclude(Id);
+    if (includeData && Object.keys(includeData).length > 0) setFormData1(includeData);
+
+    const notIncludeData = await fetchTourNotInclude(Id);
+    if (notIncludeData && Object.keys(notIncludeData).length > 0) setFormData2(notIncludeData);
+
+    const cancelData = await fetchTourCancellation(Id);
+    if (cancelData && Object.keys(cancelData).length > 0) setFormData3(cancelData);
+
+  }, [Id, fetchTourInclude, fetchTourNotInclude, fetchTourCancellation]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -83,84 +70,51 @@ function AddOther({Id}) {
       [name]: value
     }));
   };
-  
+
   const handleSubmit1 = async () => {
-    try {
-      const response = await axios.patch(`${baseURL}/includes/${Id}`, formData1); // Use the baseURL
-      console.log('Data submitted:', response.data);
-      
-      // Show alert for successful submission
-      alert('Tour details successfully saved.');
-    } catch (error) {
-      console.error('Error submitting form:', error);
-      if (error.response) {
-        // The request was made and the server responded with a status code that falls out of the range of 2xx
-        console.error('Server responded with error status:', error.response.status);
-        console.error('Error message from server:', error.response.data);
-        const errorMessage = JSON.stringify(error.response.data);
-        alert(`Server responded with an error: ${error.response.status}. ${errorMessage}`);
-      } else if (error.request) {
-        // The request was made but no response was received
-        console.error('No response received:', error.request);
-        alert('No response received from the server. Please try again later.');
+    const { success, status, data, message } = await updateTourInclude(Id, formData1);
+    if (success) {
+      console.log('Data submitted:', data);
+      alert('Tour includes successfully updated.');
+    } else {
+      if (status) {
+        console.error('Server responded with error status:', status);
+        const errorMessage = data ? JSON.stringify(data) : message;
+        alert(`Server responded with an error: ${status}. ${errorMessage}`);
       } else {
-        // Something happened in setting up the request that triggered an error
-        console.error('Error setting up the request:', error.message);
-        alert(`An error occurred: ${error.message}`);
+        alert(message || 'An error occurred during update.');
       }
     }
   };
 
   const handleSubmit2 = async () => {
-    try {
-      const response = await axios.patch(`${baseURL}/not-includes/${Id}`, formData2); // Use the baseURL
-      console.log('Data submitted:', response.data);
-      
-      // Show alert for successful submission
-      alert('Tour details successfully saved.');
-    } catch (error) {
-      console.error('Error submitting form:', error);
-      if (error.response) {
-        // The request was made and the server responded with a status code that falls out of the range of 2xx
-        console.error('Server responded with error status:', error.response.status);
-        console.error('Error message from server:', error.response.data);
-        const errorMessage = JSON.stringify(error.response.data);
-        alert(`Server responded with an error: ${error.response.status}. ${errorMessage}`);
-      } else if (error.request) {
-        // The request was made but no response was received
-        console.error('No response received:', error.request);
-        alert('No response received from the server. Please try again later.');
+    const { success, status, data, message } = await updateTourNotInclude(Id, formData2);
+    if (success) {
+      console.log('Data submitted:', data);
+      alert('Tour not includes successfully updated.');
+    } else {
+      if (status) {
+        console.error('Server responded with error status:', status);
+        const errorMessage = data ? JSON.stringify(data) : message;
+        alert(`Server responded with an error: ${status}. ${errorMessage}`);
       } else {
-        // Something happened in setting up the request that triggered an error
-        console.error('Error setting up the request:', error.message);
-        alert(`An error occurred: ${error.message}`);
+        alert(message || 'An error occurred during update.');
       }
     }
   };
 
   const handleSubmit3 = async () => {
-    try {
-      const response = await axios.patch(`${baseURL}/cancellation/${Id}`, formData3); // Use the baseURL
-      console.log('Data submitted:', response.data);
-      
-      // Show alert for successful submission
-      alert('Tour details successfully saved.');
-    } catch (error) {
-      console.error('Error submitting form:', error);
-      if (error.response) {
-        // The request was made and the server responded with a status code that falls out of the range of 2xx
-        console.error('Server responded with error status:', error.response.status);
-        console.error('Error message from server:', error.response.data);
-        const errorMessage = JSON.stringify(error.response.data);
-        alert(`Server responded with an error: ${error.response.status}. ${errorMessage}`);
-      } else if (error.request) {
-        // The request was made but no response was received
-        console.error('No response received:', error.request);
-        alert('No response received from the server. Please try again later.');
+    const { success, status, data, message } = await updateTourCancellation(Id, formData3);
+    if (success) {
+      console.log('Data submitted:', data);
+      alert('Tour cancellation successfully updated.');
+    } else {
+      if (status) {
+        console.error('Server responded with error status:', status);
+        const errorMessage = data ? JSON.stringify(data) : message;
+        alert(`Server responded with an error: ${status}. ${errorMessage}`);
       } else {
-        // Something happened in setting up the request that triggered an error
-        console.error('Error setting up the request:', error.message);
-        alert(`An error occurred: ${error.message}`);
+        alert(message || 'An error occurred during update.');
       }
     }
   };
@@ -225,7 +179,7 @@ function AddOther({Id}) {
       ))}
 
       <div className='flex justify-between'>
-      <button type="button" onClick={handleSubmit3} className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mb-10">Save Cancellation</button>
+        <button type="button" onClick={handleSubmit3} className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mb-10">Save Cancellation</button>
         <Link href={'/'} className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mb-10">
           Back to Dashboard
         </Link>
@@ -234,4 +188,4 @@ function AddOther({Id}) {
   );
 }
 
-export default AddOther;
+export default EditOther;

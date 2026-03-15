@@ -2,8 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import axios from "axios";
-import baseURL from "@/apiConfig";
+import useAreaStore from "../stores/useAreaStore";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
@@ -18,6 +17,8 @@ function AddArea() {
   const [imagePreview, setImagePreview] = useState(null); // State for image preview
   const [errors, setErrors] = useState({}); // State for form errors
   const router = useRouter();
+
+  const { createArea } = useAreaStore();
 
   // Cleanup the object URL to prevent memory leaks
   useEffect(() => {
@@ -86,33 +87,23 @@ function AddArea() {
     data.append("lng", formData.lng);
     data.append("image", image);
 
-    try {
-      const response = await axios.post(`${baseURL}/api/pickup-areas`, data, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      // Optionally, you can use a toast notification here instead of alert
+    const { success, status, data: responseData, message } = await createArea(data);
+
+    if (success) {
       alert("Pickup Area added successfully!");
       router.push("/pickup-areas");
-    } catch (error) {
-      console.error("Error adding pickup area:", error);
-      if (error.response && error.response.data) {
-        if (error.response.status === 400) {
-          // Handle validation errors from the server
-          const serverErrors = {};
-          error.response.data.errors.forEach((err) => {
-            serverErrors[err.param] = err.msg;
-          });
-          setErrors(serverErrors);
-          alert("Please fix the highlighted errors and try again.");
-        } else if (error.response.status === 404) {
-          alert("Resource not found.");
-        } else {
-          alert("An error occurred. Please try again later.");
-        }
-      } else if (error.request) {
-        alert("No response received from the server. Please try again later.");
+    } else {
+      if (status === 400 && responseData && responseData.errors) {
+        const serverErrors = {};
+        responseData.errors.forEach((err) => {
+          serverErrors[err.param] = err.msg;
+        });
+        setErrors(serverErrors);
+        alert("Please fix the highlighted errors and try again.");
+      } else if (status === 404) {
+        alert("Resource not found.");
       } else {
-        alert("An error occurred. Please try again later.");
+        alert(message || "An error occurred. Please try again later.");
       }
     }
   };
@@ -130,9 +121,8 @@ function AddArea() {
             value={formData.name}
             onChange={handleChange}
             required
-            className={`w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 ${
-              errors.name ? "border-red-500 focus:ring-red-500" : "focus:ring-blue-500"
-            }`}
+            className={`w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 ${errors.name ? "border-red-500 focus:ring-red-500" : "focus:ring-blue-500"
+              }`}
             placeholder="Enter pickup area name"
           />
           {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
@@ -146,9 +136,8 @@ function AddArea() {
             value={formData.description}
             onChange={handleChange}
             required
-            className={`w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 resize-none ${
-              errors.description ? "border-red-500 focus:ring-red-500" : "focus:ring-blue-500"
-            }`}
+            className={`w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 resize-none ${errors.description ? "border-red-500 focus:ring-red-500" : "focus:ring-blue-500"
+              }`}
             placeholder="Enter pickup area description"
             cols={5}
             rows={6}
@@ -168,9 +157,8 @@ function AddArea() {
             onChange={handleChange}
             required
             step="any"
-            className={`w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 ${
-              errors.lat ? "border-red-500 focus:ring-red-500" : "focus:ring-blue-500"
-            }`}
+            className={`w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 ${errors.lat ? "border-red-500 focus:ring-red-500" : "focus:ring-blue-500"
+              }`}
             placeholder="Enter latitude"
           />
           {errors.lat && <p className="text-red-500 text-sm mt-1">{errors.lat}</p>}
@@ -186,9 +174,8 @@ function AddArea() {
             onChange={handleChange}
             required
             step="any"
-            className={`w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 ${
-              errors.lng ? "border-red-500 focus:ring-red-500" : "focus:ring-blue-500"
-            }`}
+            className={`w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 ${errors.lng ? "border-red-500 focus:ring-red-500" : "focus:ring-blue-500"
+              }`}
             placeholder="Enter longitude"
           />
           {errors.lng && <p className="text-red-500 text-sm mt-1">{errors.lng}</p>}
@@ -202,9 +189,8 @@ function AddArea() {
             accept="image/webp"
             onChange={handleImageChange}
             required
-            className={`w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 ${
-              errors.image ? "border-red-500 focus:ring-red-500" : "focus:ring-blue-500"
-            }`}
+            className={`w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 ${errors.image ? "border-red-500 focus:ring-red-500" : "focus:ring-blue-500"
+              }`}
           />
           {errors.image && <p className="text-red-500 text-sm mt-1">{errors.image}</p>}
           {/* Image Preview */}
