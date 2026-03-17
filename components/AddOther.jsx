@@ -19,8 +19,15 @@ function AddOther() {
   const [formData3, setFormData3] = useState({
     cancel1: '',
     cancel2: '',
+    cancel2: '',
     tourId: ''
   });
+  
+  const [isSaved1, setIsSaved1] = useState(false);
+  const [isSaved2, setIsSaved2] = useState(false);
+  const [isSaved3, setIsSaved3] = useState(false);
+  
+  const isAllSaved = isSaved1 && isSaved2 && isSaved3;
 
   const {
     tours: tourOptions,
@@ -55,6 +62,7 @@ function AddOther() {
     if (success) {
       console.log('Data submitted:', data);
       alert('Tour includes successfully saved.');
+      setIsSaved1(true);
       setFormData1({ include1: '', include2: '', include3: '', tourId: '' });
     } else {
       if (status) {
@@ -72,6 +80,7 @@ function AddOther() {
     if (success) {
       console.log('Data submitted:', data);
       alert('Tour not includes successfully saved.');
+      setIsSaved2(true);
       setFormData2({ notinclude1: '', notinclude2: '', notinclude3: '', tourId: '' });
     } else {
       if (status) {
@@ -89,6 +98,7 @@ function AddOther() {
     if (success) {
       console.log('Data submitted:', data);
       alert('Tour cancellation successfully saved.');
+      setIsSaved3(true);
       setFormData3({ cancel1: '', cancel2: '', tourId: '' });
     } else {
       if (status) {
@@ -162,9 +172,15 @@ function AddOther() {
 
       <div className='flex justify-between'>
         <button type="button" onClick={handleSubmit3} className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mb-10">Save Cancellation</button>
-        <Link href={'/'} className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mb-10">
-          Back to Dashboard
-        </Link>
+        {isAllSaved ? (
+          <Link href={'/'} className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mb-10">
+            Back to Dashboard
+          </Link>
+        ) : (
+          <button disabled className="px-5 py-2.5 text-sm font-medium text-white bg-gray-400 cursor-not-allowed rounded-lg text-center mb-10">
+            Back to Dashboard
+          </button>
+        )}
       </div>
     </div>
   );

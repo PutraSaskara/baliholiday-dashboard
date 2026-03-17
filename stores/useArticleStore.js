@@ -1,8 +1,7 @@
 'use client';
 
 import { create } from 'zustand';
-import axios from 'axios';
-import baseURL from '@/apiConfig';
+import { api, getAuthHeaders } from '@/apiConfig';
 
 const useArticleStore = create((set, get) => ({
     articles: [],
@@ -12,7 +11,7 @@ const useArticleStore = create((set, get) => ({
     fetchArticles: async () => {
         set({ loading: true, error: null });
         try {
-            const response = await axios.get(`${baseURL}/single-blog`);
+            const response = await api.get('/single-blog');
             set({ articles: response.data, loading: false });
         } catch (error) {
             console.error('Error fetching articles:', error);
@@ -23,7 +22,7 @@ const useArticleStore = create((set, get) => ({
     fetchArticleById: async (id) => {
         set({ loading: true, error: null });
         try {
-            const response = await axios.get(`${baseURL}/single-blog/${id}`);
+            const response = await api.get(`/single-blog/${id}`);
             set({ loading: false });
             return response.data;
         } catch (error) {
@@ -36,7 +35,10 @@ const useArticleStore = create((set, get) => ({
     createArticle: async (formData) => {
         set({ loading: true, error: null });
         try {
-            const response = await axios.post(`${baseURL}/single-blog`, formData);
+            const authHeaders = await getAuthHeaders();
+            const response = await api.post('/single-blog', formData, {
+                headers: { ...authHeaders },
+            });
             set({ loading: false });
             return { success: true, data: response.data };
         } catch (error) {
@@ -52,7 +54,10 @@ const useArticleStore = create((set, get) => ({
     updateArticle: async (id, formData) => {
         set({ loading: true, error: null });
         try {
-            const response = await axios.patch(`${baseURL}/single-blog/${id}`, formData);
+            const authHeaders = await getAuthHeaders();
+            const response = await api.patch(`/single-blog/${id}`, formData, {
+                headers: { ...authHeaders },
+            });
             set({ loading: false });
             return { success: response.status === 200, data: response.data };
         } catch (error) {
@@ -69,7 +74,7 @@ const useArticleStore = create((set, get) => ({
     _fetchSubEntity: async (endpoint) => {
         set({ loading: true, error: null });
         try {
-            const response = await axios.get(`${baseURL}/${endpoint}`);
+            const response = await api.get(`/${endpoint}`);
             set({ loading: false });
             return response.data;
         } catch (error) {
@@ -83,8 +88,14 @@ const useArticleStore = create((set, get) => ({
     _createSubEntity: async (endpoint, formData, isMultipart = false) => {
         set({ loading: true, error: null });
         try {
-            const config = isMultipart ? { headers: { "Content-Type": "multipart/form-data" } } : {};
-            const response = await axios.post(`${baseURL}/${endpoint}`, formData, config);
+            const authHeaders = await getAuthHeaders();
+            const config = {
+                headers: {
+                    ...authHeaders,
+                    ...(isMultipart ? { "Content-Type": "multipart/form-data" } : {}),
+                },
+            };
+            const response = await api.post(`/${endpoint}`, formData, config);
             set({ loading: false });
             return { success: true, data: response.data };
         } catch (error) {
@@ -99,8 +110,14 @@ const useArticleStore = create((set, get) => ({
     _updateSubEntity: async (endpoint, formData, isMultipart = false) => {
         set({ loading: true, error: null });
         try {
-            const config = isMultipart ? { headers: { "Content-Type": "multipart/form-data" } } : {};
-            const response = await axios.patch(`${baseURL}/${endpoint}`, formData, config);
+            const authHeaders = await getAuthHeaders();
+            const config = {
+                headers: {
+                    ...authHeaders,
+                    ...(isMultipart ? { "Content-Type": "multipart/form-data" } : {}),
+                },
+            };
+            const response = await api.patch(`/${endpoint}`, formData, config);
             set({ loading: false });
             return { success: response.status === 200, data: response.data };
         } catch (error) {
@@ -123,7 +140,10 @@ const useArticleStore = create((set, get) => ({
 
     deleteArticle: async (id) => {
         try {
-            await axios.delete(`${baseURL}/single-blog/${id}`);
+            const authHeaders = await getAuthHeaders();
+            await api.delete(`/single-blog/${id}`, {
+                headers: { ...authHeaders },
+            });
             set((state) => ({
                 articles: state.articles.filter((article) => article.id !== id),
             }));

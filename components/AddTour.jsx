@@ -14,6 +14,7 @@ function AddTour() {
     pricenote3: '',
     keywords: ''
   });
+  const [isSaved, setIsSaved] = useState(false);
 
   const { createTour } = useTourStore();
 
@@ -30,6 +31,7 @@ function AddTour() {
 
     if (success) {
       alert('Data saved successfully!');
+      setIsSaved(true);
       setFormData({
         title: '',
         price1: '',
@@ -90,9 +92,15 @@ function AddTour() {
       <div className='w-full flex justify-between'>
         <button type="button" onClick={handleSubmit} className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Save</button>
 
-        <Link href={'/add-tour-package/add-tour-detail'} className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-          Next to Add Tour Detail
-        </Link>
+        {isSaved ? (
+          <Link href={'/add-tour-package/add-tour-detail'} className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+            Next to Add Tour Detail
+          </Link>
+        ) : (
+          <button disabled className="px-5 py-2.5 text-sm font-medium text-white bg-gray-400 cursor-not-allowed rounded-lg text-center">
+            Next to Add Tour Detail
+          </button>
+        )}
       </div>
 
 

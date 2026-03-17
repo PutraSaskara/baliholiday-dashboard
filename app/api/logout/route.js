@@ -4,13 +4,13 @@ import { NextResponse } from 'next/server';
 import { serialize } from 'cookie';
 
 export async function POST() {
-  // Clear the 'auth' cookie by setting it to expire in the past
-  const cookie = serialize('auth', '', {
+  // Clear the JWT token cookie by setting it to expire immediately
+  const cookie = serialize('token', '', {
     httpOnly: true,
     path: '/',
-    expires: new Date(0), // Expire the cookie immediately
+    expires: new Date(0),
     sameSite: 'strict',
-    secure: process.env.NODE_ENV === 'production', // Set secure flag in production
+    secure: process.env.NODE_ENV === 'production',
   });
 
   return new NextResponse(

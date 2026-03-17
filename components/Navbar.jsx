@@ -3,12 +3,35 @@
 'use client';
 
 import Link from "next/link";
-import React from "react";
+import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
 import useAuthStore from "../stores/useAuthStore";
+import SessionTimer from "./SessionTimer";
 
 
 function Navbar() {
-  const { isAuthenticated, logout: handleLogout } = useAuthStore();
+  const { isAuthenticated, logout, checkAuth } = useAuthStore();
+  const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    if (isAuthenticated === null) {
+      checkAuth();
+    }
+  }, [checkAuth, isAuthenticated]);
+
+  const handleLogout = async () => {
+    const success = await logout();
+    if (success) {
+      router.push('/login');
+    }
+  };
+
+  // Atasi hydration mismatch & pastikan checkAuth selesai
+  if (!mounted || isAuthenticated === null) {
+    return null;
+  }
 
   if (!isAuthenticated) {
     // Don't render Navbar if not authenticated
@@ -54,12 +77,15 @@ function Navbar() {
               </Link>
             </li>
           </ul>
-          <button
-            onClick={handleLogout}
-            className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
-          >
-            Logout
-          </button>
+          <div className="flex items-center gap-4">
+            <SessionTimer />
+            <button
+              onClick={handleLogout}
+              className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
+            >
+              Logout
+            </button>
+          </div>
         </div>
       </div>
       {/* Navbar for small screens */}
@@ -90,6 +116,9 @@ function Navbar() {
               >
                 Add Tour Package
               </Link>
+            </li>
+            <li className="mx-2 mb-1 flex items-center">
+              <SessionTimer />
             </li>
             <li className="mx-2 mb-1">
               <button

@@ -1,6 +1,7 @@
 'use client';
 
 import { create } from 'zustand';
+import { clearTokenCache, fetchToken } from '@/apiConfig';
 
 const useAuthStore = create((set) => ({
     isAuthenticated: null,
@@ -14,6 +15,10 @@ const useAuthStore = create((set) => ({
             if (res.ok) {
                 const data = await res.json();
                 set({ isAuthenticated: data.authenticated });
+                // Pre-load the JWT token into cache
+                if (data.authenticated) {
+                    fetchToken();
+                }
                 return data.authenticated;
             } else {
                 set({ isAuthenticated: false });
@@ -36,14 +41,16 @@ const useAuthStore = create((set) => ({
 
             if (res.ok) {
                 set({ isAuthenticated: true });
+                // Pre-fetch the JWT token into cache after login
+                await fetchToken();
                 return { success: true };
             } else {
                 const data = await res.json();
-                return { success: false, message: data.message || 'Login failed' };
+                return { success: false, message: data.message || 'Login gagal' };
             }
         } catch (error) {
             console.error('Login error:', error);
-            return { success: false, message: 'An error occurred during login.' };
+            return { success: false, message: 'Terjadi kesalahan saat login.' };
         }
     },
 
@@ -56,6 +63,7 @@ const useAuthStore = create((set) => ({
 
             if (res.ok) {
                 set({ isAuthenticated: false });
+                clearTokenCache();
                 return true;
             } else {
                 console.error('Failed to logout');

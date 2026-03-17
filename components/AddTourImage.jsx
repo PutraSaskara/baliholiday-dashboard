@@ -13,6 +13,7 @@ function AddTourImage() {
   const [preview1, setPreview1] = useState("");
   const [preview2, setPreview2] = useState("");
   const [preview3, setPreview3] = useState("");
+  const [isSaved, setIsSaved] = useState(false);
 
   const { tours: tourOptions, fetchTours, createTourImage } = useTourStore();
 
@@ -86,6 +87,7 @@ function AddTourImage() {
 
       if (success) {
         console.log("Images uploaded successfully:", data);
+        setIsSaved(true);
         setTourId("");
         setImages1([]);
         setImages2([]);
@@ -198,10 +200,16 @@ function AddTourImage() {
         {error && <div className="max-w-fit bg-red-500 mt-3">Error: {error}</div>}
       </form>
       <div className="flex justify-between items-center">
-        <button type="submit" onClick={handleSubmit} className="bg-green-500 px-5 py-2 rounded-xl mt-10 mb-10 hover:bg-green-600">Upload Images</button>
-        <Link href={'/add-tour-package/add-other'} className="px-5 py-2.5  text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-          Next to Add Other Information
-        </Link>
+        <button type="submit" onClick={handleSubmit} className="bg-green-500 px-5 py-2 rounded-xl mt-10 mb-10 hover:bg-green-600 border border-green-500 text-white">Upload Images</button>
+        {isSaved ? (
+          <Link href={'/add-tour-package/add-other'} className="px-5 py-2.5  text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+            Next to Add Other Information
+          </Link>
+        ) : (
+          <button disabled className="px-5 py-2.5 text-sm font-medium text-white bg-gray-400 cursor-not-allowed rounded-lg text-center">
+            Next to Add Other Information
+          </button>
+        )}
       </div>
     </div>
   );

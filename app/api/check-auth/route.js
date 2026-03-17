@@ -6,11 +6,9 @@ import { parse } from 'cookie';
 export async function GET(request) {
   const cookieHeader = request.headers.get('cookie') || '';
   const cookies = parse(cookieHeader);
-  const isAuthenticated = cookies.auth === 'true';
+  const token = cookies.token;
 
-  console.log('Check-auth: isAuthenticated =', isAuthenticated); // Log auth status
-
-  if (isAuthenticated) {
+  if (token) {
     return NextResponse.json({ authenticated: true });
   } else {
     return NextResponse.json({ authenticated: false }, { status: 401 });

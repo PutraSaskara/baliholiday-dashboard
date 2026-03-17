@@ -3,25 +3,49 @@
 import { NextResponse } from 'next/server';
 import { serialize } from 'cookie';
 
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5000';
+
 export async function POST(request) {
-  const { username, password } = await request.json();
+  try {
+    const { username, password } = await request.json();
 
-  // Define your valid credentials
-  const VALID_USERNAME = process.env.VALID_USERNAME;
-  const VALID_PASSWORD = process.env.VALID_PASSWORD;
+    // Proxy login request to backend Express.js server
+    const backendRes = await fetch(`${BACKEND_URL}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
 
-  if (username === VALID_USERNAME && password === VALID_PASSWORD) {
-    // Create a cookie named 'auth' with value 'true'
-    const cookie = serialize('auth', 'true', {
+    const data = await backendRes.json();
+
+    if (!backendRes.ok) {
+      return NextResponse.json(
+        { message: data.message || 'Login gagal' },
+        { status: backendRes.status }
+      );
+    }
+
+    // Extract JWT token from backend response
+    const token = data.token;
+
+    if (!token) {
+      return NextResponse.json(
+        { message: 'Token tidak diterima dari server' },
+        { status: 500 }
+      );
+    }
+
+    // Store JWT in httpOnly cookie
+    const cookie = serialize('token', token, {
       httpOnly: true,
       path: '/',
-      maxAge: 60 * 60, // 1 hour in seconds
+      maxAge: 60 * 60, // 1 hour (match backend JWT expiry)
       sameSite: 'strict',
-      secure: process.env.NODE_ENV === 'production', // Set secure flag in production
+      secure: process.env.NODE_ENV === 'production',
     });
 
     return new NextResponse(
-      JSON.stringify({ message: 'Login successful' }),
+      JSON.stringify({ message: 'Login berhasil' }),
       {
         status: 200,
         headers: {
@@ -30,10 +54,11 @@ export async function POST(request) {
         },
       }
     );
-  } else {
-    return new NextResponse(
-      JSON.stringify({ message: 'Invalid credentials' }),
-      { status: 401, headers: { 'Content-Type': 'application/json' } }
+  } catch (error) {
+    console.error('Login proxy error:', error);
+    return NextResponse.json(
+      { message: 'Terjadi kesalahan pada server' },
+      { status: 500 }
     );
   }
 }

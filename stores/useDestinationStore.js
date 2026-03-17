@@ -1,8 +1,7 @@
 'use client';
 
 import { create } from 'zustand';
-import axios from 'axios';
-import baseURL from '@/apiConfig';
+import { api, getAuthHeaders } from '@/apiConfig';
 
 const useDestinationStore = create((set, get) => ({
     destinations: [],
@@ -14,7 +13,7 @@ const useDestinationStore = create((set, get) => ({
     fetchDestinations: async (page = 1) => {
         set({ loading: true, error: null });
         try {
-            const response = await axios.get(`${baseURL}/api/destinations`, {
+            const response = await api.get('/api/destinations', {
                 params: { page, limit: 10 },
             });
             set({
@@ -32,7 +31,7 @@ const useDestinationStore = create((set, get) => ({
     fetchDestinationById: async (id) => {
         set({ loading: true, error: null });
         try {
-            const response = await axios.get(`${baseURL}/api/destinations/${id}`);
+            const response = await api.get(`/api/destinations/${id}`);
             set({ loading: false, error: null });
             return response.data;
         } catch (error) {
@@ -49,7 +48,7 @@ const useDestinationStore = create((set, get) => ({
 
         set({ loading: true, error: null });
         try {
-            const response = await axios.get(`${baseURL}/api/destinations/search`, {
+            const response = await api.get('/api/destinations/search', {
                 params: { query },
             });
             set({
@@ -67,8 +66,9 @@ const useDestinationStore = create((set, get) => ({
     createDestination: async (formData) => {
         set({ loading: true, error: null });
         try {
-            const response = await axios.post(`${baseURL}/api/destinations`, formData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
+            const authHeaders = await getAuthHeaders();
+            const response = await api.post('/api/destinations', formData, {
+                headers: { ...authHeaders, 'Content-Type': 'multipart/form-data' },
             });
             set({ loading: false });
             return { success: true, data: response.data };
@@ -85,8 +85,9 @@ const useDestinationStore = create((set, get) => ({
     updateDestination: async (id, formData) => {
         set({ loading: true, error: null });
         try {
-            const response = await axios.patch(`${baseURL}/api/destinations/${id}`, formData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
+            const authHeaders = await getAuthHeaders();
+            const response = await api.patch(`/api/destinations/${id}`, formData, {
+                headers: { ...authHeaders, 'Content-Type': 'multipart/form-data' },
             });
             set({ loading: false });
             return { success: response.status === 200 };
@@ -99,7 +100,10 @@ const useDestinationStore = create((set, get) => ({
 
     deleteDestination: async (id) => {
         try {
-            await axios.delete(`${baseURL}/destinations/${id}`);
+            const authHeaders = await getAuthHeaders();
+            await api.delete(`/destinations/${id}`, {
+                headers: { ...authHeaders },
+            });
             const { destinations, currentPage } = get();
             if (destinations.length === 1 && currentPage > 1) {
                 get().fetchDestinations(currentPage - 1);

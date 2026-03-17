@@ -27,6 +27,7 @@ function AddArticleParagrafs() {
     Conclusion: '',
     blogId: ''
   });
+  const [isSaved, setIsSaved] = useState(false);
 
   const { articles: tourOptions, fetchArticles, createArticleParagraf } = useArticleStore();
 
@@ -48,6 +49,7 @@ function AddArticleParagrafs() {
     if (success) {
       console.log('Data submitted:', data);
       alert('Article paragraph saved successfully!');
+      setIsSaved(true);
       setFormData({
         paragraf1: '',
         titleparagraf2: '',
@@ -131,9 +133,15 @@ function AddArticleParagrafs() {
       <div className='flex justify-between'>
         <button type="button" onClick={handleSubmit} className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mb-10">Save</button>
 
-        <Link href={'/add-article/add-article-images'} className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mb-10">
-          Next to Add Article Image
-        </Link>
+        {isSaved ? (
+          <Link href={'/add-article/add-article-images'} className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mb-10">
+            Next to Add Article Image
+          </Link>
+        ) : (
+          <button disabled className="px-5 py-2.5 text-sm font-medium text-white bg-gray-400 cursor-not-allowed rounded-lg text-center mb-10">
+            Next to Add Article Image
+          </button>
+        )}
       </div>
 
     </div>

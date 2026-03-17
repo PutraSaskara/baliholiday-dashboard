@@ -1,8 +1,7 @@
 'use client';
 
 import { create } from 'zustand';
-import axios from 'axios';
-import baseURL from '@/apiConfig';
+import { api, getAuthHeaders } from '@/apiConfig';
 
 const useAreaStore = create((set, get) => ({
     areas: [],
@@ -14,7 +13,7 @@ const useAreaStore = create((set, get) => ({
     fetchAreas: async (page = 1) => {
         set({ loading: true, error: null });
         try {
-            const response = await axios.get(`${baseURL}/api/pickup-areas`, {
+            const response = await api.get('/api/pickup-areas', {
                 params: { page, limit: 10 },
             });
             set({
@@ -32,7 +31,7 @@ const useAreaStore = create((set, get) => ({
     fetchAreaById: async (id) => {
         set({ loading: true, error: null });
         try {
-            const response = await axios.get(`${baseURL}/api/pickup-areas/${id}`);
+            const response = await api.get(`/api/pickup-areas/${id}`);
             set({ loading: false });
             return response.data;
         } catch (error) {
@@ -49,7 +48,7 @@ const useAreaStore = create((set, get) => ({
 
         set({ loading: true, error: null });
         try {
-            const response = await axios.get(`${baseURL}/api/pickup-areas/search`, {
+            const response = await api.get('/api/pickup-areas/search', {
                 params: { query },
             });
             set({
@@ -67,8 +66,9 @@ const useAreaStore = create((set, get) => ({
     createArea: async (formData) => {
         set({ loading: true, error: null });
         try {
-            const response = await axios.post(`${baseURL}/api/pickup-areas`, formData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
+            const authHeaders = await getAuthHeaders();
+            const response = await api.post('/api/pickup-areas', formData, {
+                headers: { ...authHeaders, 'Content-Type': 'multipart/form-data' },
             });
             set({ loading: false });
             return { success: true, data: response.data };
@@ -85,8 +85,9 @@ const useAreaStore = create((set, get) => ({
     updateArea: async (id, formData) => {
         set({ loading: true, error: null });
         try {
-            const response = await axios.patch(`${baseURL}/api/pickup-areas/${id}`, formData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
+            const authHeaders = await getAuthHeaders();
+            const response = await api.patch(`/api/pickup-areas/${id}`, formData, {
+                headers: { ...authHeaders, 'Content-Type': 'multipart/form-data' },
             });
             set({ loading: false });
             return { success: response.status === 200 };
@@ -99,7 +100,10 @@ const useAreaStore = create((set, get) => ({
 
     deleteArea: async (id) => {
         try {
-            await axios.delete(`${baseURL}/api/pickup-areas/${id}`);
+            const authHeaders = await getAuthHeaders();
+            await api.delete(`/api/pickup-areas/${id}`, {
+                headers: { ...authHeaders },
+            });
             const { areas, currentPage } = get();
             // If last item on page, go to previous page
             if (areas.length === 1 && currentPage > 1) {

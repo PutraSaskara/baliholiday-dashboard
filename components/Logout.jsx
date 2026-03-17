@@ -1,22 +1,31 @@
+'use client';
+
 import React from "react";
+import { useRouter } from "next/navigation";
 import useAuthStore from "../stores/useAuthStore";
 
 function Logout() {
-  const { isAuthenticated, logout: handleLogout } = useAuthStore();
+  const { isAuthenticated, logout } = useAuthStore();
+  const router = useRouter();
+
   if (!isAuthenticated) {
-    // Don't render Navbar if not authenticated
     return null;
   }
 
+  const handleLogout = async () => {
+    const success = await logout();
+    if (success) {
+      router.push('/login');
+    }
+  };
+
   return (
-    <div>
-      <button
-        onClick={handleLogout}
-        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
-      >
-        Logout
-      </button>
-    </div>
+    <button
+      onClick={handleLogout}
+      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
+    >
+      Logout
+    </button>
   );
 }
 

@@ -1,8 +1,7 @@
 'use client';
 
 import { create } from 'zustand';
-import axios from 'axios';
-import baseURL from '@/apiConfig';
+import { api, getAuthHeaders } from '@/apiConfig';
 
 const useTourStore = create((set, get) => ({
     tours: [],
@@ -12,7 +11,7 @@ const useTourStore = create((set, get) => ({
     fetchTours: async () => {
         set({ loading: true, error: null });
         try {
-            const response = await axios.get(`${baseURL}/tours`);
+            const response = await api.get('/tours');
             set({ tours: response.data, loading: false });
         } catch (error) {
             console.error('Error fetching tours:', error);
@@ -23,7 +22,7 @@ const useTourStore = create((set, get) => ({
     fetchTourById: async (id) => {
         set({ loading: true, error: null });
         try {
-            const response = await axios.get(`${baseURL}/tourssimple/${id}`);
+            const response = await api.get(`/tourssimple/${id}`);
             set({ loading: false });
             return response.data;
         } catch (error) {
@@ -36,7 +35,10 @@ const useTourStore = create((set, get) => ({
     createTour: async (formData) => {
         set({ loading: true, error: null });
         try {
-            const response = await axios.post(`${baseURL}/tours`, formData);
+            const authHeaders = await getAuthHeaders();
+            const response = await api.post('/tours', formData, {
+                headers: { ...authHeaders },
+            });
             set({ loading: false });
             return { success: true, data: response.data };
         } catch (error) {
@@ -54,7 +56,10 @@ const useTourStore = create((set, get) => ({
     updateTour: async (id, formData) => {
         set({ loading: true, error: null });
         try {
-            const response = await axios.patch(`${baseURL}/tours/${id}`, formData);
+            const authHeaders = await getAuthHeaders();
+            const response = await api.patch(`/tours/${id}`, formData, {
+                headers: { ...authHeaders },
+            });
             set({ loading: false });
             return { success: response.status === 200, data: response.data };
         } catch (error) {
@@ -70,7 +75,7 @@ const useTourStore = create((set, get) => ({
     _fetchSubEntity: async (endpoint) => {
         set({ loading: true, error: null });
         try {
-            const response = await axios.get(`${baseURL}/${endpoint}`);
+            const response = await api.get(`/${endpoint}`);
             set({ loading: false });
             return response.data;
         } catch (error) {
@@ -84,8 +89,14 @@ const useTourStore = create((set, get) => ({
     _createSubEntity: async (endpoint, formData, isMultipart = false) => {
         set({ loading: true, error: null });
         try {
-            const config = isMultipart ? { headers: { "Content-Type": "multipart/form-data" } } : {};
-            const response = await axios.post(`${baseURL}/${endpoint}`, formData, config);
+            const authHeaders = await getAuthHeaders();
+            const config = {
+                headers: {
+                    ...authHeaders,
+                    ...(isMultipart ? { "Content-Type": "multipart/form-data" } : {}),
+                },
+            };
+            const response = await api.post(`/${endpoint}`, formData, config);
             set({ loading: false });
             return { success: true, data: response.data };
         } catch (error) {
@@ -100,8 +111,14 @@ const useTourStore = create((set, get) => ({
     _updateSubEntity: async (endpoint, formData, isMultipart = false) => {
         set({ loading: true, error: null });
         try {
-            const config = isMultipart ? { headers: { "Content-Type": "multipart/form-data" } } : {};
-            const response = await axios.patch(`${baseURL}/${endpoint}`, formData, config);
+            const authHeaders = await getAuthHeaders();
+            const config = {
+                headers: {
+                    ...authHeaders,
+                    ...(isMultipart ? { "Content-Type": "multipart/form-data" } : {}),
+                },
+            };
+            const response = await api.patch(`/${endpoint}`, formData, config);
             set({ loading: false });
             return { success: response.status === 200, data: response.data };
         } catch (error) {
@@ -149,7 +166,10 @@ const useTourStore = create((set, get) => ({
 
     deleteTour: async (id) => {
         try {
-            await axios.delete(`${baseURL}/tours/${id}`);
+            const authHeaders = await getAuthHeaders();
+            await api.delete(`/tours/${id}`, {
+                headers: { ...authHeaders },
+            });
             // Remove from local state instead of refetching
             set((state) => ({
                 tours: state.tours.filter((tour) => tour.id !== id),
