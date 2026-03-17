@@ -39,99 +39,51 @@ function Navbar() {
   }
 
   return (
-    <>
-      {/* Sidebar for large screens */}
-      <div className="bg-[#344955] h-[100px]  w-full hidden lg:flex pl-1 relative">
-        <div className="m-auto w-[100%] px-10 flex items-center justify-between">
-          <ul className="text-white flex left-5 items-center justify-center">
-            {/* <li className="mb-4">
-              <button
-                onClick={handleLogout}
-                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
-              >
-                Logout
-              </button>
-            </li> */}
-            <li className="mb-2">
-              <Link
-                href="/"
-                className="text-white bg-gradient-to-r from-teal-400 via-teal-500 to-teal-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-teal-300 dark:focus:ring-white shadow-lg shadow-teal-500/50 dark:shadow-lg dark:shadow-teal-800/80 font-medium rounded-lg text-[12px] px-2 py-2.5 text-center me-2"
-              >
-                Dashboard
-              </Link>
-            </li>
-            <li className="mb-2">
-              <Link
-                href="/add-article"
-                className="text-white bg-gradient-to-r from-teal-400 via-teal-500 to-teal-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-teal-300 dark:focus:ring-white shadow-lg shadow-teal-500/50 dark:shadow-lg dark:shadow-teal-800/80 font-medium rounded-lg text-[12px] px-2 py-2.5 text-center me-2"
-              >
-                Add Article
-              </Link>
-            </li>
-            <li className="mb-2">
-              <Link
-                href="/add-tour-package"
-                className="text-white bg-gradient-to-r from-teal-400 via-teal-500 to-teal-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-teal-300 dark:focus:ring-white shadow-lg shadow-teal-500/50 dark:shadow-lg dark:shadow-teal-800/80 font-medium rounded-lg text-[12px] px-2 py-2.5 text-center me-2"
-              >
-                Add Tour Package
-              </Link>
-            </li>
-          </ul>
-          <div className="flex items-center gap-4">
-            <SessionTimer />
-            <button
-              onClick={handleLogout}
-              className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
-            >
-              Logout
-            </button>
+    <nav className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-xl border-b border-gray-100 dark:bg-gray-900/80 dark:border-gray-800 transition-all shadow-sm">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-20">
+          <div className="flex-1 flex items-center justify-between">
+            <div className="flex-shrink-0 flex items-center gap-2">
+                <Link href="/" className="text-2xl font-black tracking-tighter bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent hover:opacity-80 transition-opacity">
+                    BaliHoliday Admin
+                </Link>
+            </div>
+            
+            <div className="hidden lg:flex md:items-center space-x-2">
+              <Link href="/" className="px-5 py-2.5 rounded-xl text-sm font-semibold text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 dark:text-gray-300 dark:hover:text-blue-400 dark:hover:bg-gray-800/50">Dashboard</Link>
+              <Link href="/add-article" className="px-5 py-2.5 rounded-xl text-sm font-semibold text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 dark:text-gray-300 dark:hover:text-blue-400 dark:hover:bg-gray-800/50">Add Article</Link>
+              <Link href="/add-tour-package" className="px-5 py-2.5 rounded-xl text-sm font-semibold text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 dark:text-gray-300 dark:hover:text-blue-400 dark:hover:bg-gray-800/50">Add Tour Package</Link>
+            </div>
+
+            <div className="hidden lg:flex items-center gap-5">
+               <div className="px-4 py-2 bg-gray-50 border border-gray-100 rounded-xl dark:bg-gray-800 dark:border-gray-700 shadow-inner"><SessionTimer /></div>
+               <button onClick={handleLogout} className="px-6 py-2.5 text-sm font-bold text-white bg-red-600 rounded-xl hover:bg-red-700 transition shadow-[0_4px_14px_0_rgba(220,38,38,0.39)] hover:shadow-[0_6px_20px_rgba(220,38,38,0.23)] hover:-translate-y-0.5 duration-200">Logout</button>
+            </div>
           </div>
         </div>
       </div>
-      {/* Navbar for small screens */}
-      <div className="bg-[#344955] w-full flex lg:hidden">
-        <div className="m-auto">
-          <ul className="text-white flex justify-center items-center mt-4">
-
-            <li className="mx-2 mb-2">
-              <Link
-                href="/"
-                className="text-white bg-gradient-to-r from-teal-400 via-teal-500 to-teal-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-teal-300 dark:focus:ring-white shadow-lg shadow-teal-500/50 dark:shadow-lg dark:shadow-teal-800/80 font-medium rounded-lg text-[10px] px-2 py-2.5 text-center"
-              >
-                Dashboard
-              </Link>
+      
+      {/* Mobile Navbar Bottom / Alternative */}
+      <div className="lg:hidden border-t border-gray-100 dark:border-gray-800 bg-white/95 dark:bg-gray-900/95 px-4 py-3 overflow-x-auto nice-scrollbar shadow-inner">
+         <ul className="flex items-center justify-start sm:justify-center gap-3 w-max mx-auto">
+            <li>
+                <Link href="/" className="px-5 py-2.5 whitespace-nowrap rounded-xl text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors dark:bg-gray-800 dark:text-gray-300">Dashboard</Link>
             </li>
-            <li className="mx-2 mb-2">
-              <Link
-                href="/add-article"
-                className="text-white bg-gradient-to-r from-teal-400 via-teal-500 to-teal-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-teal-300 dark:focus:ring-white shadow-lg shadow-teal-500/50 dark:shadow-lg dark:shadow-teal-800/80 font-medium rounded-lg text-[10px] px-2 py-2.5 text-center"
-              >
-                Add Article
-              </Link>
+            <li>
+                <Link href="/add-article" className="px-5 py-2.5 whitespace-nowrap rounded-xl text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors dark:bg-gray-800 dark:text-gray-300">Add Article</Link>
             </li>
-            <li className="mx-2 mb-2">
-              <Link
-                href="/add-tour-package"
-                className="text-white bg-gradient-to-r from-teal-400 via-teal-500 to-teal-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-teal-300 dark:focus:ring-white shadow-lg shadow-teal-500/50 dark:shadow-lg dark:shadow-teal-800/80 font-medium rounded-lg text-[10px] px-2 py-2.5 text-center"
-              >
-                Add Tour Package
-              </Link>
+            <li>
+                <Link href="/add-tour-package" className="px-5 py-2.5 whitespace-nowrap rounded-xl text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors dark:bg-blue-900/30 dark:text-blue-400">Add Tour</Link>
             </li>
-            <li className="mx-2 mb-1 flex items-center">
-              <SessionTimer />
+            <li className="flex items-center">
+                 <div className="px-4 py-2 text-xs font-medium bg-gray-50 border border-gray-100 rounded-xl dark:bg-gray-800 dark:border-gray-700 whitespace-nowrap shadow-inner"><SessionTimer /></div>
             </li>
-            <li className="mx-2 mb-1">
-              <button
-                onClick={handleLogout}
-                className="text-white bg-gradient-to-r from-red-400 via-red-500 to-red-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-black-300 dark:focus:ring-white shadow-lg shadow-red-500/50 dark:shadow-lg dark:shadow-red-800/80 font-medium rounded-lg text-[10px] px-2 py-2.5 text-center"
-              >
-                Logout
-              </button>
+            <li>
+                <button onClick={handleLogout} className="px-5 py-2.5 whitespace-nowrap rounded-xl text-xs font-bold text-white bg-red-600 hover:bg-red-700 transition-colors shadow-sm">Logout</button>
             </li>
-          </ul>
-        </div>
+         </ul>
       </div>
-    </>
+    </nav>
   );
 }
 

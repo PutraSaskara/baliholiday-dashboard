@@ -9,11 +9,11 @@ export default function RootLayout({
   children
 }) {
   return (
-        <div className='w-full h-full bg-slate-200 overflow-y-auto'>
-            <ArticleNavbar/>
-          {children}
-        </div>
-    
+    <div className='w-full h-full bg-slate-200 overflow-y-auto'>
+      <ArticleNavbar />
+      {children}
+    </div>
+
 
   );
 }

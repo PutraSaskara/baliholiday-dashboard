@@ -1,12 +1,29 @@
 'use client';
 
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { api, getAuthHeaders } from '@/apiConfig';
 
-const useArticleStore = create((set, get) => ({
+const useArticleStore = create(
+  persist(
+    (set, get) => ({
     articles: [],
     loading: false,
     error: null,
+    
+    // Draft states for Article Creation Flow
+    draftArticle: null,
+    draftParagraph: null,
+    hasUnsavedChanges: false,
+    
+    setDraftArticle: (data) => set({ draftArticle: data, hasUnsavedChanges: true }),
+    setDraftParagraph: (data) => set({ draftParagraph: data, hasUnsavedChanges: true }),
+    setHasUnsavedChanges: (status) => set({ hasUnsavedChanges: status }),
+    clearDrafts: () => set({ 
+        draftArticle: null, 
+        draftParagraph: null, 
+        hasUnsavedChanges: false 
+    }),
 
     fetchArticles: async () => {
         set({ loading: true, error: null });
@@ -153,6 +170,60 @@ const useArticleStore = create((set, get) => ({
             return false;
         }
     },
-}));
+
+    // Orcehstrator for Draft Flow
+    submitAllDrafts: async (imageFormData) => {
+        const state = get();
+        set({ loading: true, error: null });
+
+        try {
+            // 1. Submit Article
+            if (!state.draftArticle) throw new Error("Missing draft article data.");
+            const articleRes = await get().createArticle(state.draftArticle);
+            if (!articleRes.success) throw new Error(articleRes.message || "Failed to create article.");
+            
+            // Extract the newly created article's ID. 
+            // Assuming the backend returns the created object with an 'id' or 'blogId' field in articleRes.data
+            const newArticleId = articleRes.data?.id || articleRes.data?.blogId || articleRes.data?.data?.id; 
+            if (!newArticleId) throw new Error("Could not retrieve new Article ID from server response.");
+
+            // 2. Submit Paragraphs
+            if (state.draftParagraph) {
+                // Attach the new article ID to the paragraph payload
+                const pData = { ...state.draftParagraph, blogId: newArticleId };
+                const pRes = await get().createArticleParagraf(pData);
+                if (!pRes.success) throw new Error(pRes.message || "Failed to create paragraphs.");
+            }
+
+            // 3. Submit Images
+            if (imageFormData) {
+                // Attach the new article ID to FormData 
+                imageFormData.set("blogId", newArticleId); 
+                const iRes = await get().createArticleImage(imageFormData);
+                if (!iRes.success) throw new Error(iRes.message || "Failed to upload images.");
+            }
+
+            // Success: clear drafts and loading
+            get().clearDrafts();
+            set({ loading: false });
+            return { success: true, message: "All data submitted successfully!" };
+
+        } catch (error) {
+            console.error("Error in submitAllDrafts:", error);
+            set({ loading: false, error: error.message });
+            return { success: false, message: error.message };
+        }
+    },
+    }),
+    {
+      name: 'article-draft-storage', // name of the item in the storage (must be unique)
+      partialize: (state) => ({ 
+        draftArticle: state.draftArticle,
+        draftParagraph: state.draftParagraph,
+        hasUnsavedChanges: state.hasUnsavedChanges
+      }), // Only save draft-related state
+    }
+  )
+);
 
 export default useArticleStore;

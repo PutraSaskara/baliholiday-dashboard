@@ -1,12 +1,45 @@
 'use client';
 
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { api, getAuthHeaders } from '@/apiConfig';
 
-const useTourStore = create((set, get) => ({
+const useTourStore = create(
+    persist(
+        (set, get) => ({
     tours: [],
     loading: false,
     error: null,
+
+    // Draft states for Tour Creation Flow
+    draftTour: null,
+    draftTourDetail: null,
+    draftTourDesc: null,
+    draftTourPlan: null,
+    draftTourInclude: null,
+    draftTourNotInclude: null,
+    draftTourCancellation: null,
+    hasUnsavedTourChanges: false,
+
+    setDraftTour: (data) => set({ draftTour: data, hasUnsavedTourChanges: true }),
+    setDraftTourDetail: (data) => set({ draftTourDetail: data, hasUnsavedTourChanges: true }),
+    setDraftTourDesc: (data) => set({ draftTourDesc: data, hasUnsavedTourChanges: true }),
+    setDraftTourPlan: (data) => set({ draftTourPlan: data, hasUnsavedTourChanges: true }),
+    setDraftTourInclude: (data) => set({ draftTourInclude: data, hasUnsavedTourChanges: true }),
+    setDraftTourNotInclude: (data) => set({ draftTourNotInclude: data, hasUnsavedTourChanges: true }),
+    setDraftTourCancellation: (data) => set({ draftTourCancellation: data, hasUnsavedTourChanges: true }),
+    setHasUnsavedTourChanges: (status) => set({ hasUnsavedTourChanges: status }),
+    
+    clearTourDrafts: () => set({ 
+        draftTour: null, 
+        draftTourDetail: null, 
+        draftTourDesc: null, 
+        draftTourPlan: null, 
+        draftTourInclude: null,
+        draftTourNotInclude: null,
+        draftTourCancellation: null,
+        hasUnsavedTourChanges: false 
+    }),
 
     fetchTours: async () => {
         set({ loading: true, error: null });
@@ -180,6 +213,93 @@ const useTourStore = create((set, get) => ({
             return false;
         }
     },
-}));
+
+    // Master Orchestrator for Draft Flow
+    submitAllTourDrafts: async (imageFormData) => {
+        const state = get();
+        set({ loading: true, error: null });
+
+        try {
+            // 1. Submit Tour (Base Entity)
+            if (!state.draftTour) throw new Error("Missing Base Tour data.");
+            const tourRes = await get().createTour(state.draftTour);
+            if (!tourRes.success) throw new Error(tourRes.message || "Failed to create tour.");
+            
+            // Extract the newly created tour ID.
+            const newTourId = tourRes.data?.id || tourRes.data?.tourId || tourRes.data?.data?.id; 
+            if (!newTourId) throw new Error("Could not retrieve new Tour ID from server response.");
+
+            // 2. Submit Detail
+            if (state.draftTourDetail) {
+                const detailData = { ...state.draftTourDetail, tourId: newTourId };
+                const res = await get().createTourDetail(detailData);
+                if (!res.success) throw new Error(res.message || "Failed to create details.");
+            }
+
+            // 3. Submit Desc
+            if (state.draftTourDesc) {
+                const descData = { ...state.draftTourDesc, tourId: newTourId };
+                const res = await get().createTourDesc(descData);
+                if (!res.success) throw new Error(res.message || "Failed to create description.");
+            }
+
+            // 4. Submit Plan
+            if (state.draftTourPlan) {
+                const planData = { ...state.draftTourPlan, tourId: newTourId };
+                const res = await get().createTourPlan(planData);
+                if (!res.success) throw new Error(res.message || "Failed to create plan.");
+            }
+
+            // 5. Submit Other Info: Include, Not Include, Cancellation
+            if (state.draftTourInclude) {
+                const incData = { ...state.draftTourInclude, tourId: newTourId };
+                const res = await get().createTourInclude(incData);
+                if (!res.success) throw new Error(res.message || "Failed to create Includes.");
+            }
+            if (state.draftTourNotInclude) {
+                const notIncData = { ...state.draftTourNotInclude, tourId: newTourId };
+                const res = await get().createTourNotInclude(notIncData);
+                if (!res.success) throw new Error(res.message || "Failed to create Not Includes.");
+            }
+            if (state.draftTourCancellation) {
+                const cancelData = { ...state.draftTourCancellation, tourId: newTourId };
+                const res = await get().createTourCancellation(cancelData);
+                if (!res.success) throw new Error(res.message || "Failed to create Cancellations.");
+            }
+
+            // 6. Upload Images (Final Step)
+            if (imageFormData) {
+                imageFormData.set("tourId", newTourId); 
+                const iRes = await get().createTourImage(imageFormData);
+                if (!iRes.success) throw new Error(iRes.message || "Failed to upload images.");
+            }
+
+            // Success: clear drafts
+            get().clearTourDrafts();
+            set({ loading: false });
+            return { success: true, message: "All Tour data submitted successfully!" };
+
+        } catch (error) {
+            console.error("Error in submitAllTourDrafts:", error);
+            set({ loading: false, error: error.message });
+            return { success: false, message: error.message };
+        }
+    },
+    }),
+    {
+      name: 'tour-draft-storage',
+      partialize: (state) => ({ 
+        draftTour: state.draftTour,
+        draftTourDetail: state.draftTourDetail,
+        draftTourDesc: state.draftTourDesc,
+        draftTourPlan: state.draftTourPlan,
+        draftTourInclude: state.draftTourInclude,
+        draftTourNotInclude: state.draftTourNotInclude,
+        draftTourCancellation: state.draftTourCancellation,
+        hasUnsavedTourChanges: state.hasUnsavedTourChanges
+      }), // Persist ONLY draft state
+    }
+  )
+);
 
 export default useTourStore;

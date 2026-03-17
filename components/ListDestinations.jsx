@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import useDestinationStore from "../stores/useDestinationStore";
 import Link from "next/link";
 import Image from "next/image";
+import { FiSearch, FiEdit2, FiEye, FiTrash2 } from "react-icons/fi";
 import baseURL from "@/apiConfig";
 
 function ListDestinations() {
@@ -38,129 +39,163 @@ function ListDestinations() {
   };
 
   return (
-    <div className="p-5">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold mb-2 md:mb-0">Destinations</h2>
-        <Link
-          href="/destinations/add"
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-        >
-          Add Destination
-        </Link>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+        <div>
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Destinations</h2>
+          <p className="text-gray-500 dark:text-gray-400">Manage your destination locations and details.</p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-4 items-center">
+            <form onSubmit={handleSearch} className="relative w-full sm:w-80 group">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                <FiSearch className="text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search by name..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-2xl text-sm focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+              />
+              <button type="submit" className="hidden">Search</button>
+            </form>
+
+            <Link
+              href="/destinations/add"
+              className="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white font-medium rounded-2xl hover:bg-blue-700 transition shadow-sm text-center whitespace-nowrap"
+            >
+              Add Destination
+            </Link>
+        </div>
       </div>
 
-      {/* Search Form */}
-      <form
-        onSubmit={handleSearch}
-        className="mb-4 flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2"
-      >
-        <input
-          type="text"
-          placeholder="Search by name..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="flex-grow border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        <button
-          type="submit"
-          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition"
-        >
-          Search
-        </button>
-      </form>
-
-      {/* Loading Indicator */}
       {loading ? (
-        <p className="text-center">Loading...</p>
+        <div className="flex justify-center items-center h-64">
+           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-white shadow-md rounded">
-            <thead>
-              <tr>
-                <th className="py-2 px-4 border-b">ID</th>
-                <th className="py-2 px-4 border-b">Name</th>
-                <th className="py-2 px-4 border-b">Description</th>
-                <th className="py-2 px-4 border-b">Latitude</th>
-                <th className="py-2 px-4 border-b">Longitude</th>
-                <th className="py-2 px-4 border-b">Image</th>
-                <th className="py-2 px-4 border-b">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {destinations.map((destination) => (
-                <tr key={destination.id} className="hover:bg-gray-100">
-                  <td className="py-2 px-4 border-b text-center">{destination.id}</td>
-                  <td className="py-2 px-4 border-b">{destination.name}</td>
-                  <td
-                    className="py-2 px-4 border-b truncate"
-                    title={destination.description}
-                  >
-                    {destination.description.length > 50
-                      ? `${destination.description.substring(0, 50)}...`
-                      : destination.description}
-                  </td>
-                  <td className="py-2 px-4 border-b text-center">{destination.lat}</td>
-                  <td className="py-2 px-4 border-b text-center">{destination.lng}</td>
-                  <td className="py-2 px-4 border-b flex justify-center">
-                    <Image
-                      src={destination.image}
-                      alt={destination.name}
-                      className="w-16 h-16 object-cover rounded"
-                      width={100}
-                      height={100}
-                    />
-                  </td>
-                  <td className="py-2 px-4 border-b space-x-2 text-center">
-                    <Link
-                      href={`/destinations/view/${destination.id}`}
-                      className="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
-                    >
-                      View
-                    </Link>
-                    <Link
-                      href={`/destinations/edit/${destination.id}`}
-                      className="px-2 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition"
-                    >
-                      Edit
-                    </Link>
-                    <button
-                      onClick={() => handleDelete(destination.id)}
-                      className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {destinations.length === 0 && (
-                <tr>
-                  <td colSpan="7" className="text-center py-4">
-                    No destinations found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
+        <>
+            {destinations.length === 0 ? (
+                <div className="text-center py-20 bg-gray-50 dark:bg-gray-800/50 rounded-3xl border border-gray-200 dark:border-gray-700">
+                    <p className="text-gray-500 dark:text-gray-400 text-lg">No destinations found.</p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {destinations.map((destination) => (
+                        <div key={destination.id} className="group flex flex-col bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden dark:bg-gray-800 dark:border-gray-700">
+                            <div className="relative w-full aspect-[4/3] overflow-hidden bg-gray-100">
+                                <Link href={`/destinations/view/${destination.id}`}>
+                                    <Image
+                                        fill
+                                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                        src={destination.image || '/placeholder.jpg'}
+                                        alt={destination.name}
+                                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                                    />
+                                </Link>
+                            </div>
+                            
+                            <div className="p-5 flex flex-col flex-grow">
+                                <div className="space-y-4 flex-grow">
+                                    <div>
+                                        <Link href={`/destinations/view/${destination.id}`}>
+                                            <h3 className="text-xl font-bold text-gray-900 dark:text-white line-clamp-1 hover:text-blue-600 transition-colors">
+                                                {destination.name}
+                                            </h3>
+                                        </Link>
+                                    </div>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-3 leading-relaxed">
+                                        {destination.description}
+                                    </p>
+                                    <div className="flex gap-4 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-xl">
+                                        <div className="flex flex-col">
+                                            <span className="text-gray-400 uppercase tracking-wider text-[10px] mb-0.5">Latitude</span>
+                                            <span>{destination.lat}</span>
+                                        </div>
+                                        <div className="w-px bg-gray-200 dark:bg-gray-700"></div>
+                                        <div className="flex flex-col">
+                                            <span className="text-gray-400 uppercase tracking-wider text-[10px] mb-0.5">Longitude</span>
+                                            <span>{destination.lng}</span>
+                                        </div>
+                                    </div>
+                                </div>
 
-      {/* Pagination */}
-      {!isSearching && totalPages > 1 && (
-        <div className="flex justify-center mt-4 space-x-1">
-          {Array.from({ length: totalPages }, (_, idx) => idx + 1).map((page) => (
-            <button
-              key={page}
-              onClick={() => fetchDestinations(page)}
-              className={`px-3 py-1 rounded ${currentPage === page
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300 transition"
-                }`}
-            >
-              {page}
-            </button>
-          ))}
-        </div>
+                                <div className="mt-6 flex justify-between items-center gap-2">
+                                    <Link
+                                        href={`/destinations/view/${destination.id}`}
+                                        className="flex-1 inline-flex justify-center items-center px-3 py-2 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors dark:bg-gray-700 dark:text-blue-400 dark:hover:bg-gray-600"
+                                        title="View Details"
+                                    >
+                                        <FiEye className="mr-2" />
+                                        View
+                                    </Link>
+                                    <Link
+                                        href={`/destinations/edit/${destination.id}`}
+                                        className="flex-1 inline-flex justify-center items-center px-3 py-2 text-sm font-medium text-orange-700 bg-orange-50 hover:bg-orange-100 rounded-xl transition-colors dark:bg-gray-700 dark:text-orange-400 dark:hover:bg-gray-600"
+                                        title="Edit"
+                                    >
+                                        <FiEdit2 className="mr-2" />
+                                        Edit
+                                    </Link>
+                                    <button
+                                        onClick={() => handleDelete(destination.id)}
+                                        className="flex-1 inline-flex justify-center items-center px-3 py-2 text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded-xl transition-colors dark:bg-gray-700 dark:text-red-400 dark:hover:bg-gray-600"
+                                        title="Delete"
+                                    >
+                                        <FiTrash2 className="mr-2" />
+                                        Delete
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* Pagination Controls */}
+            {!isSearching && totalPages > 1 && (
+                <div className="flex justify-center mt-12 mb-16">
+                    <nav aria-label="Page navigation" className="flex items-center gap-2 sm:gap-4 flex-wrap justify-center">
+                        <button
+                            onClick={() => fetchDestinations(1)}
+                            disabled={currentPage === 1}
+                            className="flex items-center justify-center px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-blue-600 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white disabled:opacity-50 disabled:hover:bg-white disabled:dark:hover:bg-gray-800 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm"
+                        >
+                            First
+                        </button>
+
+                        <button
+                            onClick={() => fetchDestinations(currentPage - 1)}
+                            disabled={currentPage === 1}
+                            className="flex items-center justify-center px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-blue-600 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white disabled:opacity-50 disabled:hover:bg-white disabled:dark:hover:bg-gray-800 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm"
+                        >
+                            Previous
+                        </button>
+
+                        <div className="flex items-center px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg shadow-inner">
+                            Page <span className="font-bold text-gray-900 dark:text-white mx-1.5">{currentPage}</span> of <span className="font-bold text-gray-900 dark:text-white mx-1.5">{totalPages}</span>
+                        </div>
+
+                        <button
+                            onClick={() => fetchDestinations(currentPage + 1)}
+                            disabled={currentPage === totalPages}
+                            className="flex items-center justify-center px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-blue-600 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white disabled:opacity-50 disabled:hover:bg-white disabled:dark:hover:bg-gray-800 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm"
+                        >
+                            Next
+                        </button>
+
+                        <button
+                            onClick={() => fetchDestinations(totalPages)}
+                            disabled={currentPage === totalPages}
+                            className="flex items-center justify-center px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-blue-600 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white disabled:opacity-50 disabled:hover:bg-white disabled:dark:hover:bg-gray-800 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm"
+                        >
+                            Last
+                        </button>
+                    </nav>
+                </div>
+            )}
+        </>
       )}
     </div>
   );

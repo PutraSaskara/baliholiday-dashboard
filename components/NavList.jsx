@@ -10,62 +10,37 @@ function NavList({ ListArticle, ListTour, DestinationsList, ListArea }) {
   };
 
   return (
-    <div>
-      <ul className="flex justify-between items-center py-2 border-b-2 mb-5 lg:w-full lg:mx-auto lg:justify-start lg:gap-5 lg:pl-10">
-        <li
-          className={`text-black font-bold text-[10px] sm:text-[16px] hover:text-primary ${
-            activeItem === "ListArticle"
-              ? "text-primary border-b-2 border-b-primary transition duration-500"
-              : ""
-          }`}
-          onClick={() => handleItemClick("ListArticle")}
-        >
-          <button>
-            <p>Article List</p>
-          </button>
-        </li>
-        <li
-          className={`text-black font-bold text-[10px] sm:text-[16px] hover:text-primary ${
-            activeItem === "ListTour"
-              ? "text-primary border-b-2 border-b-primary transition duration-500"
-              : ""
-          }`}
-          onClick={() => handleItemClick("ListTour")}
-        >
-          <button>
-            <p>Tour Package List</p>
-          </button>
-        </li>
-        <li
-          className={`text-black font-bold text-[10px] sm:text-[16px] hover:text-primary ${
-            activeItem === "DestinationsList"
-              ? "text-primary border-b-2 border-b-primary transition duration-500"
-              : ""
-          }`}
-          onClick={() => handleItemClick("DestinationsList")}
-        >
-          <button>
-            <p>Destinations List</p>
-          </button>
-        </li>
-        <li
-          className={`text-black font-bold text-[10px] sm:text-[16px] hover:text-primary ${
-            activeItem === "ListArea"
-              ? "text-primary border-b-2 border-b-primary transition duration-500"
-              : ""
-          }`}
-          onClick={() => handleItemClick("ListArea")}
-        >
-          <button>
-            <p>Area List</p>
-          </button>
-        </li>
-      </ul>
+    <div className="w-full">
+      <div className="mb-8 w-full overflow-x-auto pb-2 nice-scrollbar">
+        <ul className="flex sm:justify-start gap-2 p-1.5 bg-gray-100/80 dark:bg-gray-800/80 rounded-2xl w-max">
+          {[
+            { id: "ListArticle", label: "Articles" },
+            { id: "ListTour", label: "Tour Packages" },
+            { id: "DestinationsList", label: "Destinations" },
+            { id: "ListArea", label: "Pickup Areas" },
+          ].map((item) => (
+            <li key={item.id} className="relative">
+              <button
+                onClick={() => handleItemClick(item.id)}
+                className={`relative px-5 py-2.5 text-sm sm:text-base font-semibold transition-all duration-300 rounded-xl whitespace-nowrap ${
+                  activeItem === item.id
+                    ? "text-blue-700 bg-white shadow-sm dark:bg-gray-700 dark:text-blue-400"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-200/50 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-700/50"
+                }`}
+              >
+                {item.label}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
 
-      {activeItem === "ListArticle" && ListArticle}
-      {activeItem === "ListTour" && ListTour}
-      {activeItem === "DestinationsList" && DestinationsList}
-      {activeItem === "ListArea" && ListArea}
+      <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
+        {activeItem === "ListArticle" && ListArticle}
+        {activeItem === "ListTour" && ListTour}
+        {activeItem === "DestinationsList" && DestinationsList}
+        {activeItem === "ListArea" && ListArea}
+      </div>
     </div>
   );
 }

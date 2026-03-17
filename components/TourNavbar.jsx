@@ -1,37 +1,54 @@
+"use client";
 import React from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
-function BlogNavbar() {
+function TourNavbar() {
+  const pathname = usePathname();
+
+  const steps = [
+    { name: "Step 1: Basic Info", path: "/add-tour-package/add-tour" },
+    { name: "Step 2: Details", path: "/add-tour-package/add-tour-detail" },
+    { name: "Step 3: Descriptions", path: "/add-tour-package/add-tour-desc" },
+    { name: "Step 4: Tour Plan", path: "/add-tour-package/add-tour-plan" },
+    { name: "Step 5: Other Info", path: "/add-tour-package/add-other" },
+    { name: "Step 6: Final Images", path: "/add-tour-package/add-tour-image" },
+  ];
+
   return (
-    <nav className="bg-gray-200 shadow shadow-gray-300 w-[100%] md:px-auto">
-      <div className="md:h-16 h-28 mx-auto md:px-4 container flex items-center justify-center flex-wrap md:flex-nowrap">
-        <div className="text-gray-500 order-3 w-full md:w-auto md:order-2">
-          <ul className="flex justify-between gap-2 text-[12px]">
-            {/* <!-- Active Link = text-indigo-500
-                Inactive Link = hover:text-indigo-500 --> */}
-            <li className="md:px-4 md:py-2 hover:text-indigo-400 bg-blue-200 px-1 flex justify-center items-center">
-              <a href="/add-tour-package/add-tour">add tour</a>
-            </li>
-            <li className="md:px-4 md:py-2 hover:text-indigo-400 bg-blue-200 px-1 flex justify-center items-center">
-              <a href="/add-tour-package/add-tour-detail">add tour Detail</a>
-            </li>
-            <li className="md:px-4 md:py-2 hover:text-indigo-400 bg-blue-200 px-1 flex justify-center items-center">
-              <a href="/add-tour-package/add-tour-desc">add tour description</a>
-            </li>
-            <li className="md:px-4 md:py-2 hover:text-indigo-400 bg-blue-200 px-1 flex justify-center items-center">
-              <a href="/add-tour-package/add-tour-plan">add tour plan</a>
-            </li>
-            <li className="md:px-4 md:py-2 hover:text-indigo-400 bg-blue-200 px-1 flex justify-center items-center">
-              <a href="/add-tour-package/add-tour-image">add tour image</a>
-            </li>
-            <li className="md:px-4 md:py-2 hover:text-indigo-400 bg-blue-200 px-1 flex justify-center items-center">
-              <a href="/add-tour-package/add-other">add other information</a>
-            </li>
-
-          </ul>
-        </div>
+    <nav className="sticky top-0 z-40 w-full bg-white/60 backdrop-blur-md border-b border-gray-200/50 dark:bg-gray-900/60 dark:border-gray-800/50 transition-all shadow-sm">
+      <div className="max-w-[1600px] mx-auto px-4 py-4">
+        <ul className="flex items-center gap-2 overflow-x-auto nice-scrollbar pb-2 sm:pb-0 md:justify-center">
+          {steps.map((step, index) => {
+            const isActive = pathname === step.path;
+            return (
+              <li key={step.path} className="flex items-center">
+                <Link
+                  href={step.path}
+                  className={`px-5 py-2.5 rounded-2xl text-[11px] font-black uppercase tracking-wider transition-all duration-300 whitespace-nowrap flex items-center gap-2.5
+                    ${isActive 
+                      ? "bg-blue-600 text-white shadow-[0_4px_12px_rgba(37,99,235,0.3)] scale-105" 
+                      : "bg-gray-100 text-gray-500 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"}`}
+                >
+                  <span className={`w-5 h-5 rounded-lg flex items-center justify-center text-[10px] 
+                    ${isActive ? "bg-white/20" : "bg-gray-200 dark:bg-gray-700"}`}>
+                    {index + 1}
+                  </span>
+                  {step.name}
+                </Link>
+                {index < steps.length - 1 && (
+                  <div className="mx-2 text-gray-300 dark:text-gray-700 hidden md:block">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7"></path></svg>
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
       </div>
     </nav>
   );
 }
 
-export default BlogNavbar;
+export default TourNavbar;
+
