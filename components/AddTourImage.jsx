@@ -165,7 +165,7 @@ function AddTourImage() {
                     </div>
                     <div>
                         <h4 className="text-indigo-900 font-bold text-lg">Final Submission Ready</h4>
-                        <p className="text-indigo-700/80 text-sm">Assigning images to "{draftTour.title}" and publishing all drafted data.</p>
+                        <p className="text-indigo-700/80 text-sm">Assigning images to &quot;{draftTour.title}&quot; and publishing all drafted data.</p>
                     </div>
                 </div>
             )}

@@ -33,10 +33,13 @@ function EditArea() {
 
   useEffect(() => {
     fetchArea();
+  }, [id, fetchArea]);
+
+  useEffect(() => {
     return () => {
       if (imagePreview) URL.revokeObjectURL(imagePreview);
     };
-  }, [id, fetchArea]);
+  }, [imagePreview]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -180,7 +183,7 @@ function EditArea() {
                           )}
                           <input id="area-image-upload" type="file" accept="image/webp" onChange={handleImageChange} className="hidden" />
                       </div>
-                      <p className="mt-4 text-xs text-gray-400 ml-2 italic text-center">Leave blank if you don't want to change the photo.</p>
+                      <p className="mt-4 text-xs text-gray-400 ml-2 italic text-center">Leave blank if you don&apos;t want to change the photo.</p>
                       {errors.image && <p className="text-rose-500 text-xs font-bold mt-2 ml-1 text-center">{errors.image}</p>}
                   </div>
               </div>

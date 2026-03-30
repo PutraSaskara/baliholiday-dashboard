@@ -120,7 +120,7 @@ function AddOther() {
       <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-gray-200/50 border border-gray-100 p-8 md:p-12 transition-all duration-300">
         <header className="mb-10">
             <h1 className='text-3xl font-black tracking-tight text-gray-900 mb-2'>Inclusions & Terms</h1>
-            <p className="text-gray-500 text-lg">Specify what's included in the package and define your policies.</p>
+            <p className="text-gray-500 text-lg">Specify what&apos;s included in the package and define your policies.</p>
         </header>
 
         {/* Draft Mode Notice */}
@@ -131,7 +131,7 @@ function AddOther() {
                 </div>
                 <div>
                     <h4 className="text-blue-900 font-bold">Draft Mode Active</h4>
-                    <p className="text-blue-700/80 text-sm">Assigning policies to "{draftTour.title}"</p>
+                    <p className="text-blue-700/80 text-sm">Assigning policies to &quot;{draftTour.title}&quot;</p>
                 </div>
             </div>
         )}
@@ -140,7 +140,7 @@ function AddOther() {
             {/* Includes Section */}
             <section className="space-y-6">
                 <div className="flex items-center justify-between border-b border-gray-100 pb-2">
-                    <h4 className="text-sm font-black uppercase tracking-widest text-emerald-600">What's Included</h4>
+                    <h4 className="text-sm font-black uppercase tracking-widest text-emerald-600">What&apos;s Included</h4>
                     <button onClick={handleSubmit1} className="text-xs font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-lg transition-colors">{isSaved1 ? '✓ Saved' : 'Save Section'}</button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -163,7 +163,7 @@ function AddOther() {
             {/* Not Included Section */}
             <section className="space-y-6">
                 <div className="flex items-center justify-between border-b border-gray-100 pb-2">
-                    <h4 className="text-sm font-black uppercase tracking-widest text-rose-600">What's NOT Included</h4>
+                    <h4 className="text-sm font-black uppercase tracking-widest text-rose-600">What&apos;s NOT Included</h4>
                     <button onClick={handleSubmit2} className="text-xs font-bold text-rose-700 hover:text-rose-800 bg-rose-50 px-3 py-1.5 rounded-lg transition-colors">{isSaved2 ? '✓ Saved' : 'Save Section'}</button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

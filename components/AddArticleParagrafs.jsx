@@ -112,7 +112,7 @@ function AddArticleParagrafs() {
                 </div>
                 <div>
                     <h4 className="text-blue-900 font-bold">Draft Mode Active</h4>
-                    <p className="text-blue-700/80 text-sm">Assigning paragraphs to "{draftArticle.title}"</p>
+                    <p className="text-blue-700/80 text-sm">Assigning paragraphs to &quot;{draftArticle.title}&quot;</p>
                 </div>
             </div>
         )}

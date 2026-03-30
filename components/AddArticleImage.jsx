@@ -166,7 +166,7 @@ function AddArticleImage() {
                 </div>
                 <div>
                     <h4 className="text-indigo-900 font-bold italic tracking-tight">Draft Ready for Publication</h4>
-                    <p className="text-indigo-700/80 text-sm">Target: "{draftArticle.title}"</p>
+                    <p className="text-indigo-700/80 text-sm">Target: &quot;{draftArticle.title}&quot;</p>
                 </div>
             </div>
         )}

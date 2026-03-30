@@ -32,10 +32,13 @@ function EditDestination() {
 
   useEffect(() => {
     fetchDestination();
+  }, [id, fetchDestination]);
+
+  useEffect(() => {
     return () => {
       if (imagePreview) URL.revokeObjectURL(imagePreview);
     };
-  }, [id, fetchDestination]);
+  }, [imagePreview]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -170,7 +173,7 @@ function EditDestination() {
                           )}
                           <input id="image-upload" type="file" accept="image/webp" onChange={handleImageChange} className="hidden" />
                       </div>
-                      <p className="mt-4 text-xs text-gray-400 ml-2 italic text-center">Leave blank if you don't want to change the image.</p>
+                      <p className="mt-4 text-xs text-gray-400 ml-2 italic text-center">Leave blank if you don&apos;t want to change the image.</p>
                   </div>
               </div>
 

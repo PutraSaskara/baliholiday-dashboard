@@ -1,8 +1,8 @@
 // apiConfig.js
 import axios from 'axios';
 
-// const baseURL = 'https://api.saskaraputra.my.id';
-const baseURL = 'http://localhost:5000';
+const baseURL = 'https://api.saskaraputra.my.id';
+// const baseURL = 'http://localhost:5000';
 
 // Create axios instance with default config
 const api = axios.create({

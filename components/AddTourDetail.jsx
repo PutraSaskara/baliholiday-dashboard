@@ -92,7 +92,7 @@ function AddTourDetail() {
                 </div>
                 <div>
                     <h4 className="text-blue-900 font-bold">Draft Mode Active</h4>
-                    <p className="text-blue-700/80 text-sm">Assigning details to "{draftTour.title}"</p>
+                    <p className="text-blue-700/80 text-sm">Assigning details to &quot;{draftTour.title}&quot;</p>
                 </div>
             </div>
         )}

@@ -70,7 +70,7 @@ function AddSingleArticle() {
       <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-gray-200/50 border border-gray-100 p-8 md:p-12 transition-all duration-300">
         <header className="mb-10">
             <h1 className='text-3xl font-black tracking-tight text-gray-900 mb-2'>Create New Article</h1>
-            <p className="text-gray-500 text-lg">Let's start with the basics. Enter the title, keywords, and author.</p>
+            <p className="text-gray-500 text-lg">Let&apos;s start with the basics. Enter the title, keywords, and author.</p>
         </header>
 
         <div className="space-y-8">
