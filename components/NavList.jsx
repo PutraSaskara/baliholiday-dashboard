@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-function NavList({ ListArticle, ListTour, DestinationsList, ListArea }) {
+function NavList({ ListArticle, ListTour, DestinationsList, ListArea, ListCustomTourPrices, ListBookings }) {
   const [activeItem, setActiveItem] = useState("ListArticle");
 
   const handleItemClick = (itemName) => {
@@ -18,6 +18,8 @@ function NavList({ ListArticle, ListTour, DestinationsList, ListArea }) {
             { id: "ListTour", label: "Tour Packages" },
             { id: "DestinationsList", label: "Destinations" },
             { id: "ListArea", label: "Pickup Areas" },
+            { id: "ListCustomTourPrices", label: "Custom Tour Prices" },
+            { id: "ListBookings", label: "Bookings & Inquiries" },
           ].map((item) => (
             <li key={item.id} className="relative">
               <button
@@ -40,6 +42,8 @@ function NavList({ ListArticle, ListTour, DestinationsList, ListArea }) {
         {activeItem === "ListTour" && ListTour}
         {activeItem === "DestinationsList" && DestinationsList}
         {activeItem === "ListArea" && ListArea}
+        {activeItem === "ListCustomTourPrices" && ListCustomTourPrices}
+        {activeItem === "ListBookings" && ListBookings}
       </div>
     </div>
   );
