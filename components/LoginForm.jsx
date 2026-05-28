@@ -9,9 +9,25 @@ import { FiUser, FiLock, FiLogIn, FiAlertCircle } from 'react-icons/fi';
 export default function LoginForm({ onLoginSuccess }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuthStore();
+
+  // Load saved credentials on mount
+  useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('rememberedCredentials');
+      if (saved) {
+        try {
+          const { username: savedUser, password: savedPass } = JSON.parse(saved);
+          setUsername(savedUser || '');
+          setPassword(savedPass || '');
+          setRememberMe(true);
+        } catch {}
+      }
+    }
+  });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,6 +38,12 @@ export default function LoginForm({ onLoginSuccess }) {
       const { success, message } = await login(username, password);
 
       if (success) {
+        // Save or clear credentials based on remember me
+        if (rememberMe) {
+          localStorage.setItem('rememberedCredentials', JSON.stringify({ username, password }));
+        } else {
+          localStorage.removeItem('rememberedCredentials');
+        }
         if (onLoginSuccess) onLoginSuccess();
       } else {
         setError(message);
@@ -111,6 +133,21 @@ export default function LoginForm({ onLoginSuccess }) {
                     transition-all duration-200"
                 />
               </div>
+            </div>
+
+            {/* Remember Me */}
+            <div className="flex items-center gap-2">
+              <input
+                id="remember-me"
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                disabled={isLoading}
+                className="w-4 h-4 rounded border-white/20 bg-white/5 text-teal-500 focus:ring-teal-500/50 focus:ring-offset-0"
+              />
+              <label htmlFor="remember-me" className="text-sm text-slate-400 select-none cursor-pointer">
+                Ingat username & password
+              </label>
             </div>
 
             {/* Error Message */}

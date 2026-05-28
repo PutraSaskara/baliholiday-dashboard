@@ -107,8 +107,15 @@ function AddTour() {
 
             <div className="space-y-6">
                 <h4 className="text-sm font-black uppercase tracking-widest text-gray-400 border-b border-gray-100 pb-2 ml-1">Pricing Tiers</h4>
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl mx-1">
+                  <p className="text-xs text-amber-800 font-medium">⚠️ PayPal fee: ~4.4% + $0.30 per transaction. If you set $50, you&apos;ll receive ~$47.50. Consider adjusting your price to cover the fee.</p>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {[1, 2, 3].map((num) => (
+                    {[1, 2, 3].map((num) => {
+                        const priceVal = parseFloat(formData[`price${num}`]) || 0;
+                        const fee = priceVal > 0 ? (priceVal * 0.044 + 0.30).toFixed(2) : null;
+                        const netAmount = fee ? (priceVal - parseFloat(fee)).toFixed(2) : null;
+                        return (
                         <div key={num} className="p-6 bg-gray-50/50 rounded-3xl border border-gray-100 space-y-4 hover:bg-white hover:shadow-xl hover:shadow-gray-100/50 transition-all duration-300">
                             <div className="flex items-center gap-2 mb-2">
                                 <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-[10px]">{num}</span>
@@ -135,8 +142,12 @@ function AddTour() {
                                 onChange={handleChange} 
                                 className="w-full px-4 py-3 bg-white border border-gray-200 text-gray-900 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none font-medium text-[11px] placeholder:text-gray-300 shadow-sm"
                             />
+                            {fee && (
+                              <p className="text-[10px] text-gray-400">Fee: -${fee} → You receive: <span className="font-bold text-green-600">${netAmount}</span></p>
+                            )}
                         </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </div>
         </div>
