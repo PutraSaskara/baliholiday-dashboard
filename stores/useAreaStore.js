@@ -68,7 +68,7 @@ const useAreaStore = create((set, get) => ({
         try {
             const authHeaders = await getAuthHeaders();
             const response = await api.post('/api/pickup-areas', formData, {
-                headers: { ...authHeaders, 'Content-Type': 'multipart/form-data' },
+                headers: { ...authHeaders },
             });
             set({ loading: false });
             return { success: true, data: response.data };
@@ -87,7 +87,7 @@ const useAreaStore = create((set, get) => ({
         try {
             const authHeaders = await getAuthHeaders();
             const response = await api.patch(`/api/pickup-areas/${id}`, formData, {
-                headers: { ...authHeaders, 'Content-Type': 'multipart/form-data' },
+                headers: { ...authHeaders },
             });
             set({ loading: false });
             return { success: response.status === 200 };

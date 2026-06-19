@@ -82,8 +82,9 @@ const useDestinationStore = create((set, get) => ({
         set({ loading: true, error: null });
         try {
             const authHeaders = await getAuthHeaders();
+            // Remove manual Content-Type so Axios handles multipart/form-data boundary automatically
             const response = await api.post('/api/destinations', formData, {
-                headers: { ...authHeaders, 'Content-Type': 'multipart/form-data' },
+                headers: { ...authHeaders },
             });
             set({ loading: false });
             return { success: true, data: response.data };
@@ -91,7 +92,11 @@ const useDestinationStore = create((set, get) => ({
             console.error('Error creating destination:', error);
             set({ loading: false });
             if (error.response && error.response.data) {
-                return { success: false, message: error.response.data.message };
+                const data = error.response.data;
+                const errMsg = data.message || 
+                               (data.errors && Array.isArray(data.errors) && data.errors.map(e => e.msg).join(', ')) || 
+                               (typeof data === 'string' ? data : 'Failed to add destination.');
+                return { success: false, message: errMsg };
             }
             return { success: false, message: 'Failed to add destination.' };
         }
@@ -101,8 +106,9 @@ const useDestinationStore = create((set, get) => ({
         set({ loading: true, error: null });
         try {
             const authHeaders = await getAuthHeaders();
-            const response = await api.patch(`/api/destinations/${id}`, formData, {
-                headers: { ...authHeaders, 'Content-Type': 'multipart/form-data' },
+            // Remove manual Content-Type so Axios handles multipart/form-data boundary automatically
+            const response = await api.put(`/api/destinations/${id}`, formData, {
+                headers: { ...authHeaders },
             });
             set({ loading: false });
             return { success: response.status === 200 };
