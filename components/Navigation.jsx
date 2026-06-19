@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 
 function Navigation({ editTour, EditDetail, EditDesc, editPlan, editImage, editOther }) {
   const [activeItem, setActiveItem] = useState("editTour");
@@ -86,11 +86,11 @@ function Navigation({ editTour, EditDetail, EditDesc, editPlan, editImage, editO
         </li>
       </ul>
 
-      {activeItem === "editTour" && editTour}
-      {activeItem === "EditDetail" && EditDetail}
-      {activeItem === "EditDesc" && EditDesc}
-      {activeItem === "editPlan" && editPlan}
-      {activeItem === "editImage" && editImage}
+      {activeItem === "editTour" && React.cloneElement(editTour, { onNext: () => setActiveItem("EditDetail") })}
+      {activeItem === "EditDetail" && React.cloneElement(EditDetail, { onNext: () => setActiveItem("EditDesc") })}
+      {activeItem === "EditDesc" && React.cloneElement(EditDesc, { onNext: () => setActiveItem("editPlan") })}
+      {activeItem === "editPlan" && React.cloneElement(editPlan, { onNext: () => setActiveItem("editImage") })}
+      {activeItem === "editImage" && React.cloneElement(editImage, { onNext: () => setActiveItem("editOther") })}
       {activeItem === "editOther" && editOther}
     </div>
   );

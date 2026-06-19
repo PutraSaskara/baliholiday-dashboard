@@ -3,6 +3,7 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Navbar from "../components/Navbar";
+import Script from "next/script";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -18,6 +19,7 @@ export default function RootLayout({ children }) {
         {/** Conditionally render Navbar only if authenticated */}
         <Navbar />
         {children}
+        <Script src="https://media-library.cloudinary.com/global/all.js" strategy="lazyOnload" />
       </body>
     </html>
   );

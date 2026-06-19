@@ -18,9 +18,43 @@ export default function EditActivityPage() {
     pickupIncluded: false, operatingHours: "",
     whatToBring: "", includes: "", notIncludes: "", cancellationPolicy: "",
     keywords: "", isActive: true,
+    tldr_summary: "",
+    guide_insight_author: "",
+    guide_insight_location: "",
+    guide_insight_content: "",
+    faq: "[]",
   });
+  const [faqs, setFaqs] = useState([]);
   const [images, setImages] = useState({ image1: null, image2: null, image3: null });
   const [previews, setPreviews] = useState({ image1: null, image2: null, image3: null });
+
+  const handleFaqChange = (index, field, value) => {
+    const newFaqs = [...faqs];
+    newFaqs[index][field] = value;
+    setFaqs(newFaqs);
+    setFormData(prev => ({
+      ...prev,
+      faq: JSON.stringify(newFaqs)
+    }));
+  };
+
+  const addFaq = () => {
+    const newFaqs = [...faqs, { question: "", answer: "" }];
+    setFaqs(newFaqs);
+    setFormData(prev => ({
+      ...prev,
+      faq: JSON.stringify(newFaqs)
+    }));
+  };
+
+  const removeFaq = (index) => {
+    const newFaqs = faqs.filter((_, i) => i !== index);
+    setFaqs(newFaqs);
+    setFormData(prev => ({
+      ...prev,
+      faq: JSON.stringify(newFaqs)
+    }));
+  };
 
   useEffect(() => {
     fetchActivity();
@@ -59,8 +93,21 @@ export default function EditActivityPage() {
         cancellationPolicy: a.cancellationPolicy || "",
         keywords: a.keywords || "",
         isActive: a.isActive !== false,
+        tldr_summary: a.tldr_summary || "",
+        guide_insight_author: a.guide_insight_author || "",
+        guide_insight_location: a.guide_insight_location || "",
+        guide_insight_content: a.guide_insight_content || "",
+        faq: a.faq || "[]",
       });
       setPreviews({ image1: a.image1 || null, image2: a.image2 || null, image3: a.image3 || null });
+      
+      let parsedFaqs = [];
+      try {
+        parsedFaqs = JSON.parse(a.faq || "[]");
+      } catch (e) {
+        parsedFaqs = [];
+      }
+      setFaqs(parsedFaqs);
     } catch (err) {
       console.error("Error fetching activity:", err);
       alert("Activity not found");
@@ -276,6 +323,58 @@ export default function EditActivityPage() {
                 <label className="block mb-1.5 text-sm font-bold text-gray-700">Cancellation Policy</label>
                 <textarea name="cancellationPolicy" value={formData.cancellationPolicy} onChange={handleChange} rows={2} className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none resize-none text-sm" />
               </div>
+            </div>
+          </section>
+
+          {/* GEO Optimization & Local Insights */}
+          <section className="space-y-6">
+            <h2 className="text-sm font-black uppercase tracking-widest text-gray-400 border-b border-gray-100 pb-2">🌴 GEO Optimization & Local Insights (Optional)</h2>
+            <div className="space-y-5">
+              <div>
+                <label className="block mb-1.5 text-sm font-bold text-gray-700">Quick Summary (TL;DR)</label>
+                <textarea name="tldr_summary" value={formData.tldr_summary} onChange={handleChange} rows={3} placeholder="A concise 2-3 sentence summary of the activity..." className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none resize-none text-sm" />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                  <label className="block mb-1.5 text-sm font-bold text-gray-700">Local Guide Name</label>
+                  <input name="guide_insight_author" value={formData.guide_insight_author} onChange={handleChange} placeholder="e.g. Wayan" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" />
+                </div>
+                <div>
+                  <label className="block mb-1.5 text-sm font-bold text-gray-700">Expertise / Location Context</label>
+                  <input name="guide_insight_location" value={formData.guide_insight_location} onChange={handleChange} placeholder="e.g. Ubud Rafting Instructor" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" />
+                </div>
+              </div>
+              <div>
+                <label className="block mb-1.5 text-sm font-bold text-gray-700">Authentic Guide Content / Tips</label>
+                <textarea name="guide_insight_content" value={formData.guide_insight_content} onChange={handleChange} rows={3} placeholder="Authentic, first-hand tips or advice from the guide..." className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none resize-none text-sm" />
+              </div>
+            </div>
+          </section>
+
+          {/* Frequently Asked Questions */}
+          <section className="space-y-6">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+              <h2 className="text-sm font-black uppercase tracking-widest text-gray-400">❓ Frequently Asked Questions (Optional)</h2>
+              <button type="button" onClick={addFaq} className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold rounded-lg transition-all">
+                + Add FAQ
+              </button>
+            </div>
+            <div className="space-y-4">
+              {faqs.map((faq, index) => (
+                <div key={index} className="p-5 bg-gray-50 rounded-2xl border border-gray-200 space-y-3 relative">
+                  <button type="button" onClick={() => removeFaq(index)} className="absolute top-4 right-4 text-xs font-bold text-red-500 hover:text-red-700">
+                    Delete
+                  </button>
+                  <div>
+                    <label className="block mb-1 text-xs font-bold text-gray-500">Question #{index + 1}</label>
+                    <input type="text" value={faq.question} onChange={(e) => handleFaqChange(index, "question", e.target.value)} placeholder="e.g. What should I wear?" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm font-medium" />
+                  </div>
+                  <div>
+                    <label className="block mb-1 text-xs font-bold text-gray-500">Answer</label>
+                    <textarea value={faq.answer} onChange={(e) => handleFaqChange(index, "answer", e.target.value)} placeholder="Answer details..." rows={2} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm font-medium resize-none" />
+                  </div>
+                </div>
+              ))}
             </div>
           </section>
 

@@ -13,7 +13,48 @@ function EditArticleImage({ Id }) {
   const [preview1, setPreview1] = useState("");
   const [preview2, setPreview2] = useState("");
   const [preview3, setPreview3] = useState("");
+  const [chosenUrl1, setChosenUrl1] = useState("");
+  const [chosenUrl2, setChosenUrl2] = useState("");
+  const [chosenUrl3, setChosenUrl3] = useState("");
+  const [chosenPublicId1, setChosenPublicId1] = useState("");
+  const [chosenPublicId2, setChosenPublicId2] = useState("");
+  const [chosenPublicId3, setChosenPublicId3] = useState("");
   const [existingData, setExistingData] = useState(null);
+
+  const openCloudinaryLibrary = (imageNum) => {
+    if (window.cloudinary) {
+      window.cloudinary.openMediaLibrary({
+        cloud_name: "djibcjquk",
+        api_key: "788191854535322",
+        multiple: false
+      }, {
+        insertHandler: function(data) {
+          const selectedAsset = data.assets[0];
+          const secureUrl = selectedAsset.secure_url;
+          const publicId = selectedAsset.public_id;
+          
+          if (imageNum === 1) {
+            setPreview1(secureUrl);
+            setChosenUrl1(secureUrl);
+            setChosenPublicId1(publicId);
+            setImages1([]); // Clear file upload
+          } else if (imageNum === 2) {
+            setPreview2(secureUrl);
+            setChosenUrl2(secureUrl);
+            setChosenPublicId2(publicId);
+            setImages2([]);
+          } else if (imageNum === 3) {
+            setPreview3(secureUrl);
+            setChosenUrl3(secureUrl);
+            setChosenPublicId3(publicId);
+            setImages3([]);
+          }
+        }
+      });
+    } else {
+      alert("Cloudinary library is loading. Please try again in a few seconds.");
+    }
+  };
 
   const { articles: tourOptions, fetchArticles, fetchArticleImage, updateArticleImage } = useArticleStore();
 
@@ -62,6 +103,8 @@ function EditArticleImage({ Id }) {
     if (!validateImage(event.target.files[0])) return;
     setImages1(event.target.files);
     setPreview1(URL.createObjectURL(event.target.files[0]));
+    setChosenUrl1("");
+    setChosenPublicId1("");
     setError("");
   };
 
@@ -69,6 +112,8 @@ function EditArticleImage({ Id }) {
     if (!validateImage(event.target.files[0])) return;
     setImages2(event.target.files);
     setPreview2(URL.createObjectURL(event.target.files[0]));
+    setChosenUrl2("");
+    setChosenPublicId2("");
     setError("");
   };
 
@@ -76,6 +121,8 @@ function EditArticleImage({ Id }) {
     if (!validateImage(event.target.files[0])) return;
     setImages3(event.target.files);
     setPreview3(URL.createObjectURL(event.target.files[0]));
+    setChosenUrl3("");
+    setChosenPublicId3("");
     setError("");
   };
 
@@ -83,30 +130,62 @@ function EditArticleImage({ Id }) {
     event.preventDefault();
 
     if (!Id.trim()) {
-      setError("Tour ID is required");
-      return;
-    }
-
-    if (
-      images1.length !== 1 ||
-      images2.length !== 1 ||
-      images3.length !== 1
-    ) {
-      setError("Please select exactly one image for each field");
+      setError("Article ID is required");
       return;
     }
 
     const formData = new FormData();
     formData.append("blogId", blogId);
-    if (images1[0]) formData.append("image", images1[0]);
-    if (images2[0]) formData.append("image", images2[0]);
-    if (images3[0]) formData.append("image", images3[0]);
+
+    let hasChanges = false;
+
+    if (images1.length > 0) {
+      formData.append("image", images1[0]);
+      hasChanges = true;
+    } else if (chosenUrl1) {
+      formData.append("imageUrl1", chosenUrl1);
+      formData.append("image1", chosenPublicId1);
+      hasChanges = true;
+    }
+
+    if (images2.length > 0) {
+      formData.append("image", images2[0]);
+      hasChanges = true;
+    } else if (chosenUrl2) {
+      formData.append("imageUrl2", chosenUrl2);
+      formData.append("image2", chosenPublicId2);
+      hasChanges = true;
+    }
+
+    if (images3.length > 0) {
+      formData.append("image", images3[0]);
+      hasChanges = true;
+    } else if (chosenUrl3) {
+      formData.append("imageUrl3", chosenUrl3);
+      formData.append("image3", chosenPublicId3);
+      hasChanges = true;
+    }
+
+    if (!hasChanges) {
+      alert("No changes detected to upload.");
+      return;
+    }
 
     const { success, status, data, message } = await updateArticleImage(Id, formData);
 
     if (success) {
       console.log("Images uploaded successfully:", data);
-      alert("Images uploaded successfully");
+      alert("Images updated successfully");
+      setImages1([]);
+      setImages2([]);
+      setImages3([]);
+      setChosenUrl1("");
+      setChosenUrl2("");
+      setChosenUrl3("");
+      setChosenPublicId1("");
+      setChosenPublicId2("");
+      setChosenPublicId3("");
+      loadData();
     } else {
       if (status) {
         console.error("Server responded with error status:", status);
@@ -140,7 +219,7 @@ function EditArticleImage({ Id }) {
         <p><Link href={'https://imagecompressor.11zon.com/en/compress-webp/'} target="_blank" className="bg-blue-500 px-2 rounded-md text-white hover:bg-blue-700">imagecompressor.11zon</Link></p>
 
         <div className="block lg:flex lg:justify-between lg:gap-5 mt-10">
-          <div>
+          <div className="flex-1 space-y-2">
             <label htmlFor="images1" className="block mb-2 text-sm font-medium text-gray-900 ">Select Image 1:</label>
             <input
               type="file"
@@ -150,17 +229,25 @@ function EditArticleImage({ Id }) {
               className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
             />
             <p className="mt-1 text-sm text-black font-semibold" id="images1_help">.webp only (max size 5mb. and please choose minimum full Hd image 1920x1080 pixel).</p>
+            <button
+                type="button"
+                onClick={() => openCloudinaryLibrary(1)}
+                className="mt-2 w-full py-2 bg-indigo-50 text-indigo-700 font-bold text-xs rounded-lg border border-indigo-100 hover:bg-indigo-100 active:scale-95 transition-all flex items-center justify-center gap-1.5"
+            >
+                <svg className="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                Select from Cloudinary
+            </button>
             {preview1 && (
               <Image
                 src={preview1}
                 alt="Preview"
-                className="w-[300px] mt-5"
+                className="w-[300px] mt-5 rounded-xl object-cover aspect-[4/3]"
                 width={100}
                 height={100}
               />
             )}
           </div>
-          <div>
+          <div className="flex-1 space-y-2">
             <label htmlFor="images2" className="block mb-2 text-sm font-medium text-gray-900">Select Image 2:</label>
             <input
               type="file"
@@ -170,17 +257,25 @@ function EditArticleImage({ Id }) {
               className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
             />
             <p className="mt-1 text-sm text-black font-semibold" id="images1_help">webp only (max size 5mb. and please choose minimum full Hd image 1920x1080 pixel).</p>
+            <button
+                type="button"
+                onClick={() => openCloudinaryLibrary(2)}
+                className="mt-2 w-full py-2 bg-indigo-50 text-indigo-700 font-bold text-xs rounded-lg border border-indigo-100 hover:bg-indigo-100 active:scale-95 transition-all flex items-center justify-center gap-1.5"
+            >
+                <svg className="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                Select from Cloudinary
+            </button>
             {preview2 && (
               <Image
                 src={preview2}
                 alt="Preview"
-                className="w-[300px] mt-5"
+                className="w-[300px] mt-5 rounded-xl object-cover aspect-[4/3]"
                 width={100}
                 height={100}
               />
             )}
           </div>
-          <div>
+          <div className="flex-1 space-y-2">
             <label htmlFor="images3" className="block mb-2 text-sm font-medium text-gray-900">Select Image 3:</label>
             <input
               type="file"
@@ -190,23 +285,30 @@ function EditArticleImage({ Id }) {
               className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
             />
             <p className="mt-1 text-sm text-black font-semibold" id="images1_help">webp only (max size 5mb. and please choose minimum full Hd image 1920x1080 pixel).</p>
+            <button
+                type="button"
+                onClick={() => openCloudinaryLibrary(3)}
+                className="mt-2 w-full py-2 bg-indigo-50 text-indigo-700 font-bold text-xs rounded-lg border border-indigo-100 hover:bg-indigo-100 active:scale-95 transition-all flex items-center justify-center gap-1.5"
+            >
+                <svg className="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                Select from Cloudinary
+            </button>
             {preview3 && (
               <Image
                 src={preview3}
                 alt="Preview"
-                className="w-[300px] mt-5"
+                className="w-[300px] mt-5 rounded-xl object-cover aspect-[4/3]"
                 width={100}
                 height={100}
               />
             )}
           </div>
-
         </div>
         {error && <div className="max-w-fit bg-red-500 mt-3">Error: {error}</div>}
       </form>
       <div className="flex justify-between items-center">
         <button type="submit" onClick={handleSubmit} className="bg-green-500 px-5 py-2 rounded-xl mt-10 mb-10 hover:bg-green-600">Upload Images</button>
-        <Link href={'/'} className="px-5 py-2.5  text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+        <Link href={'/'} className="px-5 py-2.5  text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
           Back to Dashboard
         </Link>
       </div>

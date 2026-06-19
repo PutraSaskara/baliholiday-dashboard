@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
 import useTourStore from '../stores/useTourStore';
 
-function EditDetail({ tourDetailId }) {
+function EditDetail({ tourDetailId, onNext }) {
   const [formData, setFormData] = useState({
     detail1: '',
     detail2: '',
@@ -87,9 +87,15 @@ function EditDetail({ tourDetailId }) {
       <div className='flex justify-between'>
         <button type="button" onClick={handleSubmit} className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mb-10">Save</button>
 
-        <Link href={'/edit-tour-package/edit-tour-desc'} className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mb-10">
-          Next to Edit Tour Description
-        </Link>
+        {onNext ? (
+          <button type="button" onClick={onNext} className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mb-10">
+            Next to Edit Tour Description
+          </button>
+        ) : (
+          <Link href={'/edit-tour-package/edit-tour-desc'} className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mb-10">
+            Next to Edit Tour Description
+          </Link>
+        )}
       </div>
 
     </div>

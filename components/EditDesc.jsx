@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useState, useEffect, useCallback } from "react";
 import useTourStore from "../stores/useTourStore";
 
-function EditDesc({ tourId }) {
+function EditDesc({ tourId, onNext }) {
   const [formData, setFormData] = useState({
     paragraf1: "",
     paragraf2: "",
@@ -141,12 +141,22 @@ function EditDesc({ tourId }) {
           Save
         </button>
 
-        <Link
-          href={"/add-tour-package/add-tour-plan"}
-          className="px-5 py-3 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mb-10"
-        >
-          Next to Edit Tour Plan
-        </Link>
+        {onNext ? (
+          <button
+            type="button"
+            onClick={onNext}
+            className="px-5 py-3 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mb-10"
+          >
+            Next to Edit Tour Plan
+          </button>
+        ) : (
+          <Link
+            href={"/add-tour-package/add-tour-plan"}
+            className="px-5 py-3 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mb-10"
+          >
+            Next to Edit Tour Plan
+          </Link>
+        )}
       </div>
     </div>
   );

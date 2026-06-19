@@ -14,7 +14,48 @@ function AddArticleImage() {
   const [preview1, setPreview1] = useState("");
   const [preview2, setPreview2] = useState("");
   const [preview3, setPreview3] = useState("");
+  const [chosenUrl1, setChosenUrl1] = useState("");
+  const [chosenUrl2, setChosenUrl2] = useState("");
+  const [chosenUrl3, setChosenUrl3] = useState("");
+  const [chosenPublicId1, setChosenPublicId1] = useState("");
+  const [chosenPublicId2, setChosenPublicId2] = useState("");
+  const [chosenPublicId3, setChosenPublicId3] = useState("");
   const [isSaved, setIsSaved] = useState(false);
+
+  const openCloudinaryLibrary = (imageNum) => {
+    if (window.cloudinary) {
+      window.cloudinary.openMediaLibrary({
+        cloud_name: "djibcjquk",
+        api_key: "788191854535322",
+        multiple: false
+      }, {
+        insertHandler: function(data) {
+          const selectedAsset = data.assets[0];
+          const secureUrl = selectedAsset.secure_url;
+          const publicId = selectedAsset.public_id;
+          
+          if (imageNum === 1) {
+            setPreview1(secureUrl);
+            setChosenUrl1(secureUrl);
+            setChosenPublicId1(publicId);
+            setImages1([]); // Clear file upload
+          } else if (imageNum === 2) {
+            setPreview2(secureUrl);
+            setChosenUrl2(secureUrl);
+            setChosenPublicId2(publicId);
+            setImages2([]);
+          } else if (imageNum === 3) {
+            setPreview3(secureUrl);
+            setChosenUrl3(secureUrl);
+            setChosenPublicId3(publicId);
+            setImages3([]);
+          }
+        }
+      });
+    } else {
+      alert("Cloudinary library is loading. Please try again in a few seconds.");
+    }
+  };
 
   const { 
     articles: tourOptions, 
@@ -55,6 +96,8 @@ function AddArticleImage() {
     if (!validateImage(event.target.files[0])) return;
     setImages1(event.target.files);
     setPreview1(URL.createObjectURL(event.target.files[0]));
+    setChosenUrl1("");
+    setChosenPublicId1("");
     setError("");
   };
 
@@ -62,6 +105,8 @@ function AddArticleImage() {
     if (!validateImage(event.target.files[0])) return;
     setImages2(event.target.files);
     setPreview2(URL.createObjectURL(event.target.files[0]));
+    setChosenUrl2("");
+    setChosenPublicId2("");
     setError("");
   };
 
@@ -69,6 +114,8 @@ function AddArticleImage() {
     if (!validateImage(event.target.files[0])) return;
     setImages3(event.target.files);
     setPreview3(URL.createObjectURL(event.target.files[0]));
+    setChosenUrl3("");
+    setChosenPublicId3("");
     setError("");
   };
 
@@ -81,19 +128,37 @@ function AddArticleImage() {
     }
 
     if (
-      images1.length !== 1 ||
-      images2.length !== 1 ||
-      images3.length !== 1
+      (!images1.length && !chosenUrl1) ||
+      (!images2.length && !chosenUrl2) ||
+      (!images3.length && !chosenUrl3)
     ) {
-      setError("Please select exactly one image for each field");
+      setError("Please select or upload exactly one image for each field");
       return;
     }
 
     const formData = new FormData();
     formData.append("blogId", blogId);
-    formData.append("image", images1[0]);
-    formData.append("image", images2[0]);
-    formData.append("image", images3[0]);
+
+    if (images1.length > 0) {
+      formData.append("image", images1[0]);
+    } else if (chosenUrl1) {
+      formData.append("imageUrl1", chosenUrl1);
+      formData.append("image1", chosenPublicId1);
+    }
+
+    if (images2.length > 0) {
+      formData.append("image", images2[0]);
+    } else if (chosenUrl2) {
+      formData.append("imageUrl2", chosenUrl2);
+      formData.append("image2", chosenPublicId2);
+    }
+
+    if (images3.length > 0) {
+      formData.append("image", images3[0]);
+    } else if (chosenUrl3) {
+      formData.append("imageUrl3", chosenUrl3);
+      formData.append("image3", chosenPublicId3);
+    }
 
     if(draftArticle) {
        // Draft flow (New Article)
@@ -108,6 +173,12 @@ function AddArticleImage() {
          setPreview1("");
          setPreview2("");
          setPreview3("");
+         setChosenUrl1("");
+         setChosenUrl2("");
+         setChosenUrl3("");
+         setChosenPublicId1("");
+         setChosenPublicId2("");
+         setChosenPublicId3("");
          alert("All data (Article, Paragraphs, Images) uploaded successfully!");
        } else {
          alert(`Failed to submit drafts: ${message}`);
@@ -126,6 +197,12 @@ function AddArticleImage() {
          setPreview1("");
          setPreview2("");
          setPreview3("");
+         setChosenUrl1("");
+         setChosenUrl2("");
+         setChosenUrl3("");
+         setChosenPublicId1("");
+         setChosenPublicId2("");
+         setChosenPublicId3("");
          alert("Images uploaded successfully");
        } else {
          if (status) {
@@ -207,11 +284,11 @@ function AddArticleImage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              { id: '1', label: 'Image 1 (Main Header)', preview: preview1, handler: handleImageChange1 },
-              { id: '2', label: 'Image 2 (Secondary)', preview: preview2, handler: handleImageChange2 },
-              { id: '3', label: 'Image 3 (Tertiary)', preview: preview3, handler: handleImageChange3 }
+              { id: 1, label: 'Image 1 (Main Header)', preview: preview1, handler: handleImageChange1 },
+              { id: 2, label: 'Image 2 (Secondary)', preview: preview2, handler: handleImageChange2 },
+              { id: 3, label: 'Image 3 (Tertiary)', preview: preview3, handler: handleImageChange3 }
             ].map((img) => (
-              <div key={img.id} className="relative group">
+              <div key={img.id} className="relative group space-y-2">
                 <label className="block mb-2 text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">{img.label}</label>
                 <div className={`relative aspect-square rounded-3xl border-2 border-dashed transition-all duration-300 flex flex-col items-center justify-center overflow-hidden
                   ${img.preview ? 'border-transparent ring-2 ring-blue-500 ring-offset-4' : 'border-gray-200 bg-gray-50/50 hover:bg-white hover:border-blue-400'}`}>
@@ -237,6 +314,14 @@ function AddArticleImage() {
                     className="absolute inset-0 opacity-0 cursor-pointer"
                   />
                 </div>
+                <button
+                    type="button"
+                    onClick={() => openCloudinaryLibrary(img.id)}
+                    className="w-full py-2 bg-indigo-50 text-indigo-700 font-bold text-xs rounded-xl border border-indigo-100 hover:bg-indigo-100 active:scale-95 transition-all flex items-center justify-center gap-1.5"
+                >
+                    <svg className="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    Select from Cloudinary
+                </button>
               </div>
             ))}
           </div>

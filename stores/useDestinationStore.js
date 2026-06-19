@@ -28,6 +28,21 @@ const useDestinationStore = create((set, get) => ({
         }
     },
 
+    fetchAllDestinationsList: async () => {
+        set({ loading: true, error: null });
+        try {
+            const response = await api.get('/api/destinations', {
+                params: { page: 1, limit: 500 },
+            });
+            set({ loading: false });
+            return response.data.destinations || [];
+        } catch (error) {
+            console.error('Error fetching all destinations list:', error);
+            set({ error: 'Failed to fetch destinations.', loading: false });
+            return [];
+        }
+    },
+
     fetchDestinationById: async (id) => {
         set({ loading: true, error: null });
         try {

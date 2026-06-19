@@ -10,8 +10,14 @@ function AddSingleArticle() {
   const [formData, setFormData] = useState({
     title: '',
     author: '',
-    keywords: ''
+    keywords: '',
+    tldr_summary: '',
+    guide_insight_author: 'Putra Saskara',
+    guide_insight_location: '',
+    guide_insight_content: '',
+    faq: '[]'
   });
+  const [faqs, setFaqs] = useState([]);
   const [isSaved, setIsSaved] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -21,6 +27,11 @@ function AddSingleArticle() {
     if (draftArticle) {
       setFormData(draftArticle);
       setIsSaved(true); // If they already saved the draft, allow them to proceed
+      try {
+        setFaqs(JSON.parse(draftArticle.faq || '[]'));
+      } catch (e) {
+        setFaqs([]);
+      }
     }
   }, [draftArticle]);
 
@@ -29,6 +40,34 @@ function AddSingleArticle() {
     setFormData(prevState => ({
       ...prevState,
       [name]: value
+    }));
+  };
+
+  const handleFaqChange = (index, field, value) => {
+    const newFaqs = [...faqs];
+    newFaqs[index][field] = value;
+    setFaqs(newFaqs);
+    setFormData(prev => ({
+      ...prev,
+      faq: JSON.stringify(newFaqs)
+    }));
+  };
+
+  const addFaq = () => {
+    const newFaqs = [...faqs, { question: "", answer: "" }];
+    setFaqs(newFaqs);
+    setFormData(prev => ({
+      ...prev,
+      faq: JSON.stringify(newFaqs)
+    }));
+  };
+
+  const removeFaq = (index) => {
+    const newFaqs = faqs.filter((_, i) => i !== index);
+    setFaqs(newFaqs);
+    setFormData(prev => ({
+      ...prev,
+      faq: JSON.stringify(newFaqs)
     }));
   };
 
@@ -112,6 +151,115 @@ function AddSingleArticle() {
                         onChange={handleChange} 
                         className="w-full px-6 py-4 bg-gray-50/50 border border-gray-200 text-gray-900 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white transition-all outline-none font-medium placeholder:text-gray-400 shadow-sm"
                     />
+                </div>
+            </div>
+
+            {/* GEO Optimization & Local Insights */}
+            <div className="border-t border-gray-100 pt-8 space-y-6">
+                <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2 ml-1">
+                    <span>🌴</span> GEO Optimization & Local Insights (Optional)
+                </h3>
+                <div className="group">
+                    <label htmlFor="tldr_summary" className="block mb-2.5 text-sm font-bold text-gray-700 ml-1 transition-colors group-focus-within:text-blue-600">Quick Summary (TL;DR)</label>
+                    <textarea 
+                        id="tldr_summary" 
+                        name="tldr_summary" 
+                        placeholder="A concise 2-3 sentence summary of the article..."
+                        value={formData.tldr_summary || ''} 
+                        onChange={handleChange} 
+                        rows={3}
+                        className="w-full px-6 py-4 bg-gray-50/50 border border-gray-200 text-gray-900 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white transition-all outline-none font-medium placeholder:text-gray-400 shadow-sm resize-none"
+                    />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="group">
+                        <label htmlFor="guide_insight_author" className="block mb-2.5 text-sm font-bold text-gray-700 ml-1 transition-colors group-focus-within:text-blue-600">Local Guide Name</label>
+                        <input 
+                            type="text" 
+                            id="guide_insight_author" 
+                            name="guide_insight_author" 
+                            placeholder="Putra Saskara"
+                            value={formData.guide_insight_author || ''} 
+                            onChange={handleChange} 
+                            className="w-full px-6 py-4 bg-gray-50/50 border border-gray-200 text-gray-900 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white transition-all outline-none font-medium placeholder:text-gray-400 shadow-sm"
+                        />
+                    </div>
+                    <div className="group">
+                        <label htmlFor="guide_insight_location" className="block mb-2.5 text-sm font-bold text-gray-700 ml-1 transition-colors group-focus-within:text-blue-600">Expertise / Location Context</label>
+                        <input 
+                            type="text" 
+                            id="guide_insight_location" 
+                            name="guide_insight_location" 
+                            placeholder="e.g. Ubud Tours Expert"
+                            value={formData.guide_insight_location || ''} 
+                            onChange={handleChange} 
+                            className="w-full px-6 py-4 bg-gray-50/50 border border-gray-200 text-gray-900 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white transition-all outline-none font-medium placeholder:text-gray-400 shadow-sm"
+                        />
+                    </div>
+                </div>
+
+                <div className="group">
+                    <label htmlFor="guide_insight_content" className="block mb-2.5 text-sm font-bold text-gray-700 ml-1 transition-colors group-focus-within:text-blue-600">Authentic Guide Content / Tips</label>
+                    <textarea 
+                        id="guide_insight_content" 
+                        name="guide_insight_content" 
+                        placeholder="Authentic, first-hand tips or advice from the guide..."
+                        value={formData.guide_insight_content || ''} 
+                        onChange={handleChange} 
+                        rows={3}
+                        className="w-full px-6 py-4 bg-gray-50/50 border border-gray-200 text-gray-900 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white transition-all outline-none font-medium placeholder:text-gray-400 shadow-sm resize-none"
+                    />
+                </div>
+            </div>
+
+            {/* Frequently Asked Questions */}
+            <div className="border-t border-gray-100 pt-8 space-y-6">
+                <div className="flex items-center justify-between ml-1">
+                    <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                        <span>❓</span> Frequently Asked Questions (Optional)
+                    </h3>
+                    <button 
+                        type="button" 
+                        onClick={addFaq}
+                        className="px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold rounded-xl transition-all shadow-sm"
+                    >
+                        + Add FAQ Item
+                    </button>
+                </div>
+
+                <div className="space-y-4">
+                    {faqs.map((faq, index) => (
+                        <div key={index} className="p-6 bg-gray-50/50 rounded-3xl border border-gray-200 space-y-4 relative">
+                            <button 
+                                type="button" 
+                                onClick={() => removeFaq(index)}
+                                className="absolute top-4 right-4 text-xs font-bold text-red-500 hover:text-red-700"
+                            >
+                                Delete
+                            </button>
+                            <div className="group">
+                                <label className="block mb-2 text-xs font-bold text-gray-500">Question #{index + 1}</label>
+                                <input 
+                                    type="text" 
+                                    placeholder="e.g. Is Kusamba Salt Farm worth visiting?"
+                                    value={faq.question} 
+                                    onChange={(e) => handleFaqChange(index, 'question', e.target.value)} 
+                                    className="w-full px-4 py-3 bg-white border border-gray-200 text-gray-900 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none text-sm font-medium shadow-sm"
+                                />
+                            </div>
+                            <div className="group">
+                                <label className="block mb-2 text-xs font-bold text-gray-500">Answer</label>
+                                <textarea 
+                                    placeholder="Answer..."
+                                    value={faq.answer} 
+                                    onChange={(e) => handleFaqChange(index, 'answer', e.target.value)} 
+                                    rows={2}
+                                    className="w-full px-4 py-3 bg-white border border-gray-200 text-gray-900 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none text-sm font-medium shadow-sm resize-none"
+                                />
+                            </div>
+                        </div>
+                    ))}
                 </div>
             </div>
         </div>

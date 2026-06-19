@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import useTourStore from '../stores/useTourStore';
 import useWarnIfUnsavedChanges from '../hooks/useWarnIfUnsavedChanges';
+import useDestinationStore from '../stores/useDestinationStore';
 
 function AddTourPlan() {
   const { 
@@ -13,6 +14,18 @@ function AddTourPlan() {
     setDraftTourPlan,
     hasUnsavedTourChanges
   } = useTourStore();
+
+  const { fetchAllDestinationsList, createDestination } = useDestinationStore();
+  const [destinations, setDestinations] = useState([]);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalData, setModalData] = useState({
+    stopNum: null,
+    name: '',
+    lat: '',
+    lng: '',
+    description: '',
+    file: null
+  });
 
   const [formData, setFormData] = useState({
     title1: '',
@@ -77,6 +90,76 @@ function AddTourPlan() {
         fetchTours();
     }
   }, [fetchTours, draftTour, draftTourPlan]);
+
+  useEffect(() => {
+    const loadDestinations = async () => {
+      const list = await fetchAllDestinationsList();
+      setDestinations(list);
+    };
+    loadDestinations();
+  }, [fetchAllDestinationsList]);
+
+  const handleSelectDestination = (stopNum, destinationId) => {
+    if (!destinationId) return;
+    const dest = destinations.find(d => String(d.id) === String(destinationId));
+    if (dest) {
+      setFormData(prev => ({
+        ...prev,
+        [`title${stopNum}`]: dest.name || '',
+        [`coordinatesleft${stopNum}`]: String(dest.lat) || '',
+        [`coordinatesright${stopNum}`]: String(dest.lng) || '',
+        [`description${stopNum}`]: dest.description || '',
+      }));
+    }
+  };
+
+  const openSaveDestinationModal = (stopNum) => {
+    setModalData({
+      stopNum,
+      name: formData[`title${stopNum}`] || '',
+      lat: formData[`coordinatesleft${stopNum}`] || '',
+      lng: formData[`coordinatesright${stopNum}`] || '',
+      description: formData[`description${stopNum}`] || '',
+      file: null
+    });
+    setModalOpen(true);
+  };
+
+  const handleModalSave = async () => {
+    if (!modalData.name || !modalData.lat || !modalData.lng || !modalData.description) {
+      alert("Name, Latitude, Longitude, and Description are required to save a destination.");
+      return;
+    }
+    if (!modalData.file) {
+      alert("Please select an image file for the destination.");
+      return;
+    }
+
+    const payload = new FormData();
+    payload.append("name", modalData.name);
+    payload.append("description", modalData.description);
+    payload.append("lat", modalData.lat);
+    payload.append("lng", modalData.lng);
+    payload.append("image", modalData.file);
+
+    const res = await createDestination(payload);
+    if (res.success) {
+      alert("Destination saved successfully!");
+      const list = await fetchAllDestinationsList();
+      setDestinations(list);
+      
+      setFormData(prev => ({
+        ...prev,
+        [`title${modalData.stopNum}`]: modalData.name,
+        [`coordinatesleft${modalData.stopNum}`]: modalData.lat,
+        [`coordinatesright${modalData.stopNum}`]: modalData.lng,
+        [`description${modalData.stopNum}`]: modalData.description,
+      }));
+      setModalOpen(false);
+    } else {
+      alert(res.message || "Failed to save destination.");
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -160,6 +243,28 @@ function AddTourPlan() {
                         <div className="absolute left-[-13px] top-0 w-6 h-6 rounded-full bg-blue-500 border-4 border-white shadow-lg ring-4 ring-blue-50 flex items-center justify-center text-[8px] text-white font-bold">{index + 1}</div>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="md:col-span-2 flex flex-col md:flex-row gap-4 items-end bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
+                                <div className="flex-1 group w-full">
+                                    <label className="block mb-1 text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Select Existing Destination</label>
+                                    <select
+                                        onChange={(e) => handleSelectDestination(index + 1, e.target.value)}
+                                        className="w-full px-4 py-2.5 bg-white border border-gray-200 text-gray-900 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-400 transition-all outline-none font-semibold text-xs cursor-pointer shadow-sm"
+                                    >
+                                        <option value="">-- Choose Existing Destination --</option>
+                                        {destinations.map(d => (
+                                            <option key={d.id} value={d.id}>{d.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => openSaveDestinationModal(index + 1)}
+                                    className="px-4 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[10px] font-bold rounded-xl transition-all shadow-sm h-[38px] flex items-center justify-center gap-1 w-full md:w-auto"
+                                >
+                                    <span>💾</span> Save as New Destination
+                                </button>
+                            </div>
+
                             <div className="md:col-span-2 group">
                                 <label className="block mb-1 text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Stop Title</label>
                                 <input 
@@ -250,6 +355,82 @@ function AddTourPlan() {
                 </button>
             )}
         </div>
+      {/* Save Destination Modal */}
+      {modalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="relative w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl space-y-4">
+            <h3 className="text-lg font-bold text-gray-900">Save as New Destination</h3>
+            <p className="text-xs text-gray-500">This will add the location to your destinations database for reuse in other packages.</p>
+            
+            <div className="space-y-3">
+              <div>
+                <label className="block mb-1 text-xs font-bold text-gray-500">Destination Name</label>
+                <input
+                  type="text"
+                  value={modalData.name}
+                  onChange={(e) => setModalData(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none text-sm font-medium"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block mb-1 text-xs font-bold text-gray-500">Latitude</label>
+                  <input
+                    type="text"
+                    value={modalData.lat}
+                    onChange={(e) => setModalData(prev => ({ ...prev, lat: e.target.value }))}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none text-sm font-medium"
+                  />
+                </div>
+                <div>
+                  <label className="block mb-1 text-xs font-bold text-gray-500">Longitude</label>
+                  <input
+                    type="text"
+                    value={modalData.lng}
+                    onChange={(e) => setModalData(prev => ({ ...prev, lng: e.target.value }))}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none text-sm font-medium"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block mb-1 text-xs font-bold text-gray-500">Description</label>
+                <textarea
+                  value={modalData.description}
+                  onChange={(e) => setModalData(prev => ({ ...prev, description: e.target.value }))}
+                  rows={3}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none text-sm font-medium resize-none"
+                />
+              </div>
+              <div>
+                <label className="block mb-1 text-xs font-bold text-gray-500">Destination Image</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setModalData(prev => ({ ...prev, file: e.target.files[0] }))}
+                  className="w-full text-xs text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-3">
+              <button
+                type="button"
+                onClick={() => setModalOpen(false)}
+                className="px-4 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-xl transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleModalSave}
+                className="px-4 py-2 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md shadow-indigo-200"
+              >
+                Save Destination
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       </div>
     </div>
   );

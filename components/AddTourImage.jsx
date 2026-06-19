@@ -14,8 +14,49 @@ function AddTourImage() {
   const [preview1, setPreview1] = useState("");
   const [preview2, setPreview2] = useState("");
   const [preview3, setPreview3] = useState("");
+  const [chosenUrl1, setChosenUrl1] = useState("");
+  const [chosenUrl2, setChosenUrl2] = useState("");
+  const [chosenUrl3, setChosenUrl3] = useState("");
+  const [chosenPublicId1, setChosenPublicId1] = useState("");
+  const [chosenPublicId2, setChosenPublicId2] = useState("");
+  const [chosenPublicId3, setChosenPublicId3] = useState("");
   const [isSaved, setIsSaved] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  const openCloudinaryLibrary = (imageNum) => {
+    if (window.cloudinary) {
+      window.cloudinary.openMediaLibrary({
+        cloud_name: "djibcjquk",
+        api_key: "788191854535322",
+        multiple: false
+      }, {
+        insertHandler: function(data) {
+          const selectedAsset = data.assets[0];
+          const secureUrl = selectedAsset.secure_url;
+          const publicId = selectedAsset.public_id;
+          
+          if (imageNum === 1) {
+            setPreview1(secureUrl);
+            setChosenUrl1(secureUrl);
+            setChosenPublicId1(publicId);
+            setImages1([]); // Clear file upload
+          } else if (imageNum === 2) {
+            setPreview2(secureUrl);
+            setChosenUrl2(secureUrl);
+            setChosenPublicId2(publicId);
+            setImages2([]);
+          } else if (imageNum === 3) {
+            setPreview3(secureUrl);
+            setChosenUrl3(secureUrl);
+            setChosenPublicId3(publicId);
+            setImages3([]);
+          }
+        }
+      });
+    } else {
+      alert("Cloudinary library is loading. Please try again in a few seconds.");
+    }
+  };
 
   const { 
     tours: tourOptions, 
@@ -55,6 +96,8 @@ function AddTourImage() {
     if (!validateImage(event.target.files[0])) return;
     setImages1(event.target.files);
     setPreview1(URL.createObjectURL(event.target.files[0]));
+    setChosenUrl1("");
+    setChosenPublicId1("");
     setError("");
   };
 
@@ -62,6 +105,8 @@ function AddTourImage() {
     if (!validateImage(event.target.files[0])) return;
     setImages2(event.target.files);
     setPreview2(URL.createObjectURL(event.target.files[0]));
+    setChosenUrl2("");
+    setChosenPublicId2("");
     setError("");
   };
 
@@ -69,6 +114,8 @@ function AddTourImage() {
     if (!validateImage(event.target.files[0])) return;
     setImages3(event.target.files);
     setPreview3(URL.createObjectURL(event.target.files[0]));
+    setChosenUrl3("");
+    setChosenPublicId3("");
     setError("");
   };
 
@@ -82,19 +129,37 @@ function AddTourImage() {
       }
 
       if (
-        images1.length !== 1 ||
-        images2.length !== 1 ||
-        images3.length !== 1
+        (!images1.length && !chosenUrl1) ||
+        (!images2.length && !chosenUrl2) ||
+        (!images3.length && !chosenUrl3)
       ) {
-        setError("Please select exactly one image for each field");
+        setError("Please select or upload exactly one image for each field");
         return;
       }
 
       const formData = new FormData();
       formData.append("tourId", tourId);
-      formData.append("image", images1[0]);
-      formData.append("image", images2[0]);
-      formData.append("image", images3[0]);
+
+      if (images1.length > 0) {
+        formData.append("image", images1[0]);
+      } else if (chosenUrl1) {
+        formData.append("imageUrl1", chosenUrl1);
+        formData.append("image1", chosenPublicId1);
+      }
+
+      if (images2.length > 0) {
+        formData.append("image", images2[0]);
+      } else if (chosenUrl2) {
+        formData.append("imageUrl2", chosenUrl2);
+        formData.append("image2", chosenPublicId2);
+      }
+
+      if (images3.length > 0) {
+        formData.append("image", images3[0]);
+      } else if (chosenUrl3) {
+        formData.append("imageUrl3", chosenUrl3);
+        formData.append("image3", chosenPublicId3);
+      }
 
       let result;
       if (draftTour) {
@@ -118,6 +183,12 @@ function AddTourImage() {
         setPreview1("");
         setPreview2("");
         setPreview3("");
+        setChosenUrl1("");
+        setChosenUrl2("");
+        setChosenUrl3("");
+        setChosenPublicId1("");
+        setChosenPublicId2("");
+        setChosenPublicId3("");
         alert(draftTour ? "All Tour Data Published successfully!" : "Images uploaded successfully");
       } else {
         if (status) {
@@ -229,6 +300,14 @@ function AddTourImage() {
                                 )}
                                 <input type="file" id={`images${num}`} accept=".webp" onChange={handler} className="hidden" />
                             </div>
+                            <button
+                                type="button"
+                                onClick={() => openCloudinaryLibrary(num)}
+                                className="w-full py-2.5 bg-slate-50 text-slate-700 font-bold text-xs rounded-xl border border-slate-200 hover:bg-slate-100 active:scale-95 transition-all flex items-center justify-center gap-1.5"
+                            >
+                                <svg className="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                Select from Cloudinary
+                            </button>
                         </div>
                     );
                 })}

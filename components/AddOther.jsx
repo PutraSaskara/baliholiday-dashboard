@@ -136,6 +136,24 @@ function AddOther() {
             </div>
         )}
 
+        {!draftTour && (
+            <div className="mb-10 group">
+                <label htmlFor="tourId" className="block mb-2.5 text-sm font-bold text-gray-700 ml-1 group-focus-within:text-blue-600 transition-colors">Select Target Tour</label>
+                <select 
+                    id="tourId" 
+                    name="tourId"
+                    value={formData1.tourId} 
+                    onChange={handleChange}
+                    className="w-full px-6 py-4 bg-gray-50/50 border border-gray-200 text-gray-900 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white transition-all outline-none font-semibold appearance-none cursor-pointer shadow-sm"
+                >
+                    <option value="">Choose a Tour Package...</option>
+                    {tourOptions.map(tour => (
+                        <option key={tour.id} value={tour.id}>{tour.title}</option>
+                    ))}
+                </select>
+            </div>
+        )}
+
         <div className="space-y-12">
             {/* Includes Section */}
             <section className="space-y-6">
