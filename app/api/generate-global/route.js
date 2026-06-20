@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-export const maxDuration = 180; // Set maximum execution time to 180 seconds (3 minutes)
+export const maxDuration = 60; // Vercel Hobby tier allows a maximum of 60 seconds.
 export async function POST(req) {
   try {
     const { model, mode, tourId, blogId, targetSection, drafts, currentSectionData } = await req.json();
