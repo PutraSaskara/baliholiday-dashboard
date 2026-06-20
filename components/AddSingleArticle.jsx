@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import useArticleStore from '../stores/useArticleStore';
 import useWarnIfUnsavedChanges from '../hooks/useWarnIfUnsavedChanges';
+import AIAssistantModal from './AIAssistantModal';
 
 function AddSingleArticle() {
   const { draftArticle, setDraftArticle, hasUnsavedChanges } = useArticleStore();
@@ -21,6 +22,7 @@ function AddSingleArticle() {
   const [faqs, setFaqs] = useState([]);
   const [isSaved, setIsSaved] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isAIModalOpen, setIsAIModalOpen] = useState(false);
 
   // Pre-fill form with draft data on mount (avoid hydration mismatch)
   useEffect(() => {
@@ -90,6 +92,21 @@ function AddSingleArticle() {
     setIsSaved(true);
   };
 
+  const handleApplyAI = (generatedData) => {
+    const updatedForm = { ...formData };
+    if (generatedData.keywords) updatedForm.keywords = generatedData.keywords;
+    if (generatedData.tldr_summary) updatedForm.tldr_summary = generatedData.tldr_summary;
+    if (generatedData.guide_insight_location) updatedForm.guide_insight_location = generatedData.guide_insight_location;
+    if (generatedData.guide_insight_content) updatedForm.guide_insight_content = generatedData.guide_insight_content;
+    
+    if (generatedData.faq && Array.isArray(generatedData.faq)) {
+       updatedForm.faq = JSON.stringify(generatedData.faq);
+       setFaqs(generatedData.faq);
+    }
+    
+    setFormData(updatedForm);
+  };
+
   if (!mounted) {
     return null; // Avoid hydration mismatch on initial render
   }
@@ -108,9 +125,17 @@ function AddSingleArticle() {
       </div>
 
       <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-gray-200/50 border border-gray-100 p-8 md:p-12 transition-all duration-300">
-        <header className="mb-10">
-            <h1 className='text-3xl font-black tracking-tight text-gray-900 mb-2'>Create New Article</h1>
-            <p className="text-gray-500 text-lg">Let&apos;s start with the basics. Enter the title, keywords, and author.</p>
+        <header className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <h1 className='text-3xl font-black tracking-tight text-gray-900 mb-2'>Create New Article</h1>
+              <p className="text-gray-500 text-lg">Let&apos;s start with the basics. Enter the title, keywords, and author.</p>
+            </div>
+            <button 
+              onClick={() => setIsAIModalOpen(true)}
+              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-2xl shadow-lg shadow-blue-500/30 flex items-center gap-2 transition-all transform hover:scale-105 active:scale-95"
+            >
+              <span className="text-xl">✨</span> Review & AI Auto-fill
+            </button>
         </header>
 
         <div className="space-y-8">
@@ -304,6 +329,15 @@ function AddSingleArticle() {
             )}
         </div>
       </div>
+      
+      <AIAssistantModal 
+        isOpen={isAIModalOpen}
+        onClose={() => setIsAIModalOpen(false)}
+        mode="add"
+        targetSection="article"
+        drafts={{ ...formData }}
+        onApply={handleApplyAI}
+      />
     </div>
   );
 }

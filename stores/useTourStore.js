@@ -175,7 +175,7 @@ const useTourStore = create(
     // Descriptions
     fetchTourDesc: (id) => get()._fetchSubEntity(`descs/${id}`),
     createTourDesc: (formData) => get()._createSubEntity('desc', formData),
-    updateTourDesc: (id, formData) => get()._updateSubEntity(`desc/${id}`, formData),
+    updateTourDesc: (id, formData) => get()._updateSubEntity(`descs/${id}`, formData),
 
     // Plans
     fetchTourPlan: (id) => get()._fetchSubEntity(`plans/${id}`),

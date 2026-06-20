@@ -2,12 +2,13 @@
 import Link from "next/link";
 import { useState, useEffect, useCallback } from "react";
 import useArticleStore from "../stores/useArticleStore";
+import AIAssistantModal from "./AIAssistantModal";
 
 function EditSingleArticle({ id, onNext }) {
   const [formData, setFormData] = useState({
     title: "",
     slug: "",
-    tags: "",
+    keywords: "",
     author: "",
     tldr_summary: "",
     guide_insight_author: "",
@@ -19,6 +20,7 @@ function EditSingleArticle({ id, onNext }) {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isAIModalOpen, setIsAIModalOpen] = useState(false);
 
   const { fetchArticleById, updateArticle } = useArticleStore();
 
@@ -30,7 +32,7 @@ function EditSingleArticle({ id, onNext }) {
       setFormData({
         title: blog.title || "",
         slug: blog.slug || "",
-        tags: blog.tags || "",
+        keywords: blog.keywords || "",
         author: blog.author || "",
         tldr_summary: blog.tldr_summary || "",
         guide_insight_author: blog.guide_insight_author || "",
@@ -103,6 +105,21 @@ function EditSingleArticle({ id, onNext }) {
     setLoading(false);
   };
 
+  const handleApplyAI = (generatedData) => {
+    const updatedForm = { ...formData };
+    if (generatedData.keywords) updatedForm.keywords = generatedData.keywords;
+    if (generatedData.tldr_summary) updatedForm.tldr_summary = generatedData.tldr_summary;
+    if (generatedData.guide_insight_location) updatedForm.guide_insight_location = generatedData.guide_insight_location;
+    if (generatedData.guide_insight_content) updatedForm.guide_insight_content = generatedData.guide_insight_content;
+    
+    if (generatedData.faq && Array.isArray(generatedData.faq)) {
+       updatedForm.faq = JSON.stringify(generatedData.faq);
+       setFaqs(generatedData.faq);
+    }
+    
+    setFormData(updatedForm);
+  };
+
   if (loading) {
     return (
       <div className="max-w-screen-lg mx-auto">
@@ -121,7 +138,15 @@ function EditSingleArticle({ id, onNext }) {
 
   return (
     <div className="max-w-screen-lg mx-auto px-5 mb-10">
-      <h1 className="my-10 text-xl font-bold">Edit Single Article</h1>
+      <div className="my-10 flex justify-between items-center">
+        <h1 className="text-xl font-bold">Edit Single Article</h1>
+        <button 
+          onClick={() => setIsAIModalOpen(true)}
+          className="px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-lg shadow-lg flex items-center gap-2 transition-all transform hover:scale-105 active:scale-95"
+        >
+          <span className="text-xl">✨</span> Review & AI Auto-fill
+        </button>
+      </div>
       <div className="mb-6">
         <label
           htmlFor="title"
@@ -156,16 +181,16 @@ function EditSingleArticle({ id, onNext }) {
       </div>
       <div className="mb-6">
         <label
-          htmlFor="tags"
+          htmlFor="keywords"
           className="block mb-2 text-sm font-medium text-gray-900 "
         >
-          Tags
+          Keywords
         </label>
         <input
           type="text"
-          id="tags"
-          name="tags"
-          value={formData.tags}
+          id="keywords"
+          name="keywords"
+          value={formData.keywords}
           onChange={handleChange}
           className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
         />
@@ -329,6 +354,16 @@ function EditSingleArticle({ id, onNext }) {
           </Link>
         )}
       </div>
+
+      <AIAssistantModal 
+        isOpen={isAIModalOpen}
+        onClose={() => setIsAIModalOpen(false)}
+        mode="edit"
+        targetSection="article"
+        blogId={id}
+        currentSectionData={formData}
+        onApply={handleApplyAI}
+      />
     </div>
   );
 }

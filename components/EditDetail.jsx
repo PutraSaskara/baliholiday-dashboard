@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
 import useTourStore from '../stores/useTourStore';
+import AIAssistantModal from './AIAssistantModal';
 
 function EditDetail({ tourDetailId, onNext }) {
   const [formData, setFormData] = useState({
@@ -16,6 +17,7 @@ function EditDetail({ tourDetailId, onNext }) {
     detail9: '',
     tourId: ''
   });
+  const [isAIModalOpen, setIsAIModalOpen] = useState(false);
 
   const { tours: tourOptions, fetchTours, fetchTourDetail, updateTourDetail } = useTourStore();
 
@@ -58,6 +60,14 @@ function EditDetail({ tourDetailId, onNext }) {
     }
   };
 
+  const handleApplyAI = (generatedData) => {
+    const updatedDetail = { ...formData };
+    for (let i = 1; i <= 9; i++) {
+      if (generatedData[`detail${i}`]) updatedDetail[`detail${i}`] = generatedData[`detail${i}`];
+    }
+    setFormData(updatedDetail);
+  };
+
   return (
     <div className='max-w-screen-lg mx-auto'>
       <h1 className='my-10 text-xl font-bold'>Edit Tour Detail</h1>
@@ -84,8 +94,24 @@ function EditDetail({ tourDetailId, onNext }) {
         </div>
       ))}
 
-      <div className='flex justify-between'>
-        <button type="button" onClick={handleSubmit} className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mb-10">Save</button>
+      <div className="w-full flex flex-col sm:flex-row justify-between gap-4 mb-10">
+        <div className="flex gap-4">
+          <button
+            type="button"
+            onClick={() => setIsAIModalOpen(true)}
+            disabled={!formData.tourId}
+            className="px-5 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg shadow-md hover:shadow-lg transition-all disabled:opacity-50"
+          >
+            ✨ Review & AI Auto-fill
+          </button>
+          <button 
+            type="button" 
+            onClick={handleSubmit} 
+            className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+          >
+            Save
+          </button>
+        </div>
 
         {onNext ? (
           <button type="button" onClick={onNext} className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mb-10">
@@ -98,6 +124,15 @@ function EditDetail({ tourDetailId, onNext }) {
         )}
       </div>
 
+      <AIAssistantModal 
+        isOpen={isAIModalOpen}
+        onClose={() => setIsAIModalOpen(false)}
+        mode="edit"
+        tourId={formData.tourId}
+        targetSection="detail"
+        drafts={formData}
+        onApply={handleApplyAI}
+      />
     </div>
   );
 }

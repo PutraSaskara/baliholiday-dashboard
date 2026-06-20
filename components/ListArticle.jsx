@@ -91,8 +91,8 @@ function ListArticle() {
             img={tour.blogimage?.imageUrl1}
             desc={tour.blog_paragraf?.paragraf1}
             link={`/edit-article/${tour.id}`}
-            // Update link2 to use the convertSpaceToDash function
-            link2={`https://baliholiday.xyz/blog/${convertSpaceToDash(tour.title)}`}
+            // Use slug if available, otherwise fallback to basic slugification
+            link2={`https://baliholiday.xyz/blog/${tour.slug || convertSpaceToDash(tour.title).toLowerCase().replace(/[^\w\-]+/g, '')}`}
             onDelete={() => handleDelete(tour.id)}
           />
         ))}

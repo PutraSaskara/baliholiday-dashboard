@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import useTourStore from "../stores/useTourStore";
 import Link from "next/link";
+import AIAssistantModal from "./AIAssistantModal";
 
 function EditTour({ id, onNext }) {
   const [formData, setFormData] = useState({
@@ -24,6 +25,7 @@ function EditTour({ id, onNext }) {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isAIModalOpen, setIsAIModalOpen] = useState(false);
 
   const { fetchTourById, updateTour } = useTourStore();
 
@@ -110,6 +112,21 @@ function EditTour({ id, onNext }) {
       alert("Failed to update tour data. Please try again later.");
     }
     setLoading(false);
+  };
+
+  const handleApplyAI = (generatedData) => {
+    setFormData((prev) => ({
+      ...prev,
+      keywords: generatedData.keywords || prev.keywords,
+      tldr_summary: generatedData.tldr_summary || prev.tldr_summary,
+      guide_insight_location: generatedData.guide_insight_location || prev.guide_insight_location,
+      guide_insight_content: generatedData.guide_insight_content || prev.guide_insight_content,
+      faq: generatedData.faq ? JSON.stringify(generatedData.faq) : prev.faq,
+    }));
+
+    if (generatedData.faq && Array.isArray(generatedData.faq)) {
+      setFaqs(generatedData.faq);
+    }
   };
 
   if (loading) {
@@ -304,14 +321,23 @@ function EditTour({ id, onNext }) {
         </div>
       </div>
 
-      <div className="w-full flex justify-between">
-        <button
-          type="button"
-          onClick={handleSubmit}
-          className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 rounded-lg"
-        >
-          Save
-        </button>
+      <div className="w-full flex flex-col sm:flex-row justify-between gap-4">
+        <div className="flex gap-4">
+          <button
+            type="button"
+            onClick={() => setIsAIModalOpen(true)}
+            className="px-5 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg shadow-md hover:shadow-lg transition-all"
+          >
+            ✨ Review & AI Auto-fill
+          </button>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 rounded-lg"
+          >
+            Save
+          </button>
+        </div>
 
         {onNext ? (
           <button
@@ -330,6 +356,16 @@ function EditTour({ id, onNext }) {
           </Link>
         )}
       </div>
+
+      <AIAssistantModal 
+        isOpen={isAIModalOpen}
+        onClose={() => setIsAIModalOpen(false)}
+        mode="edit"
+        tourId={id}
+        targetSection="tour"
+        drafts={formData}
+        onApply={handleApplyAI}
+      />
     </div>
   );
 }

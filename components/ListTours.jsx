@@ -90,7 +90,7 @@ function ListTours() {
             img={tour.image?.imageUrl1}
             desc={tour.tour_description?.paragraf1}
             link={`edit-tour-package/${tour.id}`}
-            link2={`https://baliholiday.xyz/package/${convertSpaceToDash(tour.title)}`}
+            link2={`https://baliholiday.xyz/package/${tour.slug || convertSpaceToDash(tour.title).toLowerCase().replace(/[^\w\-]+/g, '')}`}
             onDelete={() => handleDelete(tour.id)}
           />
         ))}

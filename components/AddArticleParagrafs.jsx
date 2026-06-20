@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import useArticleStore from '../stores/useArticleStore';
 import useWarnIfUnsavedChanges from '../hooks/useWarnIfUnsavedChanges';
+import AIAssistantModal from './AIAssistantModal';
 
 function AddArticleParagrafs() {
   const {
@@ -40,6 +41,7 @@ function AddArticleParagrafs() {
 
   const [isSaved, setIsSaved] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isAIModalOpen, setIsAIModalOpen] = useState(false);
 
   useWarnIfUnsavedChanges(hasUnsavedChanges);
 
@@ -79,6 +81,17 @@ function AddArticleParagrafs() {
     setIsSaved(true);
   };
 
+  const handleApplyAI = (generatedData) => {
+    const updatedForm = { ...formData };
+    if (generatedData.paragraf1) updatedForm.paragraf1 = generatedData.paragraf1;
+    if (generatedData.Conclusion) updatedForm.Conclusion = generatedData.Conclusion;
+    for (let i = 2; i <= 7; i++) {
+      if (generatedData[`titleparagraf${i}`]) updatedForm[`titleparagraf${i}`] = generatedData[`titleparagraf${i}`];
+      if (generatedData[`paragraf${i}`]) updatedForm[`paragraf${i}`] = generatedData[`paragraf${i}`];
+    }
+    setFormData(updatedForm);
+  };
+
   if (!mounted) {
       return null; // Avoid hydration mismatch
   }
@@ -97,11 +110,19 @@ function AddArticleParagrafs() {
       </div>
 
       <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-gray-200/50 border border-gray-100 p-8 md:p-12 transition-all duration-300">
-        <header className="mb-10">
-            <h1 className='text-3xl font-black tracking-tight text-gray-900 mb-2'>Article Content</h1>
-            <p className="text-gray-500 text-lg italic">
-                Tip: Use paragraphs to break down your article into readable sections.
-            </p>
+        <header className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <h1 className='text-3xl font-black tracking-tight text-gray-900 mb-2'>Article Content</h1>
+              <p className="text-gray-500 text-lg italic">
+                  Tip: Use paragraphs to break down your article into readable sections.
+              </p>
+            </div>
+            <button 
+              onClick={() => setIsAIModalOpen(true)}
+              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-2xl shadow-lg shadow-blue-500/30 flex items-center gap-2 transition-all transform hover:scale-105 active:scale-95"
+            >
+              <span className="text-xl">✨</span> Review & AI Auto-fill
+            </button>
         </header>
 
         {/* Draft Mode Notice */}
@@ -236,6 +257,15 @@ function AddArticleParagrafs() {
             )}
         </div>
       </div>
+      
+      <AIAssistantModal 
+        isOpen={isAIModalOpen}
+        onClose={() => setIsAIModalOpen(false)}
+        mode="add"
+        targetSection="article-paragraphs"
+        drafts={{ draftArticle, draftParagraph: formData }}
+        onApply={handleApplyAI}
+      />
     </div>
   );
 }

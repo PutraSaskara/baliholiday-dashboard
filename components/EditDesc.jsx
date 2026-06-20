@@ -2,14 +2,17 @@
 import Link from "next/link";
 import { useState, useEffect, useCallback } from "react";
 import useTourStore from "../stores/useTourStore";
+import AIAssistantModal from './AIAssistantModal';
 
 function EditDesc({ tourId, onNext }) {
   const [formData, setFormData] = useState({
     paragraf1: "",
     paragraf2: "",
     paragraf3: "",
+    paragraf3: "",
     tourId: "",
   });
+  const [isAIModalOpen, setIsAIModalOpen] = useState(false);
 
   const { tours: tourOptions, fetchTours, fetchTourDesc, updateTourDesc } = useTourStore();
 
@@ -52,6 +55,14 @@ function EditDesc({ tourId, onNext }) {
         alert(message || 'An error occurred during update.');
       }
     }
+  };
+
+  const handleApplyAI = (generatedData) => {
+    const updatedDesc = { ...formData };
+    for (let i = 1; i <= 3; i++) {
+      if (generatedData[`desc${i}`]) updatedDesc[`paragraf${i}`] = generatedData[`desc${i}`];
+    }
+    setFormData(updatedDesc);
   };
 
   return (
@@ -132,14 +143,24 @@ function EditDesc({ tourId, onNext }) {
         ></textarea>
       </div>
 
-      <div className="flex justify-between">
-        <button
-          type="button"
-          onClick={handleSubmit}
-          className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mb-10"
-        >
-          Save
-        </button>
+      <div className="w-full flex flex-col sm:flex-row justify-between gap-4 mb-10">
+        <div className="flex gap-4">
+          <button
+            type="button"
+            onClick={() => setIsAIModalOpen(true)}
+            disabled={!formData.tourId}
+            className="px-5 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg shadow-md hover:shadow-lg transition-all disabled:opacity-50"
+          >
+            ✨ Review & AI Auto-fill
+          </button>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+          >
+            Save
+          </button>
+        </div>
 
         {onNext ? (
           <button
@@ -158,6 +179,16 @@ function EditDesc({ tourId, onNext }) {
           </Link>
         )}
       </div>
+
+      <AIAssistantModal 
+        isOpen={isAIModalOpen}
+        onClose={() => setIsAIModalOpen(false)}
+        mode="edit"
+        tourId={formData.tourId}
+        targetSection="desc"
+        drafts={formData}
+        onApply={handleApplyAI}
+      />
     </div>
   );
 }

@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
 import useArticleStore from '../stores/useArticleStore';
+import AIAssistantModal from './AIAssistantModal';
 
 function EditArticleParagraf({ id, onNext }) {
   const [formData, setFormData] = useState({
@@ -29,6 +30,7 @@ function EditArticleParagraf({ id, onNext }) {
   });
 
   const { articles: tourOptions, fetchArticles, fetchArticleParagraf, updateArticleParagraf } = useArticleStore();
+  const [isAIModalOpen, setIsAIModalOpen] = useState(false);
 
   useEffect(() => {
     fetchArticles();
@@ -71,9 +73,28 @@ function EditArticleParagraf({ id, onNext }) {
     }
   };
 
+  const handleApplyAI = (generatedData) => {
+    const updatedForm = { ...formData };
+    if (generatedData.paragraf1) updatedForm.paragraf1 = generatedData.paragraf1;
+    if (generatedData.Conclusion) updatedForm.Conclusion = generatedData.Conclusion;
+    for (let i = 2; i <= 7; i++) {
+      if (generatedData[`titleparagraf${i}`]) updatedForm[`titleparagraf${i}`] = generatedData[`titleparagraf${i}`];
+      if (generatedData[`paragraf${i}`]) updatedForm[`paragraf${i}`] = generatedData[`paragraf${i}`];
+    }
+    setFormData(updatedForm);
+  };
+
   return (
     <div className='max-w-screen-lg mx-auto px-5'>
-      <h1 className='my-10 text-xl font-bold'>Please Edit Article Paragraphs</h1>
+      <div className="my-10 flex justify-between items-center">
+        <h1 className='text-xl font-bold'>Please Edit Article Paragraphs</h1>
+        <button 
+          onClick={() => setIsAIModalOpen(true)}
+          className="px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-lg shadow-lg flex items-center gap-2 transition-all transform hover:scale-105 active:scale-95"
+        >
+          <span className="text-xl">✨</span> Review & AI Auto-fill
+        </button>
+      </div>
 
       <div className='my-5'>
         <h3>Note</h3>
@@ -135,6 +156,15 @@ function EditArticleParagraf({ id, onNext }) {
         )}
       </div>
 
+      <AIAssistantModal 
+        isOpen={isAIModalOpen}
+        onClose={() => setIsAIModalOpen(false)}
+        mode="edit"
+        targetSection="article-paragraphs"
+        blogId={id}
+        currentSectionData={formData}
+        onApply={handleApplyAI}
+      />
     </div>
 
   );
