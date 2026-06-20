@@ -3,7 +3,7 @@
 import { NextResponse } from 'next/server';
 import { serialize } from 'cookie';
 
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5000';
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || 'http://localhost:5000';
 
 export async function POST(request) {
   try {

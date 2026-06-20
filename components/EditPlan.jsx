@@ -8,6 +8,7 @@ function AddTourPlan({ tourId, onNext }) {
   const { fetchAllDestinationsList, createDestination } = useDestinationStore();
   const [destinations, setDestinations] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState(null);
   const [searchQueries, setSearchQueries] = useState({});
   const [modalData, setModalData] = useState({
     stopNum: null,
@@ -220,26 +221,45 @@ function AddTourPlan({ tourId, onNext }) {
       {[...Array(9)].map((_, index) => (
         <div key={index} className="mb-6 p-5 border border-gray-200 rounded-2xl bg-gray-50/30">
           <div className="flex flex-col md:flex-row gap-4 items-end bg-gray-50/50 p-4 rounded-xl border border-gray-100 mb-4">
-            <div className="flex-1 w-full space-y-2">
-              <label className="block text-xs font-bold text-gray-500">Select Existing Destination</label>
+            <div className="flex-1 w-full space-y-2 relative">
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Search & Select Destination</label>
               <input
-                type="text"
-                placeholder="🔍 Type to search destination..."
-                value={searchQueries[index + 1] || ''}
-                onChange={(e) => setSearchQueries(prev => ({ ...prev, [index + 1]: e.target.value }))}
-                className="w-full px-3 py-1.5 bg-white border border-gray-300 text-gray-900 rounded-lg text-xs outline-none focus:ring-1 focus:ring-blue-500"
+                  type="text"
+                  placeholder="🔍 Search destination name..."
+                  value={searchQueries[index + 1] !== undefined ? searchQueries[index + 1] : (formData[`title${index + 1}`] || '')}
+                  onChange={(e) => {
+                      setSearchQueries(prev => ({ ...prev, [index + 1]: e.target.value }));
+                      setOpenDropdown(index + 1);
+                  }}
+                  onFocus={() => setOpenDropdown(index + 1)}
+                  onBlur={() => setTimeout(() => setOpenDropdown(null), 200)}
+                  className="w-full px-4 py-2.5 bg-white border border-gray-200 text-gray-900 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-400 transition-all outline-none font-semibold text-xs shadow-sm"
               />
-              <select
-                onChange={(e) => handleSelectDestination(index + 1, e.target.value)}
-                className="w-full px-4 py-2 bg-white border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm font-medium cursor-pointer"
-              >
-                <option value="">-- Choose Existing Destination --</option>
-                {destinations.filter(d => 
-                  d.name.toLowerCase().includes((searchQueries[index + 1] || '').toLowerCase())
-                ).map(d => (
-                  <option key={d.id} value={d.id}>{d.name}</option>
-                ))}
-              </select>
+              
+              {openDropdown === index + 1 && (
+                  <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl max-h-48 overflow-y-auto top-[60px]">
+                      {destinations.filter(d => 
+                          d.name.toLowerCase().includes((searchQueries[index + 1] || '').toLowerCase())
+                      ).map(d => (
+                          <div 
+                              key={d.id} 
+                              className="px-4 py-2.5 text-xs font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-700 cursor-pointer border-b border-gray-50 last:border-0 transition-colors"
+                              onMouseDown={() => {
+                                  handleSelectDestination(index + 1, d.id);
+                                  setSearchQueries(prev => ({ ...prev, [index + 1]: d.name }));
+                                  setOpenDropdown(null);
+                              }}
+                          >
+                              {d.name}
+                          </div>
+                      ))}
+                      {destinations.filter(d => 
+                          d.name.toLowerCase().includes((searchQueries[index + 1] || '').toLowerCase())
+                      ).length === 0 && (
+                          <div className="px-4 py-3 text-xs text-gray-400 italic text-center">No destinations found</div>
+                      )}
+                  </div>
+              )}
             </div>
             <button
               type="button"
