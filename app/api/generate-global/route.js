@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+export const maxDuration = 60; // Set maximum execution time to 60 seconds
 export async function POST(req) {
   try {
     const { model, mode, tourId, blogId, targetSection, drafts, currentSectionData } = await req.json();

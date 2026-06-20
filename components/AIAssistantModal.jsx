@@ -105,8 +105,23 @@ export default function AIAssistantModal({
       });
 
       if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || errData.details || 'Failed to generate');
+        let errMsg = 'Failed to generate content. The server might have timed out.';
+        try {
+          const text = await res.text();
+          try {
+            const errData = JSON.parse(text);
+            errMsg = errData.error || errData.details || errMsg;
+          } catch(e) {
+            if (res.status === 504) {
+              errMsg = 'Server Timeout (504): The AI took too long to respond. This is common on shared hosting. Try again or use a faster model like Gemini Flash.';
+            } else {
+              errMsg = `Server Error (${res.status}): The server returned an invalid response.`;
+            }
+          }
+        } catch(e) {
+          errMsg = `Server Error (${res.status})`;
+        }
+        throw new Error(errMsg);
       }
 
       const generatedData = await res.json();
