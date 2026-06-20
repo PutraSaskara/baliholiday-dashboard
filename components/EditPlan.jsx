@@ -8,6 +8,7 @@ function AddTourPlan({ tourId, onNext }) {
   const { fetchAllDestinationsList, createDestination } = useDestinationStore();
   const [destinations, setDestinations] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
+  const [searchQueries, setSearchQueries] = useState({});
   const [modalData, setModalData] = useState({
     stopNum: null,
     name: '',
@@ -92,7 +93,18 @@ function AddTourPlan({ tourId, onNext }) {
   }, [fetchAllDestinationsList]);
 
   const handleSelectDestination = (stopNum, destinationId) => {
-    if (!destinationId) return;
+    if (!destinationId) {
+      setFormData(prev => ({
+        ...prev,
+        [`title${stopNum}`]: '',
+        [`coordinatesleft${stopNum}`]: '',
+        [`coordinatesright${stopNum}`]: '',
+        [`description${stopNum}`]: '',
+        [`link${stopNum}`]: '',
+        [`image${stopNum}`]: '',
+      }));
+      return;
+    }
     const dest = destinations.find(d => String(d.id) === String(destinationId));
     if (dest) {
       setFormData(prev => ({
@@ -101,6 +113,8 @@ function AddTourPlan({ tourId, onNext }) {
         [`coordinatesleft${stopNum}`]: String(dest.lat) || '',
         [`coordinatesright${stopNum}`]: String(dest.lng) || '',
         [`description${stopNum}`]: dest.description || '',
+        [`image${stopNum}`]: dest.image || '',
+        // We do not overwrite link${stopNum} here so they can keep their blog link
       }));
     }
   };
@@ -127,11 +141,15 @@ function AddTourPlan({ tourId, onNext }) {
       return;
     }
 
+    // Normalize coordinates (replace comma with dot, trim spaces)
+    const formattedLat = String(modalData.lat).replace(',', '.').trim();
+    const formattedLng = String(modalData.lng).replace(',', '.').trim();
+
     const payload = new FormData();
     payload.append("name", modalData.name);
     payload.append("description", modalData.description);
-    payload.append("lat", modalData.lat);
-    payload.append("lng", modalData.lng);
+    payload.append("lat", formattedLat);
+    payload.append("lng", formattedLng);
     payload.append("image", modalData.file);
 
     const res = await createDestination(payload);
@@ -140,21 +158,20 @@ function AddTourPlan({ tourId, onNext }) {
       const list = await fetchAllDestinationsList();
       setDestinations(list);
       
+      const newDest = res.data || {};
       setFormData(prev => ({
         ...prev,
-        [`title${modalData.stopNum}`]: modalData.name,
-        [`coordinatesleft${modalData.stopNum}`]: modalData.lat,
-        [`coordinatesright${modalData.stopNum}`]: modalData.lng,
-        [`description${modalData.stopNum}`]: modalData.description,
+        [`title${modalData.stopNum}`]: newDest.name || modalData.name,
+        [`coordinatesleft${modalData.stopNum}`]: newDest.lat || modalData.lat,
+        [`coordinatesright${modalData.stopNum}`]: newDest.lng || modalData.lng,
+        [`description${modalData.stopNum}`]: newDest.description || modalData.description,
+        [`image${modalData.stopNum}`]: newDest.image || '',
       }));
       setModalOpen(false);
     } else {
       alert(res.message || "Failed to save destination.");
     }
   };
-
-
-
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -203,14 +220,23 @@ function AddTourPlan({ tourId, onNext }) {
       {[...Array(9)].map((_, index) => (
         <div key={index} className="mb-6 p-5 border border-gray-200 rounded-2xl bg-gray-50/30">
           <div className="flex flex-col md:flex-row gap-4 items-end bg-gray-50/50 p-4 rounded-xl border border-gray-100 mb-4">
-            <div className="flex-1 w-full">
-              <label className="block mb-1 text-xs font-bold text-gray-500">Select Existing Destination</label>
+            <div className="flex-1 w-full space-y-2">
+              <label className="block text-xs font-bold text-gray-500">Select Existing Destination</label>
+              <input
+                type="text"
+                placeholder="🔍 Type to search destination..."
+                value={searchQueries[index + 1] || ''}
+                onChange={(e) => setSearchQueries(prev => ({ ...prev, [index + 1]: e.target.value }))}
+                className="w-full px-3 py-1.5 bg-white border border-gray-300 text-gray-900 rounded-lg text-xs outline-none focus:ring-1 focus:ring-blue-500"
+              />
               <select
                 onChange={(e) => handleSelectDestination(index + 1, e.target.value)}
                 className="w-full px-4 py-2 bg-white border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm font-medium cursor-pointer"
               >
                 <option value="">-- Choose Existing Destination --</option>
-                {destinations.map(d => (
+                {destinations.filter(d => 
+                  d.name.toLowerCase().includes((searchQueries[index + 1] || '').toLowerCase())
+                ).map(d => (
                   <option key={d.id} value={d.id}>{d.name}</option>
                 ))}
               </select>
@@ -224,22 +250,49 @@ function AddTourPlan({ tourId, onNext }) {
             </button>
           </div>
 
-          <label htmlFor={`title${index + 1}`} className="block text-sm font-medium text-gray-900">Plan title {index + 1}</label>
-          <input id={`title${index + 1}`} name={`title${index + 1}`} value={formData[`title${index + 1}`]} onChange={handleChange} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
-
-          <label htmlFor={`coordinatesleft${index + 1}`} className="block text-sm font-medium text-gray-900">Plan coordinatesleft {index + 1}</label>
-          <input id={`coordinatesleft${index + 1}`} name={`coordinatesleft${index + 1}`} value={formData[`coordinatesleft${index + 1}`]} onChange={handleChange} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
-
-          <label htmlFor={`coordinatesright${index + 1}`} className="block text-sm font-medium text-gray-900">Plan coordinatesright {index + 1}</label>
-          <input id={`coordinatesright${index + 1}`} name={`coordinatesright${index + 1}`} value={formData[`coordinatesright${index + 1}`]} onChange={handleChange} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
-
-
-
-          <label htmlFor={`description${index + 1}`} className="block text-sm font-medium text-gray-900">Plan description {index + 1}</label>
-          <textarea id={`description${index + 1}`} name={`description${index + 1}`} value={formData[`description${index + 1}`]} onChange={handleChange} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
-
-          <label htmlFor={`link${index + 1}`} className="block text-sm font-medium text-gray-900">Blog Link {index + 1}</label>
-          <input id={`link${index + 1}`} name={`link${index + 1}`} value={formData[`link${index + 1}`]} onChange={handleChange} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
+          {formData[`title${index + 1}`] ? (
+            <div className="mt-2 p-4 bg-indigo-50/50 border border-indigo-100 rounded-2xl flex flex-col gap-4">
+              <div className="flex gap-4 items-start">
+                {(formData[`image${index + 1}`] || (formData[`link${index + 1}`] && (formData[`link${index + 1}`].includes('cloudinary') || formData[`link${index + 1}`].match(/\.(jpeg|jpg|gif|png|webp)$/i)))) ? (
+                  <img 
+                    src={(formData[`image${index + 1}`] || formData[`link${index + 1}`]).startsWith('http') ? (formData[`image${index + 1}`] || formData[`link${index + 1}`]) : `${process.env.NEXT_PUBLIC_MAIN_API || 'http://localhost:5000'}${formData[`image${index + 1}`] || formData[`link${index + 1}`]}`} 
+                    alt={formData[`title${index + 1}`]}
+                    className="w-24 h-24 object-cover rounded-xl shadow-sm flex-shrink-0"
+                  />
+                ) : (
+                  <div className="w-24 h-24 bg-gray-200 rounded-xl flex items-center justify-center flex-shrink-0 text-gray-400">
+                    📷
+                  </div>
+                )}
+                <div className="flex-1 space-y-2">
+                  <h5 className="font-bold text-gray-900 text-sm">{formData[`title${index + 1}`]}</h5>
+                  <div className="flex gap-3 text-[10px] text-gray-500 font-bold bg-white px-2 py-1 rounded-lg w-max shadow-sm border border-gray-100">
+                    <span>📍 Lat: {formData[`coordinatesleft${index + 1}`]}</span>
+                    <span className="text-gray-300">|</span>
+                    <span>Lng: {formData[`coordinatesright${index + 1}`]}</span>
+                  </div>
+                  <p className="text-xs text-gray-600 leading-relaxed line-clamp-3">{formData[`description${index + 1}`]}</p>
+                </div>
+              </div>
+              <div className="w-full mt-2 border-t border-indigo-100 pt-3">
+                <label className="block mb-1 text-[10px] font-black uppercase text-indigo-400 tracking-widest ml-1">🔗 Blog Article Link (Optional)</label>
+                <input 
+                  type="text" 
+                  name={`link${index + 1}`}
+                  placeholder="https://baliholiday.xyz/blog/..."
+                  value={formData[`link${index + 1}`] || ''} 
+                  onChange={handleChange} 
+                  className="w-full px-4 py-2 bg-white border border-indigo-100 rounded-xl focus:ring-2 focus:ring-indigo-400/50 outline-none font-medium text-xs text-indigo-700"
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="mt-2 p-6 bg-gray-50 border border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center text-center">
+              <span className="text-2xl mb-2">🗺️</span>
+              <p className="text-xs font-bold text-gray-400">No destination selected yet</p>
+              <p className="text-[10px] text-gray-400 mt-1">Select a destination above or save a new one to preview it here.</p>
+            </div>
+          )}
         </div>
       ))}
 

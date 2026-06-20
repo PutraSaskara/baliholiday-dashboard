@@ -13,6 +13,7 @@ function AddTour() {
   
   const [formData, setFormData] = useState({
     title: '',
+    slug: '',
     price1: '',
     pricenote1: '',
     price2: '',
@@ -128,6 +129,19 @@ function AddTour() {
                     value={formData.title} 
                     onChange={handleChange} 
                     className="w-full px-6 py-4 bg-gray-50/50 border border-gray-200 text-gray-900 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white transition-all outline-none text-lg font-medium placeholder:text-gray-400 shadow-sm"
+                />
+            </div>
+
+            <div className="group">
+                <label htmlFor="slug" className="block mb-2.5 text-sm font-bold text-gray-700 ml-1 transition-colors group-focus-within:text-blue-600">Custom URL Slug (Optional)</label>
+                <input 
+                    type="text" 
+                    id="slug" 
+                    name="slug" 
+                    placeholder="Leave empty to auto-generate from title"
+                    value={formData.slug} 
+                    onChange={handleChange} 
+                    className="w-full px-6 py-4 bg-gray-50/50 border border-gray-200 text-gray-900 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white transition-all outline-none font-medium placeholder:text-gray-400 shadow-sm"
                 />
             </div>
 

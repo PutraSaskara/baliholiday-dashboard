@@ -6,6 +6,7 @@ import Link from "next/link";
 function EditTour({ id, onNext }) {
   const [formData, setFormData] = useState({
     title: "",
+    slug: "",
     price1: "",
     pricenote1: "",
     price2: "",
@@ -32,6 +33,7 @@ function EditTour({ id, onNext }) {
     if (data) {
       setFormData({
         title: data.title || "",
+        slug: data.slug || "",
         price1: data.price1 || "",
         pricenote1: data.pricenote1 || "",
         price2: data.price2 || "",
@@ -147,6 +149,25 @@ function EditTour({ id, onNext }) {
           className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
         />
       </div>
+
+      <div className="mb-6">
+        <label
+          htmlFor="slug"
+          className="block mb-2 text-sm font-medium text-gray-900"
+        >
+          Custom URL Slug (Optional)
+        </label>
+        <input
+          type="text"
+          id="slug"
+          name="slug"
+          placeholder="Leave empty to keep current slug"
+          value={formData.slug}
+          onChange={handleChange}
+          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+        />
+      </div>
+
       {/* Repeat similar blocks for other fields */}
       <div className="mb-6">
         <label

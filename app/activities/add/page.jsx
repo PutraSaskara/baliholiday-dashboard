@@ -9,6 +9,7 @@ export default function AddActivityPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
+    slug: "",
     category: "activity",
     subType: "",
     description: "",
@@ -153,6 +154,11 @@ export default function AddActivityPage() {
               <div className="md:col-span-2">
                 <label className="block mb-1.5 text-sm font-bold text-gray-700">Title *</label>
                 <input name="title" value={formData.title} onChange={handleChange} placeholder="e.g. Bali ATV Ride Adventure" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block mb-1.5 text-sm font-bold text-gray-700">Custom URL Slug (Optional)</label>
+                <input name="slug" value={formData.slug} onChange={handleChange} placeholder="Leave empty to auto-generate from title" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" />
               </div>
 
               <div>

@@ -10,7 +10,7 @@ export default function EditActivityPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    title: "", category: "activity", subType: "", description: "",
+    title: "", slug: "", category: "activity", subType: "", description: "",
     price1: "", priceNote1: "", price2: "", priceNote2: "", price3: "", priceNote3: "",
     duration: "", location: "", lat: "", lng: "",
     fromLocation: "", toLocation: "",
@@ -66,6 +66,7 @@ export default function EditActivityPage() {
       const a = res.data.activity;
       setFormData({
         title: a.title || "",
+        slug: a.slug || "",
         category: a.category || "activity",
         subType: a.subType || "",
         description: a.description || "",
@@ -188,6 +189,10 @@ export default function EditActivityPage() {
               <div className="md:col-span-2">
                 <label className="block mb-1.5 text-sm font-bold text-gray-700">Title *</label>
                 <input name="title" value={formData.title} onChange={handleChange} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block mb-1.5 text-sm font-bold text-gray-700">Custom URL Slug (Optional)</label>
+                <input name="slug" value={formData.slug} onChange={handleChange} placeholder="Leave empty to keep current slug" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" />
               </div>
               <div>
                 <label className="block mb-1.5 text-sm font-bold text-gray-700">Category *</label>
