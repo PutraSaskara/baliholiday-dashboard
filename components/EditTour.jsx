@@ -167,6 +167,57 @@ function EditTour({ id, onNext }) {
         />
       </div>
 
+      {/* Tour Price Tiers */}
+      <div className="border-t border-gray-200 pt-6 mt-6 mb-6 space-y-4">
+        <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+          <span>💰</span> Tour Price
+        </h3>
+        <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+          <p className="text-xs text-amber-800 font-medium">
+            ⚠️ PayPal fee: ~4.4% + $0.30 per transaction. If you set $50, you&apos;ll receive ~$47.50. Consider adjusting your price to cover the fee.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[1, 2, 3].map((num) => {
+            const priceVal = parseFloat(formData[`price${num}`]) || 0;
+            const fee = priceVal > 0 ? (priceVal * 0.044 + 0.30).toFixed(2) : null;
+            const netAmount = fee ? (priceVal - parseFloat(fee)).toFixed(2) : null;
+            return (
+              <div key={num} className="p-4 bg-gray-50 rounded-lg border border-gray-200 space-y-3">
+                <label htmlFor={`price${num}`} className="block text-xs font-bold text-gray-500">
+                  Price Tier {num}
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-xs">$</span>
+                  <input
+                    type="number"
+                    id={`price${num}`}
+                    name={`price${num}`}
+                    placeholder="0"
+                    value={formData[`price${num}`] || ""}
+                    onChange={handleChange}
+                    className="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-7 pr-2.5 py-2.5"
+                  />
+                </div>
+                <input
+                  type="text"
+                  name={`pricenote${num}`}
+                  placeholder="Note (e.g. Per Person)"
+                  value={formData[`pricenote${num}`] || ""}
+                  onChange={handleChange}
+                  className="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                />
+                {fee && (
+                  <p className="text-[10px] text-gray-400">
+                    Fee: -${fee} → You receive: <span className="font-bold text-green-600">${netAmount}</span>
+                  </p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       <div className="mb-6">
         <label
           htmlFor="slug"
