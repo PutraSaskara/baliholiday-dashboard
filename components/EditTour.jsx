@@ -179,7 +179,7 @@ function EditTour({ id, onNext }) {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[1, 2, 3].map((num) => {
-            const priceVal = parseFloat(formData[`price${num}`]) || 0;
+            const priceVal = parseFloat(String(formData[`price${num}`] || "").replace(/[^0-9.]/g, "")) || 0;
             const fee = priceVal > 0 ? (priceVal * 0.044 + 0.30).toFixed(2) : null;
             const netAmount = fee ? (priceVal - parseFloat(fee)).toFixed(2) : null;
             return (
@@ -187,18 +187,15 @@ function EditTour({ id, onNext }) {
                 <label htmlFor={`price${num}`} className="block text-xs font-bold text-gray-500">
                   Price Tier {num}
                 </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-xs">$</span>
-                  <input
-                    type="number"
-                    id={`price${num}`}
-                    name={`price${num}`}
-                    placeholder="0"
-                    value={formData[`price${num}`] || ""}
-                    onChange={handleChange}
-                    className="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-7 pr-2.5 py-2.5"
-                  />
-                </div>
+                <input
+                  type="text"
+                  id={`price${num}`}
+                  name={`price${num}`}
+                  placeholder="0"
+                  value={formData[`price${num}`] || ""}
+                  onChange={handleChange}
+                  className="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                />
                 <input
                   type="text"
                   name={`pricenote${num}`}
