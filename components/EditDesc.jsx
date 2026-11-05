@@ -3,8 +3,16 @@ import Link from "next/link";
 import { useState, useEffect, useCallback } from "react";
 import useTourStore from "../stores/useTourStore";
 import AIAssistantModal from './AIAssistantModal';
+import { useToast } from "./ui/Toast";
+import FormShell from './forms/FormShell';
+import FormSection from './forms/FormSection';
+import FormActions from './forms/FormActions';
+import Button, { buttonClass } from './ui/Button';
+import Select from './ui/Select';
+import Textarea from './ui/Textarea';
 
 function EditDesc({ tourId, onNext }) {
+  const toast = useToast();
   const [formData, setFormData] = useState({
     paragraf1: "",
     paragraf2: "",
@@ -44,14 +52,14 @@ function EditDesc({ tourId, onNext }) {
     const { success, status, data, message } = await updateTourDesc(tourId, formData);
 
     if (success) {
-      alert("Description saved successfully!");
+      toast.success("Description saved successfully!");
     } else {
       if (status) {
         console.error('Server responded with error status:', status);
         const errorMessage = data ? JSON.stringify(data) : message;
-        alert(`Server responded with an error: ${status}. ${errorMessage}`);
+        toast.error(`Server responded with an error: ${status}. ${errorMessage}`);
       } else {
-        alert(message || 'An error occurred during update.');
+        toast.error(message || 'An error occurred during update.');
       }
     }
   };
@@ -65,27 +73,48 @@ function EditDesc({ tourId, onNext }) {
   };
 
   return (
-    <div className="max-w-screen-lg mx-auto">
-      <h1 className="my-10 text-xl font-bold">Please Edit Tour Description </h1>
-
-      <div className="my-5">
-        <h3>Note</h3>
-        <p>*Tour Description is description related to Tour Title</p>
-      </div>
-
-      <div className="mb-6">
-        <label
-          htmlFor="tourId"
-          className="block mb-2 text-sm font-medium text-gray-900"
-        >
-          Choose Tour Title For this Tour Plan
-        </label>
-        <select
-          id="tourId"
+    <FormShell
+      title="Edit Tour Description"
+      description="*Tour Description is description related to Tour Title"
+      headerExtra={
+        <div className="mt-3">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => setIsAIModalOpen(true)}
+            disabled={!formData.tourId}
+          >
+            Review &amp; AI Auto-fill
+          </Button>
+        </div>
+      }
+      actions={
+        <FormActions
+          left={
+            <Button type="button" onClick={handleSubmit}>
+              Save
+            </Button>
+          }
+          right={
+            onNext ? (
+              <Button type="button" onClick={onNext}>
+                Next to Edit Tour Plan
+              </Button>
+            ) : (
+              <Link href={"/add-tour-package/add-tour-plan"} className={buttonClass()}>
+                Next to Edit Tour Plan
+              </Link>
+            )
+          }
+        />
+      }
+    >
+      <div className="space-y-6">
+        <Select
+          label="Choose Tour Title For this Tour Plan"
           name="tourId"
           value={formData.tourId}
           onChange={handleChange}
-          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
         >
           <option value="">Select a Tour</option>
           {tourOptions.map((tour) => (
@@ -93,90 +122,20 @@ function EditDesc({ tourId, onNext }) {
               {tour?.title}
             </option>
           ))}
-        </select>
-      </div>
+        </Select>
 
-      <div className="mb-6">
-        <label
-          htmlFor="paragraf1"
-          className="block mb-2 text-sm font-medium text-gray-900"
-        >
-          Paragraf 1
-        </label>
-        <textarea
-          id="paragraf1"
-          name="paragraf1"
-          value={formData.paragraf1}
-          onChange={handleChange}
-          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-        ></textarea>
-      </div>
-      <div className="mb-6">
-        <label
-          htmlFor="paragraf2"
-          className="block mb-2 text-sm font-medium text-gray-900"
-        >
-          Paragraf 2
-        </label>
-        <textarea
-          id="paragraf2"
-          name="paragraf2"
-          value={formData.paragraf2}
-          onChange={handleChange}
-          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-        ></textarea>
-      </div>
-      <div className="mb-6">
-        <label
-          htmlFor="paragraf3"
-          className="block mb-2 text-sm font-medium text-gray-900"
-        >
-          Paragraf 3
-        </label>
-        <textarea
-          id="paragraf3"
-          name="paragraf3"
-          value={formData.paragraf3}
-          onChange={handleChange}
-          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-        ></textarea>
-      </div>
-
-      <div className="w-full flex flex-col sm:flex-row justify-between gap-4 mb-10">
-        <div className="flex gap-4">
-          <button
-            type="button"
-            onClick={() => setIsAIModalOpen(true)}
-            disabled={!formData.tourId}
-            className="px-5 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg shadow-md hover:shadow-lg transition-all disabled:opacity-50"
-          >
-            ✨ Review & AI Auto-fill
-          </button>
-          <button
-            type="button"
-            onClick={handleSubmit}
-            className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-          >
-            Save
-          </button>
-        </div>
-
-        {onNext ? (
-          <button
-            type="button"
-            onClick={onNext}
-            className="px-5 py-3 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mb-10"
-          >
-            Next to Edit Tour Plan
-          </button>
-        ) : (
-          <Link
-            href={"/add-tour-package/add-tour-plan"}
-            className="px-5 py-3 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mb-10"
-          >
-            Next to Edit Tour Plan
-          </Link>
-        )}
+        <FormSection title="Paragraphs" columns={1}>
+          {[1, 2, 3].map((num) => (
+            <Textarea
+              key={num}
+              label={`Paragraf ${num}`}
+              name={`paragraf${num}`}
+              rows={5}
+              value={formData[`paragraf${num}`]}
+              onChange={handleChange}
+            />
+          ))}
+        </FormSection>
       </div>
 
       <AIAssistantModal 
@@ -188,7 +147,7 @@ function EditDesc({ tourId, onNext }) {
         drafts={formData}
         onApply={handleApplyAI}
       />
-    </div>
+    </FormShell>
   );
 }
 

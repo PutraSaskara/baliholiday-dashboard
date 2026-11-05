@@ -3,8 +3,17 @@ import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
 import useArticleStore from '../stores/useArticleStore';
 import AIAssistantModal from './AIAssistantModal';
+import { useToast } from "./ui/Toast";
+import FormShell from './forms/FormShell';
+import FormSection from './forms/FormSection';
+import FormActions from './forms/FormActions';
+import Button, { buttonClass } from './ui/Button';
+import Input from './ui/Input';
+import Select from './ui/Select';
+import Textarea from './ui/Textarea';
 
 function EditArticleParagraf({ id, onNext }) {
+  const toast = useToast();
   const [formData, setFormData] = useState({
     paragraf1: '',
     titleparagraf2: '',
@@ -60,14 +69,14 @@ function EditArticleParagraf({ id, onNext }) {
     const { success, status, data, message } = await updateArticleParagraf(id, formData);
 
     if (success) {
-      alert('Article paragraph saved successfully!');
+      toast.success('Article paragraph saved successfully!');
     } else {
       if (status) {
         console.error('Server responded with error status:', status);
         const errorMessage = data ? JSON.stringify(data) : message;
-        alert(`Server responded with an error: ${status}. ${errorMessage}`);
+        toast.error(`Server responded with an error: ${status}. ${errorMessage}`);
       } else {
-        alert(message || 'An error occurred during save.');
+        toast.error(message || 'An error occurred during save.');
       }
     }
   };
@@ -84,75 +93,90 @@ function EditArticleParagraf({ id, onNext }) {
   };
 
   return (
-    <div className='max-w-screen-lg mx-auto px-5'>
-      <div className="my-10 flex justify-between items-center">
-        <h1 className='text-xl font-bold'>Please Edit Article Paragraphs</h1>
-        <button 
-          onClick={() => setIsAIModalOpen(true)}
-          className="px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-lg shadow-lg flex items-center gap-2 transition-all transform hover:scale-105 active:scale-95"
+    <FormShell
+      title="Edit Article Paragraphs"
+      description="*Link for Paragraph is used to associate the article paragraph with a blog post (e.g., https://baliholiday.xyz/blog/explanation-about-monkey-forest)"
+      headerExtra={
+        <div className="mt-3">
+          <Button type="button" variant="secondary" onClick={() => setIsAIModalOpen(true)}>
+            Review &amp; AI Auto-fill
+          </Button>
+        </div>
+      }
+      actions={
+        <FormActions
+          left={
+            <Button type="button" onClick={handleSubmit}>
+              Save
+            </Button>
+          }
+          right={
+            onNext ? (
+              <Button type="button" onClick={onNext}>
+                Next to Edit Article Image
+              </Button>
+            ) : (
+              <Link href={'/add-article/add-article-images'} className={buttonClass()}>
+                Next to Edit Article Image
+              </Link>
+            )
+          }
+        />
+      }
+    >
+      <div className="space-y-6">
+        <Select
+          label="Choose Blog Post"
+          name="blogId"
+          value={formData.blogId}
+          onChange={handleChange}
         >
-          <span className="text-xl">✨</span> Review & AI Auto-fill
-        </button>
-      </div>
-
-      <div className='my-5'>
-        <h3>Note</h3>
-        <p>*Link for Paragraph is used to associate the article paragraph with a blog post (e.g., https://baliholiday.xyz/blog/explanation-about-monkey-forest)</p>
-      </div>
-
-      {/* Select the blog post to associate the article paragraphs */}
-      <div className="mb-6">
-        <label htmlFor="tourId" className="block mb-2 text-sm font-medium text-gray-900">Choose Blog Post</label>
-        <select id="tourId" name="blogId" value={formData.blogId} onChange={handleChange} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
           <option value="">Select a Blog Post</option>
           {tourOptions.map(blog => (
             <option key={blog?.id} value={blog?.id}>{blog?.title}</option>
           ))}
-        </select>
-      </div>
+        </Select>
 
-      {/* Paragraphs */}
-      <label htmlFor={`paragraf1`} className="block text-sm font-medium text-gray-900">Paragraph 1</label>
-      <textarea id={`paragraf1`} name={`paragraf1`} value={formData[`paragraf1`]} onChange={handleChange} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 h-32 resize-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"></textarea>
+        <FormSection title="Paragraphs" columns={1}>
+          <Textarea
+            label="Paragraph 1"
+            name="paragraf1"
+            rows={6}
+            value={formData[`paragraf1`]}
+            onChange={handleChange}
+          />
 
-      {/* Repeat for each set of article paragraphs */}
-      {[...Array(6)].map((_, index) => (
-        <div key={index + 1} className="mb-6 mt-10">
-          <label htmlFor={`titleparagraf${index + 2}`} className="block text-sm font-medium text-gray-900">Title for Paragraph {index + 2}</label>
-          <input id={`titleparagraf${index + 2}`} name={`titleparagraf${index + 2}`} value={formData[`titleparagraf${index + 2}`]} onChange={handleChange} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
+          {[...Array(6)].map((_, index) => (
+            <div key={index + 1} className="space-y-3 rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+              <Input
+                label={`Title for Paragraph ${index + 2}`}
+                name={`titleparagraf${index + 2}`}
+                value={formData[`titleparagraf${index + 2}`]}
+                onChange={handleChange}
+              />
+              <Textarea
+                label={`Paragraph ${index + 2}`}
+                name={`paragraf${index + 2}`}
+                rows={5}
+                value={formData[`paragraf${index + 2}`]}
+                onChange={handleChange}
+              />
+              <Input
+                label={`Link for Paragraph ${index + 2}`}
+                name={`link${index + 2}`}
+                value={formData[`link${index + 2}`]}
+                onChange={handleChange}
+              />
+            </div>
+          ))}
 
-          <label htmlFor={`paragraf${index + 2}`} className="block text-sm font-medium text-gray-900">Paragraph {index + 2}</label>
-          <textarea id={`paragraf${index + 2}`} name={`paragraf${index + 2}`} value={formData[`paragraf${index + 2}`]} onChange={handleChange} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 h-32 resize-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"></textarea>
-
-
-          <label htmlFor={`link${index + 2}`} className="block text-sm font-medium text-gray-900">Link for Paragraph {index + 2}</label>
-          <input id={`link${index + 2}`} name={`link${index + 2}`} value={formData[`link${index + 2}`]} onChange={handleChange} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
-        </div>
-      ))}
-
-      {/* Conclusion paragraph */}
-      <div className="mb-6">
-        <label htmlFor="Conclusion" className="block text-sm font-medium text-gray-900">Conclusion</label>
-        <input id="Conclusion" name="Conclusion" value={formData.Conclusion} onChange={handleChange} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
-      </div>
-
-      {/* Save button */}
-      <div className='flex justify-between'>
-        <button type="button" onClick={handleSubmit} className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mb-10">Save</button>
-
-        {onNext ? (
-          <button
-            type="button"
-            onClick={onNext}
-            className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mb-10"
-          >
-            Next to Edit Article Image
-          </button>
-        ) : (
-          <Link href={'/add-article/add-article-images'} className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mb-10">
-            Next to Edit Article Image
-          </Link>
-        )}
+          <Input
+            label="Conclusion"
+            name="Conclusion"
+            value={formData.Conclusion}
+            onChange={handleChange}
+          />
+        </FormSection>
       </div>
 
       <AIAssistantModal 
@@ -164,8 +188,7 @@ function EditArticleParagraf({ id, onNext }) {
         currentSectionData={formData}
         onApply={handleApplyAI}
       />
-    </div>
-
+    </FormShell>
   );
 }
 

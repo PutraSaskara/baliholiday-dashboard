@@ -8,12 +8,12 @@ export const metadata = {
 export default function RootLayout({
   children
 }) {
+  // Tanpa overflow-y-auto di sini agar action bar sticky di dalam form
+  // menempel ke viewport (bukan ke kontainer yang tidak ikut men-scroll).
   return (
-    <div className='w-full h-full bg-slate-200 overflow-y-auto'>
+    <div className="w-full bg-slate-50">
       <ArticleNavbar />
       {children}
     </div>
-
-
   );
 }

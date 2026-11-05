@@ -3,8 +3,16 @@ import Link from "next/link";
 import { useState, useEffect, useCallback } from "react";
 import useArticleStore from "../stores/useArticleStore";
 import AIAssistantModal from "./AIAssistantModal";
+import { useToast } from "./ui/Toast";
+import FormShell from "./forms/FormShell";
+import FormSection from "./forms/FormSection";
+import FormActions from "./forms/FormActions";
+import Button, { buttonClass } from "./ui/Button";
+import Input from "./ui/Input";
+import Textarea from "./ui/Textarea";
 
 function EditSingleArticle({ id, onNext }) {
+  const toast = useToast();
   const [formData, setFormData] = useState({
     title: "",
     slug: "",
@@ -97,10 +105,10 @@ function EditSingleArticle({ id, onNext }) {
     setLoading(true);
     const { success } = await updateArticle(id, formData);
     if (success) {
-      alert("Article data updated successfully!");
+      toast.success("Article data updated successfully!");
       fetchArticleData();
     } else {
-      alert("Failed to update article data. Please try again later.");
+      toast.error("Failed to update article data. Please try again later.");
     }
     setLoading(false);
   };
@@ -137,222 +145,141 @@ function EditSingleArticle({ id, onNext }) {
   }
 
   return (
-    <div className="max-w-screen-lg mx-auto px-5 mb-10">
-      <div className="my-10 flex justify-between items-center">
-        <h1 className="text-xl font-bold">Edit Single Article</h1>
-        <button 
-          onClick={() => setIsAIModalOpen(true)}
-          className="px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-lg shadow-lg flex items-center gap-2 transition-all transform hover:scale-105 active:scale-95"
-        >
-          <span className="text-xl">✨</span> Review & AI Auto-fill
-        </button>
-      </div>
-      <div className="mb-6">
-        <label
-          htmlFor="title"
-          className="block mb-2 text-sm font-medium text-gray-900 "
-        >
-          Title
-        </label>
-        <input
-          type="text"
-          id="title"
-          name="title"
-          value={formData.title}
-          onChange={handleChange}
-          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-        />
-      </div>
-      <div className="mb-6">
-        <label
-          htmlFor="slug"
-          className="block mb-2 text-sm font-medium text-gray-900 "
-        >
-          Slug
-        </label>
-        <input
-          type="text"
-          id="slug"
-          name="slug"
-          value={formData.slug}
-          onChange={handleChange}
-          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-        />
-      </div>
-      <div className="mb-6">
-        <label
-          htmlFor="keywords"
-          className="block mb-2 text-sm font-medium text-gray-900 "
-        >
-          Keywords
-        </label>
-        <input
-          type="text"
-          id="keywords"
-          name="keywords"
-          value={formData.keywords}
-          onChange={handleChange}
-          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-        />
-      </div>
-      <div className="mb-6">
-        <label
-          htmlFor="author"
-          className="block mb-2 text-sm font-medium text-gray-900 "
-        >
-          Author
-        </label>
-        <input
-          type="text"
-          id="author"
-          name="author"
-          value={formData.author}
-          onChange={handleChange}
-          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-        />
-      </div>
-
-      <div className="border-t border-gray-200 pt-6 mt-6 space-y-6">
-        <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-          <span>🌴</span> GEO Optimization & Local Insights (Optional)
-        </h3>
-        
-        <div className="mb-6">
-          <label htmlFor="tldr_summary" className="block mb-2 text-sm font-medium text-gray-900">
-            Quick Summary (TL;DR)
-          </label>
-          <textarea
-            id="tldr_summary"
-            name="tldr_summary"
-            placeholder="A concise 2-3 sentence summary of the article..."
-            value={formData.tldr_summary || ""}
-            onChange={handleChange}
-            rows={3}
-            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 resize-none"
-          />
+    <FormShell
+      title="Edit Single Article"
+      description="Update the title, author, keywords, and SEO insights for this article."
+      headerExtra={
+        <div className="mt-3">
+          <Button type="button" variant="secondary" onClick={() => setIsAIModalOpen(true)}>
+            Review &amp; AI Auto-fill
+          </Button>
         </div>
+      }
+      actions={
+        <FormActions
+          left={
+            <Button type="button" onClick={handleSubmit} loading={loading}>
+              Save
+            </Button>
+          }
+          right={
+            onNext ? (
+              <Button type="button" onClick={onNext}>
+                Next to Edit Article Paragrafs
+              </Button>
+            ) : (
+              <Link href={"/add-article/add-article-paragrafs"} className={buttonClass()}>
+                Next to Edit Article Paragrafs
+              </Link>
+            )
+          }
+        />
+      }
+    >
+      <div className="space-y-8">
+        <FormSection title="Basic Info">
+          <Input
+            label="Title"
+            name="title"
+            required
+            value={formData.title}
+            onChange={handleChange}
+          />
+          <Input
+            label="Slug"
+            name="slug"
+            value={formData.slug}
+            onChange={handleChange}
+          />
+          <Input
+            label="Keywords"
+            name="keywords"
+            value={formData.keywords}
+            onChange={handleChange}
+          />
+          <Input
+            label="Author"
+            name="author"
+            value={formData.author}
+            onChange={handleChange}
+          />
+        </FormSection>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label htmlFor="guide_insight_author" className="block mb-2 text-sm font-medium text-gray-900">
-              Local Guide Name
-            </label>
-            <input
-              type="text"
-              id="guide_insight_author"
-              name="guide_insight_author"
-              placeholder="Putra Saskara"
-              value={formData.guide_insight_author || ""}
+        <FormSection title="GEO Optimization & Local Insights (Optional)">
+          <div className="sm:col-span-2">
+            <Textarea
+              label="Quick Summary (TL;DR)"
+              name="tldr_summary"
+              rows={3}
+              placeholder="A concise 2-3 sentence summary of the article..."
+              value={formData.tldr_summary || ""}
               onChange={handleChange}
-              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
             />
           </div>
-          <div>
-            <label htmlFor="guide_insight_location" className="block mb-2 text-sm font-medium text-gray-900">
-              Expertise / Location Context
-            </label>
-            <input
-              type="text"
-              id="guide_insight_location"
-              name="guide_insight_location"
-              placeholder="e.g. Ubud Tours Expert"
-              value={formData.guide_insight_location || ""}
+          <Input
+            label="Local Guide Name"
+            name="guide_insight_author"
+            placeholder="Putra Saskara"
+            value={formData.guide_insight_author || ""}
+            onChange={handleChange}
+          />
+          <Input
+            label="Expertise / Location Context"
+            name="guide_insight_location"
+            placeholder="e.g. Ubud Tours Expert"
+            value={formData.guide_insight_location || ""}
+            onChange={handleChange}
+          />
+          <div className="sm:col-span-2">
+            <Textarea
+              label="Authentic Guide Content / Tips"
+              name="guide_insight_content"
+              rows={3}
+              placeholder="Authentic, first-hand tips or advice from the guide..."
+              value={formData.guide_insight_content || ""}
               onChange={handleChange}
-              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
             />
           </div>
-        </div>
+        </FormSection>
 
-        <div className="mb-6">
-          <label htmlFor="guide_insight_content" className="block mb-2 text-sm font-medium text-gray-900">
-            Authentic Guide Content / Tips
-          </label>
-          <textarea
-            id="guide_insight_content"
-            name="guide_insight_content"
-            placeholder="Authentic, first-hand tips or advice from the guide..."
-            value={formData.guide_insight_content || ""}
-            onChange={handleChange}
-            rows={3}
-            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 resize-none"
-          />
-        </div>
-      </div>
+        <section>
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Frequently Asked Questions (Optional)
+            </h2>
+            <Button type="button" variant="secondary" size="sm" onClick={addFaq}>
+              + Add FAQ Item
+            </Button>
+          </div>
 
-      <div className="border-t border-gray-200 pt-6 mt-6 mb-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-            <span>❓</span> Frequently Asked Questions (Optional)
-          </h3>
-          <button
-            type="button"
-            onClick={addFaq}
-            className="px-3 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-800 text-xs font-bold rounded-lg transition-colors"
-          >
-            + Add FAQ Item
-          </button>
-        </div>
-
-        <div className="space-y-4">
-          {faqs.map((faq, index) => (
-            <div key={index} className="p-4 bg-gray-50 rounded-lg border border-gray-200 space-y-3 relative">
-              <button
-                type="button"
-                onClick={() => removeFaq(index)}
-                className="absolute top-2 right-2 text-xs font-bold text-red-500 hover:text-red-700"
-              >
-                Delete
-              </button>
-              <div>
-                <label className="block mb-1 text-xs font-bold text-gray-500">Question #{index + 1}</label>
-                <input
-                  type="text"
+          <div className="space-y-4">
+            {faqs.map((faq, index) => (
+              <div key={index} className="space-y-3 rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-slate-500">Question #{index + 1}</span>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => removeFaq(index)}>
+                    Delete
+                  </Button>
+                </div>
+                <Input
+                  label="Question"
+                  name={`faq-question-${index}`}
                   placeholder="e.g. Is Kusamba Salt Farm worth visiting?"
                   value={faq.question}
                   onChange={(e) => handleFaqChange(index, "question", e.target.value)}
-                  className="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
                 />
-              </div>
-              <div>
-                <label className="block mb-1 text-xs font-bold text-gray-500">Answer</label>
-                <textarea
+                <Textarea
+                  label="Answer"
+                  name={`faq-answer-${index}`}
+                  rows={2}
                   placeholder="Answer..."
                   value={faq.answer}
                   onChange={(e) => handleFaqChange(index, "answer", e.target.value)}
-                  rows={2}
-                  className="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 resize-none"
                 />
               </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="w-full flex justify-between">
-        <button
-          type="button"
-          onClick={handleSubmit}
-          className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 rounded-lg"
-        >
-          Save
-        </button>
-
-        {onNext ? (
-          <button
-            type="button"
-            onClick={onNext}
-            className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 rounded-lg"
-          >
-            Next to Edit Article Paragrafs
-          </button>
-        ) : (
-          <Link
-            href={"/add-article/add-article-paragrafs"}
-            className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 rounded-lg"
-          >
-            Next to Edit Article Paragrafs
-          </Link>
-        )}
+            ))}
+          </div>
+        </section>
       </div>
 
       <AIAssistantModal 
@@ -364,7 +291,7 @@ function EditSingleArticle({ id, onNext }) {
         currentSectionData={formData}
         onApply={handleApplyAI}
       />
-    </div>
+    </FormShell>
   );
 }
 

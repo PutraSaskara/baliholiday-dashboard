@@ -8,6 +8,23 @@ import { useRouter } from "next/navigation";
 import { FaSpinner } from "react-icons/fa";
 import Image from "next/image";
 import baseURL from "@/apiConfig";
+import { useToast } from "./ui/Toast";
+import FormShellRaw from "./forms/FormShell";
+import FormSectionRaw from "./forms/FormSection";
+import FormActionsRaw from "./forms/FormActions";
+import ButtonRaw from "./ui/Button";
+import InputRaw from "./ui/Input";
+import TextareaRaw from "./ui/Textarea";
+
+// Komponen UI berbasis JSX tidak punya deklarasi tipe, jadi TypeScript
+// menganggap seluruh props-nya wajib. Di-cast ke `any` agar file ini tetap
+// lulus type check tanpa mengubah perilaku.
+const FormShell: any = FormShellRaw;
+const FormSection: any = FormSectionRaw;
+const FormActions: any = FormActionsRaw;
+const Button: any = ButtonRaw;
+const Input: any = InputRaw;
+const Textarea: any = TextareaRaw;
 
 interface Destination {
   id: string;
@@ -25,6 +42,7 @@ interface DestinationFormProps {
 }
 
 const DestinationForm: React.FC<DestinationFormProps> = ({ isEditMode, existingData }) => {
+  const toast = useToast() as any;
   const [name, setName] = useState<string>(existingData.name);
   const [description, setDescription] = useState<string>(existingData.description);
   const [lat, setLat] = useState<number>(existingData.lat);
@@ -62,14 +80,14 @@ const DestinationForm: React.FC<DestinationFormProps> = ({ isEditMode, existingD
             "Content-Type": "multipart/form-data",
           },
         });
-        alert("Destination updated successfully.");
+        toast.success("Destination updated successfully.");
       } else {
         await axios.post(`${baseURL}/api/destinations`, formData, {
           headers: {
             "Content-Type": "multipart/form-data",
           },
         });
-        alert("Destination created successfully.");
+        toast.success("Destination created successfully.");
       }
 
       router.push("/destinations");
@@ -82,111 +100,102 @@ const DestinationForm: React.FC<DestinationFormProps> = ({ isEditMode, existingD
   };
 
   return (
-    <div className="max-w-md mx-auto mt-6">
-      <h2 className="text-2xl font-bold mb-4">
-        {isEditMode ? "Edit" : "Create"} Destination
-      </h2>
-      {error && <p className="text-red-500 mb-4">{error}</p>}
-      <form onSubmit={handleSubmit} encType="multipart/form-data">
-        {/* Name */}
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-1" htmlFor="name">
-            Name<span className="text-red-500">*</span>
-          </label>
-          <input
-            id="name"
+    <form onSubmit={handleSubmit} encType="multipart/form-data">
+      <FormShell
+        title={`${isEditMode ? "Edit" : "Create"} Destination`}
+        description="Provide the destination details, coordinates, and cover image."
+        maxWidth="max-w-2xl"
+        actions={
+          <FormActions
+            left={
+              <Button type="button" variant="secondary" onClick={() => router.back()}>
+                Cancel
+              </Button>
+            }
+            right={
+              <Button type="submit" loading={isSubmitting}>
+                {isEditMode ? "Update" : "Create"} Destination
+              </Button>
+            }
+          />
+        }
+      >
+        {error ? (
+          <p role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-600">
+            {error}
+          </p>
+        ) : null}
+
+        <FormSection columns={1}>
+          {/* Name */}
+          <Input
+            label="Name"
+            name="name"
+            required
             type="text"
             value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="border rounded p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
           />
-        </div>
 
-        {/* Description */}
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-1" htmlFor="description">
-            Description<span className="text-red-500">*</span>
-          </label>
-          <textarea
-            id="description"
+          {/* Description */}
+          <Textarea
+            label="Description"
+            name="description"
+            required
+            rows={5}
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="border rounded p-2 w-full h-32 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          ></textarea>
-        </div>
-
-        {/* Latitude */}
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-1" htmlFor="lat">
-            Latitude<span className="text-red-500">*</span>
-          </label>
-          <input
-            id="lat"
-            type="number"
-            step="any"
-            value={lat}
-            onChange={(e) => setLat(parseFloat(e.target.value))}
-            className="border rounded p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
+            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value)}
           />
-        </div>
 
-        {/* Longitude */}
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-1" htmlFor="lng">
-            Longitude<span className="text-red-500">*</span>
-          </label>
-          <input
-            id="lng"
-            type="number"
-            step="any"
-            value={lng}
-            onChange={(e) => setLng(parseFloat(e.target.value))}
-            className="border rounded p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          />
-        </div>
-
-        {/* Image */}
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-1" htmlFor="image">
-            Image{!isEditMode && <span className="text-red-500">*</span>}
-          </label>
-          <input
-            id="image"
-            type="file"
-            accept="image/webp"
-            onChange={(e) => setImage(e.target.files?.[0] || null)}
-            className="border rounded p-2 w-full"
-            {...(!isEditMode && { required: true })}
-          />
-          <p className="text-sm text-gray-500 mt-1">Only WEBP format is allowed.</p>
-          {isEditMode && existingData?.image && (
-            <Image
-              src={existingData.image}
-              alt={existingData.name}
-              className="mt-2 w-32 h-32 object-cover rounded"
-              width={128} // Specify width and height for optimization
-              height={128}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {/* Latitude */}
+            <Input
+              label="Latitude"
+              name="lat"
+              required
+              type="number"
+              step="any"
+              value={lat}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLat(parseFloat(e.target.value))}
             />
-          )}
-        </div>
 
-        {/* Submit Button */}
-        <button
-          type="submit"
-          className={`w-full p-2 rounded bg-blue-500 text-white hover:bg-blue-600 flex items-center justify-center ${
-            isSubmitting ? "cursor-not-allowed" : ""
-          }`}
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? <FaSpinner className="animate-spin mr-2" /> : null}
-          {isEditMode ? "Update" : "Create"} Destination
-        </button>
-      </form>
-    </div>
+            {/* Longitude */}
+            <Input
+              label="Longitude"
+              name="lng"
+              required
+              type="number"
+              step="any"
+              value={lng}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLng(parseFloat(e.target.value))}
+            />
+          </div>
+
+          {/* Image */}
+          <div>
+            <Input
+              label="Image"
+              name="image"
+              type="file"
+              accept="image/webp"
+              required={!isEditMode}
+              hint="Only WEBP format is allowed."
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setImage(e.target.files?.[0] || null)}
+              className="text-sm file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-xs file:font-medium"
+            />
+            {isEditMode && existingData?.image ? (
+              <Image
+                src={existingData.image}
+                alt={existingData.name}
+                className="mt-3 h-32 w-32 rounded-xl object-cover"
+                width={128}
+                height={128}
+              />
+            ) : null}
+          </div>
+        </FormSection>
+      </FormShell>
+    </form>
   );
 };
 

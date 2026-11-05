@@ -4,8 +4,16 @@ import { useState, useEffect } from 'react';
 import useArticleStore from '../stores/useArticleStore';
 import useWarnIfUnsavedChanges from '../hooks/useWarnIfUnsavedChanges';
 import AIAssistantModal from './AIAssistantModal';
+import { useToast } from "./ui/Toast";
+import FormShell from './forms/FormShell';
+import FormActions from './forms/FormActions';
+import Button, { buttonClass } from './ui/Button';
+import Input from './ui/Input';
+import Select from './ui/Select';
+import Textarea from './ui/Textarea';
 
 function AddArticleParagrafs() {
+  const toast = useToast();
   const {
     articles: tourOptions, 
     fetchArticles, 
@@ -69,14 +77,14 @@ function AddArticleParagrafs() {
   const handleSubmit = async () => {
     // Validation
     if (!draftArticle && !formData.blogId) {
-       alert("Please choose a Blog Post to associate these paragraphs with.");
+       toast.error("Please choose a Blog Post to associate these paragraphs with.");
        return;
     }
 
     // Save to Zustand Draft memory instead of calling API
     setDraftParagraph(formData);
 
-    alert('Draft Paragraph saved locally. Please proceed to the final step!');
+    toast.success('Draft Paragraph saved locally. Please proceed to the final step!');
     setIsSaved(true);
   };
 
@@ -96,167 +104,131 @@ function AddArticleParagrafs() {
   }
 
   return (
-    <div className='max-w-4xl mx-auto py-10 px-4'>
-      {/* Wizard Progress Indicator */}
-      <div className="mb-12">
-        <div className="flex items-center justify-between mb-4 px-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-blue-600">Step 2 of 3</span>
-            <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Content & Paragraphs</span>
+    <>
+    <FormShell
+      title="Article Content"
+      description="Tip: Use paragraphs to break down your article into readable sections."
+      headerExtra={
+        <div className="mt-3">
+          <Button variant="secondary" onClick={() => setIsAIModalOpen(true)}>
+            Review &amp; AI Auto-fill
+          </Button>
         </div>
-        <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-          <div className="w-2/3 h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full transition-all duration-500"></div>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-gray-200/50 border border-gray-100 p-8 md:p-12 transition-all duration-300">
-        <header className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-              <h1 className='text-3xl font-black tracking-tight text-gray-900 mb-2'>Article Content</h1>
-              <p className="text-gray-500 text-lg italic">
-                  Tip: Use paragraphs to break down your article into readable sections.
-              </p>
-            </div>
-            <button 
-              onClick={() => setIsAIModalOpen(true)}
-              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-2xl shadow-lg shadow-blue-500/30 flex items-center gap-2 transition-all transform hover:scale-105 active:scale-95"
-            >
-              <span className="text-xl">✨</span> Review & AI Auto-fill
-            </button>
-        </header>
-
+      }
+      actions={
+        <FormActions
+          left={
+            <>
+              <Link
+                href={'/add-article/add-single-article'}
+                className={buttonClass({ variant: "secondary" })}
+              >
+                Back
+              </Link>
+              <Button variant="secondary" onClick={handleSubmit}>
+                {isSaved ? 'Draf Saved' : 'Save as Draf'}
+              </Button>
+            </>
+          }
+          right={
+            isSaved ? (
+              <Link href={'/add-article/add-article-images'} className={buttonClass()}>
+                Next to Final Step
+              </Link>
+            ) : (
+              <Button disabled>Next to Final Step</Button>
+            )
+          }
+        />
+      }
+    >
         {/* Draft Mode Notice */}
         {draftArticle && (
-            <div className="mb-10 p-5 rounded-3xl bg-blue-50/50 border border-blue-100/50 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-blue-500 flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-200">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                </div>
+            <div className="mb-6 flex items-center gap-4 rounded-xl border border-brand-200 bg-brand-50 p-4">
                 <div>
-                    <h4 className="text-blue-900 font-bold">Draft Mode Active</h4>
-                    <p className="text-blue-700/80 text-sm">Assigning paragraphs to &quot;{draftArticle.title}&quot;</p>
+                    <h4 className="font-semibold text-brand-900">Draft Mode Active</h4>
+                    <p className="text-sm text-brand-700">Assigning paragraphs to &quot;{draftArticle.title}&quot;</p>
                 </div>
             </div>
         )}
 
         {!draftArticle && (
-            <div className="mb-10 group">
-                <label htmlFor="blogId" className="block mb-2.5 text-sm font-bold text-gray-700 ml-1 group-focus-within:text-blue-600 transition-colors">Select Blog Post</label>
-                <select 
-                    id="blogId" 
-                    name="blogId" 
-                    value={formData.blogId} 
-                    onChange={handleChange} 
-                    className="w-full px-6 py-4 bg-gray-50/50 border border-gray-200 text-gray-900 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white transition-all outline-none font-semibold appearance-none cursor-pointer shadow-sm"
+            <div className="mb-6">
+                <Select
+                    label="Select Blog Post"
+                    name="blogId"
+                    required
+                    value={formData.blogId}
+                    onChange={handleChange}
                 >
                     <option value="">Choose a Blog Post...</option>
                     {tourOptions.map(blog => (
                         <option key={blog?.id} value={blog?.id}>{blog?.title}</option>
                     ))}
-                </select>
+                </Select>
             </div>
         )}
 
-        <div className="space-y-12">
+        <div className="space-y-6">
             {/* Paragraph 1 (Introduction) */}
-            <div className="group p-6 bg-gray-50/30 rounded-3xl border border-gray-100 hover:border-blue-200/50 transition-all">
-                <label htmlFor="paragraf1" className="block mb-3 text-sm font-bold text-gray-700 ml-1 uppercase tracking-wider">Introduction (Paragraph 1)</label>
-                <textarea 
-                    id="paragraf1" 
-                    name="paragraf1" 
-                    value={formData.paragraf1} 
-                    onChange={handleChange} 
+            <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+                <Textarea
+                    label="Introduction (Paragraph 1)"
+                    name="paragraf1"
+                    rows={6}
+                    value={formData.paragraf1}
+                    onChange={handleChange}
                     placeholder="Enter the introduction..."
-                    className="w-full px-6 py-4 bg-white border border-gray-200 text-gray-900 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none font-medium min-h-[160px] resize-none shadow-sm"
                 />
             </div>
 
             {/* Dynamic Paragraphs 2-7 */}
             {[...Array(6)].map((_, index) => (
-                <div key={index + 2} className="group p-8 bg-gray-50/30 rounded-[2rem] border border-gray-100 space-y-6 hover:shadow-xl hover:shadow-gray-100/50 transition-all">
-                    <div className="flex items-center gap-3 mb-2">
-                        <span className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">{index + 2}</span>
-                        <h4 className="font-black text-gray-800 uppercase tracking-tighter">Section {index + 2}</h4>
+                <div key={index + 2} className="space-y-4 rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+                    <div className="flex items-center gap-3">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 text-sm font-bold text-brand-700">{index + 2}</span>
+                        <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">Section {index + 2}</h2>
                     </div>
-                    
-                    <div className="space-y-4">
-                        <div className="group">
-                            <label className="block mb-2 text-xs font-bold text-gray-500 uppercase ml-1">Section Title</label>
-                            <input 
-                                type="text"
-                                name={`titleparagraf${index + 2}`}
-                                value={formData[`titleparagraf${index + 2}`]}
-                                onChange={handleChange}
-                                placeholder="Enter sub-heading title..."
-                                className="w-full px-6 py-4 bg-white border border-gray-200 text-gray-900 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none font-bold shadow-sm"
-                            />
-                        </div>
-                        
-                        <div className="group">
-                            <label className="block mb-2 text-xs font-bold text-gray-500 uppercase ml-1">Section Content</label>
-                            <textarea 
-                                name={`paragraf${index + 2}`}
-                                value={formData[`paragraf${index + 2}`]}
-                                onChange={handleChange}
-                                placeholder="Enter paragraph content..."
-                                className="w-full px-6 py-4 bg-white border border-gray-200 text-gray-900 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none font-medium min-h-[140px] resize-none shadow-sm"
-                            />
-                        </div>
 
-                        <div className="group">
-                            <label className="block mb-2 text-xs font-bold text-gray-500 uppercase ml-1">External Link (Optional)</label>
-                            <input 
-                                type="text"
-                                name={`link${index + 2}`}
-                                value={formData[`link${index + 2}`]}
-                                onChange={handleChange}
-                                placeholder="https://..."
-                                className="w-full px-5 py-3 bg-white border border-gray-200 text-gray-900 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none font-medium text-sm text-blue-600 placeholder:text-gray-300 italic shadow-inner"
-                            />
-                        </div>
-                    </div>
+                    <Input
+                        label="Section Title"
+                        name={`titleparagraf${index + 2}`}
+                        value={formData[`titleparagraf${index + 2}`]}
+                        onChange={handleChange}
+                        placeholder="Enter sub-heading title..."
+                    />
+                    <Textarea
+                        label="Section Content"
+                        name={`paragraf${index + 2}`}
+                        rows={5}
+                        value={formData[`paragraf${index + 2}`]}
+                        onChange={handleChange}
+                        placeholder="Enter paragraph content..."
+                    />
+                    <Input
+                        label="External Link (Optional)"
+                        name={`link${index + 2}`}
+                        value={formData[`link${index + 2}`]}
+                        onChange={handleChange}
+                        placeholder="https://..."
+                    />
                 </div>
             ))}
 
             {/* Conclusion */}
-            <div className="group p-6 bg-blue-50/30 rounded-3xl border border-blue-100 transition-all">
-                <label htmlFor="Conclusion" className="block mb-3 text-sm font-bold text-blue-800 ml-1 uppercase tracking-wider">Conclusion</label>
-                <textarea 
-                    id="Conclusion" 
-                    name="Conclusion" 
-                    value={formData.Conclusion} 
-                    onChange={handleChange} 
+            <div className="rounded-xl border border-brand-200 bg-brand-50/60 p-4">
+                <Textarea
+                    label="Conclusion"
+                    name="Conclusion"
+                    rows={4}
+                    value={formData.Conclusion}
+                    onChange={handleChange}
                     placeholder="Enter the conclusion..."
-                    className="w-full px-6 py-4 bg-white border border-blue-200 text-gray-900 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none font-medium min-h-[100px] resize-none shadow-sm"
                 />
             </div>
         </div>
+      </FormShell>
 
-        <div className='mt-16 pt-8 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4'>
-            <button 
-                type="button" 
-                onClick={handleSubmit} 
-                className="w-full sm:w-auto px-10 py-4 text-base font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-2xl transition-all duration-200 shadow-sm hover:shadow-md active:scale-95"
-            >
-                {isSaved ? 'Draf Saved' : 'Save as Draf'}
-            </button>
-
-            {isSaved ? (
-                <Link 
-                    href={'/add-article/add-article-images'} 
-                    className="w-full sm:w-auto px-10 py-4 text-base font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl text-center shadow-[0_4px_14px_0_rgba(37,99,235,0.39)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.23)] hover:-translate-y-0.5 transition-all duration-200"
-                >
-                    Next to Final Step →
-                </Link>
-            ) : (
-                <button 
-                    disabled 
-                    className="w-full sm:w-auto px-10 py-4 text-base font-bold text-gray-400 bg-gray-100 cursor-not-allowed rounded-2xl text-center"
-                >
-                    Next to Final Step →
-                </button>
-            )}
-        </div>
-      </div>
-      
       <AIAssistantModal 
         isOpen={isAIModalOpen}
         onClose={() => setIsAIModalOpen(false)}
@@ -265,7 +237,7 @@ function AddArticleParagrafs() {
         drafts={{ draftArticle, draftParagraph: formData }}
         onApply={handleApplyAI}
       />
-    </div>
+    </>
   );
 }
 

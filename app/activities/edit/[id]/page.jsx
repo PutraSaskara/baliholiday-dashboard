@@ -3,8 +3,17 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { api } from "@/apiConfig";
 import Link from "next/link";
+import { useToast } from "../../../../components/ui/Toast";
+import FormShell from "../../../../components/forms/FormShell";
+import FormSection from "../../../../components/forms/FormSection";
+import FormActions from "../../../../components/forms/FormActions";
+import Button, { buttonClass } from "../../../../components/ui/Button";
+import Input from "../../../../components/ui/Input";
+import Select from "../../../../components/ui/Select";
+import Textarea from "../../../../components/ui/Textarea";
 
 export default function EditActivityPage() {
+  const toast = useToast();
   const router = useRouter();
   const params = useParams();
   const [isLoading, setIsLoading] = useState(true);
@@ -111,7 +120,7 @@ export default function EditActivityPage() {
       setFaqs(parsedFaqs);
     } catch (err) {
       console.error("Error fetching activity:", err);
-      alert("Activity not found");
+      toast.error("Activity not found");
       router.push("/activities");
     } finally {
       setIsLoading(false);
@@ -134,7 +143,7 @@ export default function EditActivityPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.title || !formData.price1 || !formData.description) {
-      alert("Please fill in Title, Description, and Price 1.");
+      toast.error("Please fill in Title, Description, and Price 1.");
       return;
     }
 
@@ -157,11 +166,11 @@ export default function EditActivityPage() {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      alert("Activity updated successfully!");
+      toast.success("Activity updated successfully!");
       router.push("/activities");
     } catch (err) {
       console.error("Error updating activity:", err);
-      alert(err.response?.data?.error || "Failed to update activity");
+      toast.error(err.response?.data?.error || "Failed to update activity");
     } finally {
       setIsSubmitting(false);
     }
@@ -172,250 +181,181 @@ export default function EditActivityPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto py-10 px-4">
-      <div className="mb-6">
-        <Link href="/activities" className="text-sm text-blue-600 hover:underline">← Back to Activities</Link>
+    <div className="max-w-4xl mx-auto">
+      <div className="mb-4">
+        <Link href="/activities" className="text-sm font-medium text-brand-700 hover:underline">← Back to Activities</Link>
       </div>
 
-      <div className="bg-white rounded-[2rem] shadow-xl border border-gray-100 p-8 md:p-10">
-        <h1 className="text-3xl font-black text-gray-900 mb-2">Edit Activity</h1>
-        <p className="text-gray-500 mb-8">Update the activity details below.</p>
+      <form onSubmit={handleSubmit}>
+        <FormShell
+          title="Edit Activity"
+          description="Update the activity details below."
+          actions={
+            <FormActions
+              left={
+                <Link href="/activities" className={buttonClass({ variant: "secondary" })}>
+                  Cancel
+                </Link>
+              }
+              right={<Button type="submit" loading={isSubmitting}>{isSubmitting ? "Saving..." : "Save Changes"}</Button>}
+            />
+          }
+        >
+          <div className="space-y-8">
+            {/* Basic Info */}
+            <FormSection title="Basic Info">
+              <div className="sm:col-span-2">
+                <Input label="Title" name="title" required value={formData.title} onChange={handleChange} />
+              </div>
+              <div className="sm:col-span-2">
+                <Input label="Custom URL Slug (Optional)" name="slug" placeholder="Leave empty to keep current slug" value={formData.slug} onChange={handleChange} />
+              </div>
+              <Select label="Category" name="category" required value={formData.category} onChange={handleChange}>
+                <option value="activity">Activity</option>
+                <option value="experience">Experience</option>
+                <option value="transfer">Transfer</option>
+                <option value="ticket">Ticket</option>
+              </Select>
+              <Input label="Sub Type" name="subType" placeholder="e.g. atv, rafting" value={formData.subType} onChange={handleChange} />
+              <div className="sm:col-span-2">
+                <Textarea label="Description" name="description" required rows={4} value={formData.description} onChange={handleChange} />
+              </div>
+              <div className="sm:col-span-2">
+                <Input label="Keywords" name="keywords" value={formData.keywords} onChange={handleChange} />
+              </div>
+            </FormSection>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Basic Info */}
-          <section className="space-y-5">
-            <h2 className="text-sm font-black uppercase tracking-widest text-gray-400 border-b border-gray-100 pb-2">Basic Info</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div className="md:col-span-2">
-                <label className="block mb-1.5 text-sm font-bold text-gray-700">Title *</label>
-                <input name="title" value={formData.title} onChange={handleChange} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" />
+            {/* Pricing */}
+            <FormSection title="Pricing" columns={1}>
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
+                <p className="text-xs font-medium text-amber-800">PayPal fee: ~4.4% + $0.30 per transaction. If you set $50, you&apos;ll receive ~$47.50. Consider adjusting your price to cover the fee.</p>
               </div>
-              <div className="md:col-span-2">
-                <label className="block mb-1.5 text-sm font-bold text-gray-700">Custom URL Slug (Optional)</label>
-                <input name="slug" value={formData.slug} onChange={handleChange} placeholder="Leave empty to keep current slug" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" />
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                {[1, 2, 3].map((n) => {
+                  const priceVal = parseFloat(formData[`price${n}`]) || 0;
+                  const fee = priceVal > 0 ? (priceVal * 0.044 + 0.30).toFixed(2) : null;
+                  const netAmount = fee ? (priceVal - parseFloat(fee)).toFixed(2) : null;
+                  return (
+                    <div key={n} className="space-y-3 rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+                      <Input
+                        label={`Price ${n}`}
+                        name={`price${n}`}
+                        type="number"
+                        value={formData[`price${n}`]}
+                        onChange={handleChange}
+                      />
+                      <Input
+                        label={`Price Note ${n} (Optional)`}
+                        name={`priceNote${n}`}
+                        placeholder="Note"
+                        value={formData[`priceNote${n}`]}
+                        onChange={handleChange}
+                      />
+                      {fee && (
+                        <p className="text-[11px] text-slate-500">Fee: -${fee} → You receive: <span className="font-semibold text-emerald-600">${netAmount}</span></p>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
-              <div>
-                <label className="block mb-1.5 text-sm font-bold text-gray-700">Category *</label>
-                <select name="category" value={formData.category} onChange={handleChange} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none bg-white">
-                  <option value="activity">Activity</option>
-                  <option value="experience">Experience</option>
-                  <option value="transfer">Transfer</option>
-                  <option value="ticket">Ticket</option>
-                </select>
-              </div>
-              <div>
-                <label className="block mb-1.5 text-sm font-bold text-gray-700">Sub Type</label>
-                <input name="subType" value={formData.subType} onChange={handleChange} placeholder="e.g. atv, rafting" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block mb-1.5 text-sm font-bold text-gray-700">Description *</label>
-                <textarea name="description" value={formData.description} onChange={handleChange} rows={4} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none resize-none" />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block mb-1.5 text-sm font-bold text-gray-700">Keywords</label>
-                <input name="keywords" value={formData.keywords} onChange={handleChange} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" />
-              </div>
-            </div>
-          </section>
+            </FormSection>
 
-          {/* Pricing */}
-          <section className="space-y-5">
-            <h2 className="text-sm font-black uppercase tracking-widest text-gray-400 border-b border-gray-100 pb-2">Pricing</h2>
-            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl mb-2">
-              <p className="text-xs text-amber-800 font-medium">⚠️ PayPal fee: ~4.4% + $0.30 per transaction. If you set $50, you&apos;ll receive ~$47.50. Consider adjusting your price to cover the fee.</p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {[1, 2, 3].map((n) => {
-                const priceVal = parseFloat(formData[`price${n}`]) || 0;
-                const fee = priceVal > 0 ? (priceVal * 0.044 + 0.30).toFixed(2) : null;
-                const netAmount = fee ? (priceVal - parseFloat(fee)).toFixed(2) : null;
-                return (
-                  <div key={n} className="p-4 bg-gray-50 rounded-2xl border border-gray-100 space-y-3">
-                    <span className="text-xs font-bold text-gray-500">Price {n}</span>
-                    <input name={`price${n}`} value={formData[`price${n}`]} onChange={handleChange} type="number" className="w-full px-3 py-2.5 border border-gray-200 rounded-xl outline-none text-sm font-bold" />
-                    <input name={`priceNote${n}`} value={formData[`priceNote${n}`]} onChange={handleChange} placeholder="Note" className="w-full px-3 py-2.5 border border-gray-200 rounded-xl outline-none text-xs" />
-                    {fee && (
-                      <p className="text-[10px] text-gray-400">Fee: -${fee} → You receive: <span className="font-bold text-green-600">${netAmount}</span></p>
-                    )}
+            {/* Details */}
+            <FormSection title="Details">
+              <Input label="Duration" name="duration" value={formData.duration} onChange={handleChange} />
+              <Input label="Location" name="location" value={formData.location} onChange={handleChange} />
+              <Input label="Latitude" name="lat" type="number" step="any" value={formData.lat} onChange={handleChange} />
+              <Input label="Longitude" name="lng" type="number" step="any" value={formData.lng} onChange={handleChange} />
+              <Select label="Difficulty" name="difficulty" value={formData.difficulty} onChange={handleChange}>
+                <option value="">— None —</option>
+                <option value="easy">Easy</option>
+                <option value="moderate">Moderate</option>
+                <option value="hard">Hard</option>
+              </Select>
+              <Input label="Min Age" name="minAge" type="number" value={formData.minAge} onChange={handleChange} />
+              <Input label="Max Participants" name="maxParticipants" type="number" value={formData.maxParticipants} onChange={handleChange} />
+              <Input label="Time Slots" name="timeSlots" hint="Comma-separated" placeholder="08:00, 10:00, 14:00" value={formData.timeSlots} onChange={handleChange} />
+              <Input label="Operating Hours" name="operatingHours" value={formData.operatingHours} onChange={handleChange} />
+              <label className="flex h-11 cursor-pointer items-center gap-3">
+                <input type="checkbox" name="pickupIncluded" checked={formData.pickupIncluded} onChange={handleChange} className="h-5 w-5 rounded border-slate-300 accent-brand-600" />
+                <span className="text-sm font-medium text-slate-700">Pickup Included</span>
+              </label>
+
+              {formData.category === "transfer" && (
+                <div className="grid grid-cols-1 gap-4 rounded-xl border border-brand-200 bg-brand-50 p-4 sm:col-span-2 sm:grid-cols-2">
+                  <Input label="From Location" name="fromLocation" value={formData.fromLocation} onChange={handleChange} />
+                  <Input label="To Location" name="toLocation" value={formData.toLocation} onChange={handleChange} />
+                </div>
+              )}
+            </FormSection>
+
+            {/* Includes */}
+            <FormSection title="Includes & Info" columns={1}>
+              <Textarea label="Includes" name="includes" rows={3} value={formData.includes} onChange={handleChange} />
+              <Textarea label="Not Includes" name="notIncludes" rows={3} value={formData.notIncludes} onChange={handleChange} />
+              <Textarea label="What to Bring" name="whatToBring" rows={3} value={formData.whatToBring} onChange={handleChange} />
+              <Textarea label="Cancellation Policy" name="cancellationPolicy" rows={2} value={formData.cancellationPolicy} onChange={handleChange} />
+            </FormSection>
+
+            {/* GEO Optimization & Local Insights */}
+            <FormSection title="GEO Optimization & Local Insights (Optional)">
+              <div className="sm:col-span-2">
+                <Textarea label="Quick Summary (TL;DR)" name="tldr_summary" rows={3} placeholder="A concise 2-3 sentence summary of the activity..." value={formData.tldr_summary} onChange={handleChange} />
+              </div>
+              <Input label="Local Guide Name" name="guide_insight_author" placeholder="e.g. Wayan" value={formData.guide_insight_author} onChange={handleChange} />
+              <Input label="Expertise / Location Context" name="guide_insight_location" placeholder="e.g. Ubud Rafting Instructor" value={formData.guide_insight_location} onChange={handleChange} />
+              <div className="sm:col-span-2">
+                <Textarea label="Authentic Guide Content / Tips" name="guide_insight_content" rows={3} placeholder="Authentic, first-hand tips or advice from the guide..." value={formData.guide_insight_content} onChange={handleChange} />
+              </div>
+            </FormSection>
+
+            {/* Frequently Asked Questions */}
+            <section>
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2">
+                <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">Frequently Asked Questions (Optional)</h2>
+                <Button type="button" variant="secondary" size="sm" onClick={addFaq}>+ Add FAQ</Button>
+              </div>
+              <div className="space-y-4">
+                {faqs.map((faq, index) => (
+                  <div key={index} className="space-y-3 rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-slate-500">Question #{index + 1}</span>
+                      <Button type="button" variant="ghost" size="sm" onClick={() => removeFaq(index)}>Delete</Button>
+                    </div>
+                    <Input label="Question" name={`faq-question-${index}`} value={faq.question} onChange={(e) => handleFaqChange(index, "question", e.target.value)} placeholder="e.g. What should I wear?" />
+                    <Textarea label="Answer" name={`faq-answer-${index}`} rows={2} value={faq.answer} onChange={(e) => handleFaqChange(index, "answer", e.target.value)} placeholder="Answer details..." />
                   </div>
-                );
-              })}
-            </div>
-          </section>
+                ))}
+              </div>
+            </section>
 
-          {/* Details */}
-          <section className="space-y-5">
-            <h2 className="text-sm font-black uppercase tracking-widest text-gray-400 border-b border-gray-100 pb-2">Details</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div>
-                <label className="block mb-1.5 text-sm font-bold text-gray-700">Duration</label>
-                <input name="duration" value={formData.duration} onChange={handleChange} className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none" />
-              </div>
-              <div>
-                <label className="block mb-1.5 text-sm font-bold text-gray-700">Location</label>
-                <input name="location" value={formData.location} onChange={handleChange} className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none" />
-              </div>
-              <div>
-                <label className="block mb-1.5 text-sm font-bold text-gray-700">Latitude</label>
-                <input name="lat" value={formData.lat} onChange={handleChange} type="number" step="any" className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none" />
-              </div>
-              <div>
-                <label className="block mb-1.5 text-sm font-bold text-gray-700">Longitude</label>
-                <input name="lng" value={formData.lng} onChange={handleChange} type="number" step="any" className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none" />
-              </div>
-              <div>
-                <label className="block mb-1.5 text-sm font-bold text-gray-700">Difficulty</label>
-                <select name="difficulty" value={formData.difficulty} onChange={handleChange} className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none bg-white">
-                  <option value="">— None —</option>
-                  <option value="easy">Easy</option>
-                  <option value="moderate">Moderate</option>
-                  <option value="hard">Hard</option>
-                </select>
-              </div>
-              <div>
-                <label className="block mb-1.5 text-sm font-bold text-gray-700">Min Age</label>
-                <input name="minAge" value={formData.minAge} onChange={handleChange} type="number" className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none" />
-              </div>
-              <div>
-                <label className="block mb-1.5 text-sm font-bold text-gray-700">Max Participants</label>
-                <input name="maxParticipants" value={formData.maxParticipants} onChange={handleChange} type="number" className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none" />
-              </div>
-              <div>
-                <label className="block mb-1.5 text-sm font-bold text-gray-700">Time Slots</label>
-                <input name="timeSlots" value={formData.timeSlots} onChange={handleChange} placeholder="08:00, 10:00, 14:00" className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none" />
-              </div>
-              <div>
-                <label className="block mb-1.5 text-sm font-bold text-gray-700">Operating Hours</label>
-                <input name="operatingHours" value={formData.operatingHours} onChange={handleChange} className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none" />
-              </div>
-              <div className="flex items-center gap-3 pt-6">
-                <input type="checkbox" name="pickupIncluded" checked={formData.pickupIncluded} onChange={handleChange} className="w-5 h-5 rounded border-gray-300 text-blue-600" />
-                <label className="text-sm font-bold text-gray-700">Pickup Included</label>
-              </div>
-            </div>
-
-            {formData.category === "transfer" && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-4 p-4 bg-indigo-50 rounded-2xl border border-indigo-100">
-                <div>
-                  <label className="block mb-1.5 text-sm font-bold text-indigo-700">From Location</label>
-                  <input name="fromLocation" value={formData.fromLocation} onChange={handleChange} className="w-full px-4 py-3 border border-indigo-200 rounded-xl outline-none" />
-                </div>
-                <div>
-                  <label className="block mb-1.5 text-sm font-bold text-indigo-700">To Location</label>
-                  <input name="toLocation" value={formData.toLocation} onChange={handleChange} className="w-full px-4 py-3 border border-indigo-200 rounded-xl outline-none" />
-                </div>
-              </div>
-            )}
-          </section>
-
-          {/* Includes */}
-          <section className="space-y-5">
-            <h2 className="text-sm font-black uppercase tracking-widest text-gray-400 border-b border-gray-100 pb-2">Includes & Info</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block mb-1.5 text-sm font-bold text-gray-700">Includes</label>
-                <textarea name="includes" value={formData.includes} onChange={handleChange} rows={3} className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none resize-none text-sm" />
-              </div>
-              <div>
-                <label className="block mb-1.5 text-sm font-bold text-gray-700">Not Includes</label>
-                <textarea name="notIncludes" value={formData.notIncludes} onChange={handleChange} rows={3} className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none resize-none text-sm" />
-              </div>
-              <div>
-                <label className="block mb-1.5 text-sm font-bold text-gray-700">What to Bring</label>
-                <textarea name="whatToBring" value={formData.whatToBring} onChange={handleChange} rows={3} className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none resize-none text-sm" />
-              </div>
-              <div>
-                <label className="block mb-1.5 text-sm font-bold text-gray-700">Cancellation Policy</label>
-                <textarea name="cancellationPolicy" value={formData.cancellationPolicy} onChange={handleChange} rows={2} className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none resize-none text-sm" />
-              </div>
-            </div>
-          </section>
-
-          {/* GEO Optimization & Local Insights */}
-          <section className="space-y-6">
-            <h2 className="text-sm font-black uppercase tracking-widest text-gray-400 border-b border-gray-100 pb-2">🌴 GEO Optimization & Local Insights (Optional)</h2>
-            <div className="space-y-5">
-              <div>
-                <label className="block mb-1.5 text-sm font-bold text-gray-700">Quick Summary (TL;DR)</label>
-                <textarea name="tldr_summary" value={formData.tldr_summary} onChange={handleChange} rows={3} placeholder="A concise 2-3 sentence summary of the activity..." className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none resize-none text-sm" />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div>
-                  <label className="block mb-1.5 text-sm font-bold text-gray-700">Local Guide Name</label>
-                  <input name="guide_insight_author" value={formData.guide_insight_author} onChange={handleChange} placeholder="e.g. Wayan" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" />
-                </div>
-                <div>
-                  <label className="block mb-1.5 text-sm font-bold text-gray-700">Expertise / Location Context</label>
-                  <input name="guide_insight_location" value={formData.guide_insight_location} onChange={handleChange} placeholder="e.g. Ubud Rafting Instructor" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" />
-                </div>
-              </div>
-              <div>
-                <label className="block mb-1.5 text-sm font-bold text-gray-700">Authentic Guide Content / Tips</label>
-                <textarea name="guide_insight_content" value={formData.guide_insight_content} onChange={handleChange} rows={3} placeholder="Authentic, first-hand tips or advice from the guide..." className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none resize-none text-sm" />
-              </div>
-            </div>
-          </section>
-
-          {/* Frequently Asked Questions */}
-          <section className="space-y-6">
-            <div className="flex items-center justify-between border-b border-gray-100 pb-2">
-              <h2 className="text-sm font-black uppercase tracking-widest text-gray-400">❓ Frequently Asked Questions (Optional)</h2>
-              <button type="button" onClick={addFaq} className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold rounded-lg transition-all">
-                + Add FAQ
-              </button>
-            </div>
-            <div className="space-y-4">
-              {faqs.map((faq, index) => (
-                <div key={index} className="p-5 bg-gray-50 rounded-2xl border border-gray-200 space-y-3 relative">
-                  <button type="button" onClick={() => removeFaq(index)} className="absolute top-4 right-4 text-xs font-bold text-red-500 hover:text-red-700">
-                    Delete
-                  </button>
-                  <div>
-                    <label className="block mb-1 text-xs font-bold text-gray-500">Question #{index + 1}</label>
-                    <input type="text" value={faq.question} onChange={(e) => handleFaqChange(index, "question", e.target.value)} placeholder="e.g. What should I wear?" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm font-medium" />
-                  </div>
-                  <div>
-                    <label className="block mb-1 text-xs font-bold text-gray-500">Answer</label>
-                    <textarea value={faq.answer} onChange={(e) => handleFaqChange(index, "answer", e.target.value)} placeholder="Answer details..." rows={2} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm font-medium resize-none" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Images */}
-          <section className="space-y-5">
-            <h2 className="text-sm font-black uppercase tracking-widest text-gray-400 border-b border-gray-100 pb-2">Images</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Images */}
+            <FormSection title="Images">
               {[1, 2, 3].map((n) => (
                 <div key={n} className="space-y-2">
-                  <label className="block text-sm font-bold text-gray-700">Image {n}</label>
-                  <input type="file" name={`image${n}`} accept="image/*" onChange={handleImageChange} className="w-full text-sm file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700" />
+                  <Input
+                    label={`Image ${n} (Optional)`}
+                    name={`image${n}`}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="text-sm file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-xs file:font-medium"
+                  />
                   {previews[`image${n}`] && (
-                    <img src={previews[`image${n}`]} alt={`Preview ${n}`} className="w-full h-32 object-cover rounded-xl border border-gray-200" />
+                    <img src={previews[`image${n}`]} alt={`Preview ${n}`} className="h-32 w-full rounded-xl border border-slate-200 object-cover" />
                   )}
                 </div>
               ))}
-            </div>
-          </section>
+            </FormSection>
 
-          {/* Status */}
-          <section>
-            <div className="flex items-center gap-3">
-              <input type="checkbox" name="isActive" checked={formData.isActive} onChange={handleChange} className="w-5 h-5 rounded border-gray-300 text-blue-600" />
-              <label className="text-sm font-bold text-gray-700">Active (visible to public)</label>
-            </div>
-          </section>
-
-          {/* Submit */}
-          <div className="pt-6 border-t border-gray-100 flex items-center justify-end gap-4">
-            <Link href="/activities" className="px-6 py-3 text-sm font-bold text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors">Cancel</Link>
-            <button type="submit" disabled={isSubmitting} className="px-8 py-3 text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl shadow-lg hover:-translate-y-0.5 transition-all disabled:opacity-50">
-              {isSubmitting ? "Saving..." : "Save Changes"}
-            </button>
+            {/* Status */}
+            <label className="flex h-11 cursor-pointer items-center gap-3">
+              <input type="checkbox" name="isActive" checked={formData.isActive} onChange={handleChange} className="h-5 w-5 rounded border-slate-300 accent-brand-600" />
+              <span className="text-sm font-medium text-slate-700">Active (visible to public)</span>
+            </label>
           </div>
-        </form>
-      </div>
+        </FormShell>
+      </form>
     </div>
   );
 }

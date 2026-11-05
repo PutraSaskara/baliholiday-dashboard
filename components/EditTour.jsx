@@ -3,8 +3,16 @@ import { useState, useEffect, useCallback } from "react";
 import useTourStore from "../stores/useTourStore";
 import Link from "next/link";
 import AIAssistantModal from "./AIAssistantModal";
+import { useToast } from "./ui/Toast";
+import FormShell from "./forms/FormShell";
+import FormSection from "./forms/FormSection";
+import FormActions from "./forms/FormActions";
+import Button, { buttonClass } from "./ui/Button";
+import Input from "./ui/Input";
+import Textarea from "./ui/Textarea";
 
 function EditTour({ id, onNext }) {
+  const toast = useToast();
   const [formData, setFormData] = useState({
     title: "",
     slug: "",
@@ -106,10 +114,10 @@ function EditTour({ id, onNext }) {
     setLoading(true);
     const { success } = await updateTour(id, formData);
     if (success) {
-      alert("Tour data updated successfully!");
+      toast.success("Tour data updated successfully!");
       fetchTourData();
     } else {
-      alert("Failed to update tour data. Please try again later.");
+      toast.error("Failed to update tour data. Please try again later.");
     }
     setLoading(false);
   };
@@ -146,263 +154,184 @@ function EditTour({ id, onNext }) {
   }
 
   return (
-    <div className="max-w-screen-lg mx-auto">
-      <h1 className="my-10 text-xl font-bold">
-        Please Edit Tour Title and Tour Price
-      </h1>
-      <div className="mb-6">
-        <label
-          htmlFor="title"
-          className="block mb-2 text-sm font-medium text-gray-900"
-        >
-          Tour Title
-        </label>
-        <input
-          type="text"
-          id="title"
-          name="title"
-          value={formData.title}
-          onChange={handleChange}
-          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-        />
-      </div>
-
-      {/* Tour Price Tiers */}
-      <div className="border-t border-gray-200 pt-6 mt-6 mb-6 space-y-4">
-        <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-          <span>💰</span> Tour Price
-        </h3>
-        <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-          <p className="text-xs text-amber-800 font-medium">
-            ⚠️ PayPal fee: ~4.4% + $0.30 per transaction. If you set $50, you&apos;ll receive ~$47.50. Consider adjusting your price to cover the fee.
-          </p>
+    <FormShell
+      title="Edit Tour"
+      description="Please Edit Tour Title and Tour Price"
+      headerExtra={
+        <div className="mt-3">
+          <Button variant="secondary" onClick={() => setIsAIModalOpen(true)}>
+            Review &amp; AI Auto-fill
+          </Button>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[1, 2, 3].map((num) => {
-            const priceVal = parseFloat(String(formData[`price${num}`] || "").replace(/[^0-9.]/g, "")) || 0;
-            const fee = priceVal > 0 ? (priceVal * 0.044 + 0.30).toFixed(2) : null;
-            const netAmount = fee ? (priceVal - parseFloat(fee)).toFixed(2) : null;
-            return (
-              <div key={num} className="p-4 bg-gray-50 rounded-lg border border-gray-200 space-y-3">
-                <label htmlFor={`price${num}`} className="block text-xs font-bold text-gray-500">
-                  Price Tier {num}
-                </label>
-                <input
-                  type="text"
-                  id={`price${num}`}
-                  name={`price${num}`}
-                  placeholder="0"
-                  value={formData[`price${num}`] || ""}
-                  onChange={handleChange}
-                  className="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                />
-                <input
-                  type="text"
-                  name={`pricenote${num}`}
-                  placeholder="Note (e.g. Per Person)"
-                  value={formData[`pricenote${num}`] || ""}
-                  onChange={handleChange}
-                  className="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                />
-                {fee && (
-                  <p className="text-[10px] text-gray-400">
-                    Fee: -${fee} → You receive: <span className="font-bold text-green-600">${netAmount}</span>
-                  </p>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="mb-6">
-        <label
-          htmlFor="slug"
-          className="block mb-2 text-sm font-medium text-gray-900"
-        >
-          Custom URL Slug (Optional)
-        </label>
-        <input
-          type="text"
-          id="slug"
-          name="slug"
-          placeholder="Leave empty to keep current slug"
-          value={formData.slug}
-          onChange={handleChange}
-          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+      }
+      actions={
+        <FormActions
+          left={
+            <Button type="button" onClick={handleSubmit} loading={loading}>
+              Save
+            </Button>
+          }
+          right={
+            onNext ? (
+              <Button type="button" onClick={onNext}>
+                Next to Edit Tour Detail
+              </Button>
+            ) : (
+              <Link href={"/add-tour-package/add-tour-detail"} className={buttonClass()}>
+                Next to Edit Tour Detail
+              </Link>
+            )
+          }
         />
-      </div>
-
-      {/* Repeat similar blocks for other fields */}
-      <div className="mb-6">
-        <label
-          htmlFor="keywords"
-          className="block mb-2 text-sm font-medium text-gray-900"
-        >
-          Keywords
-        </label>
-        <input
-          type="text"
-          id="keywords"
-          name="keywords"
-          value={formData.keywords}
-          onChange={handleChange}
-          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-        />
-      </div>
-
-      {/* GEO Optimization & Local Insights */}
-      <div className="border-t border-gray-200 pt-6 mt-6 space-y-6">
-        <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-          <span>🌴</span> GEO Optimization & Local Insights (Optional)
-        </h3>
-        
-        <div className="mb-6">
-          <label htmlFor="tldr_summary" className="block mb-2 text-sm font-medium text-gray-900">
-            Quick Summary (TL;DR)
-          </label>
-          <textarea
-            id="tldr_summary"
-            name="tldr_summary"
-            placeholder="A concise 2-3 sentence summary of the tour..."
-            value={formData.tldr_summary || ""}
+      }
+    >
+      <div className="space-y-8">
+        <FormSection title="Basic Info" columns={1}>
+          <Input
+            label="Tour Title"
+            name="title"
+            required
+            value={formData.title}
             onChange={handleChange}
-            rows={3}
-            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 resize-none"
           />
-        </div>
+        </FormSection>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label htmlFor="guide_insight_author" className="block mb-2 text-sm font-medium text-gray-900">
-              Local Guide Name
-            </label>
-            <input
-              type="text"
-              id="guide_insight_author"
-              name="guide_insight_author"
-              placeholder="Putra Saskara"
-              value={formData.guide_insight_author || ""}
+        {/* Tour Price Tiers */}
+        <FormSection title="Tour Price" columns={1}>
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
+            <p className="text-xs font-medium text-amber-800">
+              PayPal fee: ~4.4% + $0.30 per transaction. If you set $50, you&apos;ll receive ~$47.50. Consider adjusting your price to cover the fee.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            {[1, 2, 3].map((num) => {
+              const priceVal = parseFloat(String(formData[`price${num}`] || "").replace(/[^0-9.]/g, "")) || 0;
+              const fee = priceVal > 0 ? (priceVal * 0.044 + 0.30).toFixed(2) : null;
+              const netAmount = fee ? (priceVal - parseFloat(fee)).toFixed(2) : null;
+              return (
+                <div key={num} className="space-y-3 rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+                  <Input
+                    label={`Price Tier ${num}`}
+                    name={`price${num}`}
+                    placeholder="0"
+                    value={formData[`price${num}`] || ""}
+                    onChange={handleChange}
+                    leading={<span className="text-xs font-bold text-slate-400">$</span>}
+                  />
+                  <Input
+                    label={`Note ${num} (Optional)`}
+                    name={`pricenote${num}`}
+                    placeholder="Note (e.g. Per Person)"
+                    value={formData[`pricenote${num}`] || ""}
+                    onChange={handleChange}
+                  />
+                  {fee && (
+                    <p className="text-[11px] text-slate-500">
+                      Fee: -${fee} → You receive: <span className="font-semibold text-emerald-600">${netAmount}</span>
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </FormSection>
+
+        <FormSection title="Custom URL Slug (Optional)" columns={1}>
+          <Input
+            label="Custom URL Slug (Optional)"
+            name="slug"
+            placeholder="Leave empty to keep current slug"
+            value={formData.slug}
+            onChange={handleChange}
+          />
+        </FormSection>
+
+        <FormSection title="Keywords" columns={1}>
+          <Input
+            label="Keywords"
+            name="keywords"
+            value={formData.keywords}
+            onChange={handleChange}
+          />
+        </FormSection>
+
+        {/* GEO Optimization & Local Insights */}
+        <FormSection title="GEO Optimization & Local Insights (Optional)">
+          <div className="sm:col-span-2">
+            <Textarea
+              label="Quick Summary (TL;DR)"
+              name="tldr_summary"
+              rows={3}
+              placeholder="A concise 2-3 sentence summary of the tour..."
+              value={formData.tldr_summary || ""}
               onChange={handleChange}
-              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
             />
           </div>
-          <div>
-            <label htmlFor="guide_insight_location" className="block mb-2 text-sm font-medium text-gray-900">
-              Expertise / Location Context
-            </label>
-            <input
-              type="text"
-              id="guide_insight_location"
-              name="guide_insight_location"
-              placeholder="e.g. Ubud Tours Expert"
-              value={formData.guide_insight_location || ""}
+          <Input
+            label="Local Guide Name"
+            name="guide_insight_author"
+            placeholder="Putra Saskara"
+            value={formData.guide_insight_author || ""}
+            onChange={handleChange}
+          />
+          <Input
+            label="Expertise / Location Context"
+            name="guide_insight_location"
+            placeholder="e.g. Ubud Tours Expert"
+            value={formData.guide_insight_location || ""}
+            onChange={handleChange}
+          />
+          <div className="sm:col-span-2">
+            <Textarea
+              label="Authentic Guide Content / Tips"
+              name="guide_insight_content"
+              rows={3}
+              placeholder="Authentic, first-hand tips or advice from the guide..."
+              value={formData.guide_insight_content || ""}
               onChange={handleChange}
-              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
             />
           </div>
-        </div>
+        </FormSection>
 
-        <div className="mb-6">
-          <label htmlFor="guide_insight_content" className="block mb-2 text-sm font-medium text-gray-900">
-            Authentic Guide Content / Tips
-          </label>
-          <textarea
-            id="guide_insight_content"
-            name="guide_insight_content"
-            placeholder="Authentic, first-hand tips or advice from the guide..."
-            value={formData.guide_insight_content || ""}
-            onChange={handleChange}
-            rows={3}
-            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 resize-none"
-          />
-        </div>
-      </div>
+        {/* FAQ Optimization */}
+        <section>
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Frequently Asked Questions (Optional)
+            </h2>
+            <Button type="button" variant="secondary" size="sm" onClick={addFaq}>
+              + Add FAQ Item
+            </Button>
+          </div>
 
-      {/* FAQ Optimization */}
-      <div className="border-t border-gray-200 pt-6 mt-6 mb-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-            <span>❓</span> Frequently Asked Questions (Optional)
-          </h3>
-          <button
-            type="button"
-            onClick={addFaq}
-            className="px-3 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-800 text-xs font-bold rounded-lg transition-colors"
-          >
-            + Add FAQ Item
-          </button>
-        </div>
-
-        <div className="space-y-4">
-          {faqs.map((faq, index) => (
-            <div key={index} className="p-4 bg-gray-50 rounded-lg border border-gray-200 space-y-3 relative">
-              <button
-                type="button"
-                onClick={() => removeFaq(index)}
-                className="absolute top-2 right-2 text-xs font-bold text-red-500 hover:text-red-700"
-              >
-                Delete
-              </button>
-              <div>
-                <label className="block mb-1 text-xs font-bold text-gray-500">Question #{index + 1}</label>
-                <input
-                  type="text"
+          <div className="space-y-4">
+            {faqs.map((faq, index) => (
+              <div key={index} className="space-y-3 rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-slate-500">Question #{index + 1}</span>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => removeFaq(index)}>
+                    Delete
+                  </Button>
+                </div>
+                <Input
+                  label="Question"
+                  name={`faq-question-${index}`}
                   placeholder="e.g. Is Kusamba Salt Farm worth visiting?"
                   value={faq.question}
                   onChange={(e) => handleFaqChange(index, "question", e.target.value)}
-                  className="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
                 />
-              </div>
-              <div>
-                <label className="block mb-1 text-xs font-bold text-gray-500">Answer</label>
-                <textarea
+                <Textarea
+                  label="Answer"
+                  name={`faq-answer-${index}`}
+                  rows={2}
                   placeholder="Answer..."
                   value={faq.answer}
                   onChange={(e) => handleFaqChange(index, "answer", e.target.value)}
-                  rows={2}
-                  className="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 resize-none"
                 />
               </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="w-full flex flex-col sm:flex-row justify-between gap-4">
-        <div className="flex gap-4">
-          <button
-            type="button"
-            onClick={() => setIsAIModalOpen(true)}
-            className="px-5 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg shadow-md hover:shadow-lg transition-all"
-          >
-            ✨ Review & AI Auto-fill
-          </button>
-          <button
-            type="button"
-            onClick={handleSubmit}
-            className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 rounded-lg"
-          >
-            Save
-          </button>
-        </div>
-
-        {onNext ? (
-          <button
-            type="button"
-            onClick={onNext}
-            className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 rounded-lg"
-          >
-            Next to Edit Tour Detail
-          </button>
-        ) : (
-          <Link
-            href={"/add-tour-package/add-tour-detail"}
-            className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 rounded-lg"
-          >
-            Next to Edit Tour Detail
-          </Link>
-        )}
+            ))}
+          </div>
+        </section>
       </div>
 
       <AIAssistantModal 
@@ -414,7 +343,7 @@ function EditTour({ id, onNext }) {
         drafts={formData}
         onApply={handleApplyAI}
       />
-    </div>
+    </FormShell>
   );
 }
 

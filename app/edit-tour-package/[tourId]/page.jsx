@@ -9,7 +9,7 @@ import EditOther from '../../../components/EditOther'
 async function page({ params }) {
     const { tourId } = await params
   return (
-    <div className='w-full h-[100vh] overflow-y-auto'>
+    <div className='w-full'>
         <Navigation editTour={<EditTour id={tourId}/>} EditDetail={<EditDetail tourDetailId={tourId}/>}  EditDesc={<EditDesc tourId={tourId} />} editPlan={<EditPlan tourId={tourId} />} editImage={<EditImage Id={tourId} />} editOther={<EditOther Id={tourId} />}/>
         
     </div>

@@ -369,6 +369,7 @@ export default function AppShell({ children }) {
                         <Link
                           href={crumb.href}
                           onClick={closeOverlays}
+                          prefetch={false}
                           className="truncate font-medium text-slate-500 hover:text-slate-800"
                         >
                           {crumb.label}

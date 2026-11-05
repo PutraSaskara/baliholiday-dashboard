@@ -3,8 +3,15 @@ import React, { useState, useEffect, useCallback } from "react";
 import useTourStore from "../stores/useTourStore";
 import Link from "next/link";
 import Image from "next/image";
+import { useToast } from "./ui/Toast";
+import FormShell from "./forms/FormShell";
+import FormActions from "./forms/FormActions";
+import Button, { buttonClass } from "./ui/Button";
+import Input from "./ui/Input";
+import Select from "./ui/Select";
 
 function EditTourImage({ Id, onNext }) {
+  const toast = useToast();
   const [tourId, setTourId] = useState("");
   const [images1, setImages1] = useState([]);
   const [images2, setImages2] = useState([]);
@@ -52,7 +59,7 @@ function EditTourImage({ Id, onNext }) {
         }
       });
     } else {
-      alert("Cloudinary library is loading. Please try again in a few seconds.");
+      toast.error("Cloudinary library is loading. Please try again in a few seconds.");
     }
   };
 
@@ -165,14 +172,14 @@ function EditTourImage({ Id, onNext }) {
       }
 
       if (!hasChanges) {
-        alert("No changes detected to upload.");
+        toast.error("No changes detected to upload.");
         return;
       }
 
       const { success, status, data, message } = await updateTourImage(Id, formData);
 
       if (success) {
-        alert("Images updated successfully");
+        toast.success("Images updated successfully");
         setImages1([]);
         setImages2([]);
         setImages3([]);
@@ -187,139 +194,115 @@ function EditTourImage({ Id, onNext }) {
         if (status) {
           console.error("Server responded with error status:", status);
           const errorMessage = data ? JSON.stringify(data) : message;
-          alert(`Server responded with an error: ${status}. ${errorMessage}`);
+          toast.error(`Server responded with an error: ${status}. ${errorMessage}`);
         } else {
-          alert(message || "An error occurred during upload.");
+          toast.error(message || "An error occurred during upload.");
         }
       }
     } catch (error) {
       console.error("Unexpected error in handleSubmit:", error);
-      alert("An unexpected error occurred.");
+      toast.error("An unexpected error occurred.");
     }
   };
 
   return (
-    <div className="px-10">
-      <h2 className="mt-10 text-center font-bold text-3xl">Edit Tour Image</h2>
-      <form onSubmit={handleSubmit}>
-        <div className="bg-slate-300 max-w-fit px-2 py-3 mt-5">
-          <label htmlFor="tourId" className="font-bold">Choose Tour Title for This Image:</label>
-          <select id="tourId" value={tourId} onChange={handleTourIdChange}>
+    <form onSubmit={handleSubmit}>
+      <FormShell
+        title="Edit Tour Image"
+        description="Note: Please remember use .webp image type and make sure image size maximum 5mb."
+        actions={
+          <FormActions
+            left={
+              <Button type="submit">Upload Images</Button>
+            }
+            right={
+              onNext ? (
+                <Button type="button" onClick={onNext}>
+                  Next to Edit Other Information
+                </Button>
+              ) : (
+                <Link href={'/edit-tour/add-other'} className={buttonClass()}>
+                  Next to Edit Other Information
+                </Link>
+              )
+            }
+          />
+        }
+      >
+        <div className="space-y-6">
+          <Select
+            label="Choose Tour Title for This Image"
+            name="tourId"
+            value={tourId}
+            onChange={handleTourIdChange}
+          >
             <option value="">Select a Tour</option>
             {tourOptions.map((tour) => (
               <option key={tour.id} value={tour.id}>
                 {tour.title}
               </option>
             ))}
-          </select>
-        </div>
-        <p className="mt-5">Note: Please remember use .webp image type and make sure image size maximum 5mb</p>
-        <p>this is link for convert image to .webp :</p>
-        <p><Link href={'https://image.online-convert.com/convert-to-webp'} target="_blank" className="bg-blue-500 px-2 rounded-md text-white hover:bg-blue-700">image.online-convert</Link></p>
-        <p>this is link for compress image .webp :</p>
-        <p><Link href={'https://imagecompressor.11zon.com/en/compress-webp/'} target="_blank" className="bg-blue-500 px-2 rounded-md text-white hover:bg-blue-700">imagecompressor.11zon</Link></p>
+          </Select>
 
-        <div className="block lg:flex lg:justify-between lg:gap-5 mt-10">
-          <div className="flex-1 space-y-2">
-            <label htmlFor="images1" className="block mb-2 text-sm font-medium text-gray-900 ">Select Image 1:</label>
-            <input
-              type="file"
-              id="images1"
-              accept="image/*"
-              onChange={handleImageChange1}
-              className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
-            />
-            <p className="mt-1 text-sm text-black font-semibold" id="images1_help">.webp only (max size 5mb. and please choose minimum full Hd image 1920x1080 pixel).</p>
-            <button
-                type="button"
-                onClick={() => openCloudinaryLibrary(1)}
-                className="mt-2 w-full py-2 bg-indigo-50 text-indigo-700 font-bold text-xs rounded-lg border border-indigo-100 hover:bg-indigo-100 active:scale-95 transition-all flex items-center justify-center gap-1.5"
-            >
-                <svg className="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                Select from Cloudinary
-            </button>
-            {preview1 && (
-              <Image
-                src={preview1}
-                alt="Preview"
-                className="w-[300px] mt-5 rounded-xl object-cover aspect-[4/3]"
-                width={100}
-                height={100}
-              />
-            )}
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-700">
+            This is link for convert image to .webp:{" "}
+            <Link href={'https://image.online-convert.com/convert-to-webp'} target="_blank" className="font-semibold text-brand-700 underline">
+              image.online-convert
+            </Link>
+            <br />
+            This is link for compress image .webp:{" "}
+            <Link href={'https://imagecompressor.11zon.com/en/compress-webp/'} target="_blank" className="font-semibold text-brand-700 underline">
+              imagecompressor.11zon
+            </Link>
           </div>
-          <div className="flex-1 space-y-2">
-            <label htmlFor="images2" className="block mb-2 text-sm font-medium text-gray-900">Select Image 2:</label>
-            <input
-              type="file"
-              id="images2"
-              accept="image/*"
-              onChange={handleImageChange2}
-              className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
-            />
-            <p className="mt-1 text-sm text-black font-semibold" id="images1_help">webp only (max size 5mb. and please choose minimum full Hd image 1920x1080 pixel).</p>
-            <button
-                type="button"
-                onClick={() => openCloudinaryLibrary(2)}
-                className="mt-2 w-full py-2 bg-indigo-50 text-indigo-700 font-bold text-xs rounded-lg border border-indigo-100 hover:bg-indigo-100 active:scale-95 transition-all flex items-center justify-center gap-1.5"
-            >
-                <svg className="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                Select from Cloudinary
-            </button>
-            {preview2 && (
-              <Image
-                src={preview2}
-                alt="Preview"
-                className="w-[300px] mt-5 rounded-xl object-cover aspect-[4/3]"
-                width={100}
-                height={100}
-              />
-            )}
+
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3].map((num) => {
+              const handler = num === 1 ? handleImageChange1 : num === 2 ? handleImageChange2 : handleImageChange3;
+              const preview = num === 1 ? preview1 : num === 2 ? preview2 : preview3;
+              return (
+                <div key={num} className="space-y-2">
+                  <Input
+                    label={`Select Image ${num}`}
+                    name={`images${num}`}
+                    id={`images${num}`}
+                    type="file"
+                    accept="image/*"
+                    onChange={handler}
+                    hint=".webp only (max size 5mb. and please choose minimum full Hd image 1920x1080 pixel)."
+                    className="text-sm file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-xs file:font-medium"
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => openCloudinaryLibrary(num)}
+                    className="w-full"
+                  >
+                    Select from Cloudinary
+                  </Button>
+                  {preview && (
+                    <Image
+                      src={preview}
+                      alt={`Preview ${num}`}
+                      className="aspect-[4/3] w-full max-w-[300px] rounded-xl object-cover"
+                      width={300}
+                      height={225}
+                    />
+                  )}
+                </div>
+              );
+            })}
           </div>
-          <div className="flex-1 space-y-2">
-            <label htmlFor="images3" className="block mb-2 text-sm font-medium text-gray-900">Select Image 3:</label>
-            <input
-              type="file"
-              id="images3"
-              accept="image/*"
-              onChange={handleImageChange3}
-              className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
-            />
-            <p className="mt-1 text-sm text-black font-semibold" id="images1_help">webp only (max size 5mb. and please choose minimum full Hd image 1920x1080 pixel).</p>
-            <button
-                type="button"
-                onClick={() => openCloudinaryLibrary(3)}
-                className="mt-2 w-full py-2 bg-indigo-50 text-indigo-700 font-bold text-xs rounded-lg border border-indigo-100 hover:bg-indigo-100 active:scale-95 transition-all flex items-center justify-center gap-1.5"
-            >
-                <svg className="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                Select from Cloudinary
-            </button>
-            {preview3 && (
-              <Image
-                src={preview3}
-                alt="Preview"
-                className="w-[300px] mt-5 rounded-xl object-cover aspect-[4/3]"
-                width={100}
-                height={100}
-              />
-            )}
-          </div>
+
+          {error && (
+            <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-600" role="alert">
+              Error: {error}
+            </div>
+          )}
         </div>
-        {error && <div className="max-w-fit bg-red-500 mt-3">Error: {error}</div>}
-      </form>
-      <div className="flex justify-between items-center">
-        <button type="submit" onClick={handleSubmit} className="bg-green-500 px-5 py-2 rounded-xl mt-10 mb-10 hover:bg-green-600">Upload Images</button>
-        {onNext ? (
-          <button type="button" onClick={onNext} className="px-5 py-2.5  text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-            Next to Edit Other Information
-          </button>
-        ) : (
-          <Link href={'/edit-tour/add-other'} className="px-5 py-2.5  text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-            Next to Edit Other Information
-          </Link>
-        )}
-      </div>
-    </div>
+      </FormShell>
+    </form>
   );
 }
 

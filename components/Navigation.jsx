@@ -1,97 +1,55 @@
 "use client";
 
 import React, { useState } from "react";
+import Stepper from "./ui/Stepper";
+
+// Urutan langkah edit tour sama dengan alur tambah:
+// Tour -> Detail -> Description -> Plan -> Image -> Other.
+const STEPS = [
+  { label: "Edit Tour" },
+  { label: "Edit Detail" },
+  { label: "Edit Description" },
+  { label: "Edit Plan" },
+  { label: "Edit Image" },
+  { label: "Edit Other" },
+];
 
 function Navigation({ editTour, EditDetail, EditDesc, editPlan, editImage, editOther }) {
-  const [activeItem, setActiveItem] = useState("editTour");
+  const [activeItem, setActiveItem] = useState(0);
+  // Batas langkah yang boleh diklik: hanya langkah yang sudah dilalui.
+  const [visited, setVisited] = useState(0);
 
-  const handleItemClick = (itemName) => {
-    setActiveItem(itemName);
+  const handleSelect = (index) => {
+    if (index > visited) return;
+    setActiveItem(index);
   };
 
-  return (
-    <div>
-      <ul className="flex justify-between items-center py-2 border-b-2 mb-5 lg:w-full lg:mx-auto lg:justify-start lg:gap-5 lg:pl-10">
-        <li
-          className={`text-black font-bold text-[10px] sm:text-[16px] hover:text-primary ${
-            activeItem === "editTour"
-              ? "text-primary border-b-2 border-b-primary transition duration-500"
-              : ""
-          }`}
-          onClick={() => handleItemClick("editTour")}
-        >
-          <button>
-            <p>Edit Tour</p>
-          </button>
-        </li>
-        <li
-          className={`text-black font-bold text-[10px] sm:text-[16px] hover:text-primary ${
-            activeItem === "EditDetail"
-              ? "text-primary border-b-2 border-b-primary transition duration-500"
-              : ""
-          }`}
-          onClick={() => handleItemClick("EditDetail")}
-        >
-          <button>
-            <p>Edit Detail</p>
-          </button>
-        </li>
-        <li
-          className={`text-black font-bold text-[10px] sm:text-[16px] hover:text-primary ${
-            activeItem === "EditDesc"
-              ? "text-primary border-b-2 border-b-primary transition duration-500"
-              : ""
-          }`}
-          onClick={() => handleItemClick("EditDesc")}
-        >
-          <button>
-            <p>Edit Description</p>
-          </button>
-        </li>
-        <li
-          className={`text-black font-bold text-[10px] sm:text-[16px] hover:text-primary ${
-            activeItem === "editPlan"
-              ? "text-primary border-b-2 border-b-primary transition duration-500"
-              : ""
-          }`}
-          onClick={() => handleItemClick("editPlan")}
-        >
-          <button>
-            <p>Edit Plan</p>
-          </button>
-        </li>
-        <li
-          className={`text-black font-bold text-[10px] sm:text-[16px] hover:text-primary ${
-            activeItem === "editImage"
-              ? "text-primary border-b-2 border-b-primary transition duration-500"
-              : ""
-          }`}
-          onClick={() => handleItemClick("editImage")}
-        >
-          <button>
-            <p>Edit Image</p>
-          </button>
-        </li>
-        <li
-          className={`text-black font-bold text-[10px] sm:text-[16px] hover:text-primary ${
-            activeItem === "editOther"
-              ? "text-primary border-b-2 border-b-primary transition duration-500"
-              : ""
-          }`}
-          onClick={() => handleItemClick("editOther")}
-        >
-          <button>
-            <p>Edit Other</p>
-          </button>
-        </li>
-      </ul>
+  const goNext = () => {
+    const next = Math.min(activeItem + 1, STEPS.length - 1);
+    setActiveItem(next);
+    setVisited((prev) => Math.max(prev, next));
+  };
 
-      {activeItem === "editTour" && React.cloneElement(editTour, { onNext: () => setActiveItem("EditDetail") })}
-      {activeItem === "EditDetail" && React.cloneElement(EditDetail, { onNext: () => setActiveItem("EditDesc") })}
-      {activeItem === "EditDesc" && React.cloneElement(EditDesc, { onNext: () => setActiveItem("editPlan") })}
-      {activeItem === "editPlan" && React.cloneElement(editPlan, { onNext: () => setActiveItem("editImage") })}
-      {activeItem === "editImage" && React.cloneElement(editImage, { onNext: () => setActiveItem("editOther") })}
-      {activeItem === "editOther" && editOther}
+  const items = [editTour, EditDetail, EditDesc, editPlan, editImage, editOther];
+  const content =
+    activeItem === STEPS.length - 1
+      ? items[activeItem]
+      : items[activeItem]
+      ? React.cloneElement(items[activeItem], { onNext: goNext })
+      : null;
+
+  return (
+    <div className="py-2">
+      <div className="mb-5 border-b border-slate-200 pb-4">
+        <Stepper
+          steps={STEPS}
+          current={activeItem}
+          maxVisited={visited}
+          onSelect={handleSelect}
+        />
+      </div>
+
+      {content}
     </div>
   );
 }

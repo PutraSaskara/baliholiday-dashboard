@@ -18,6 +18,14 @@ const SIZES = {
   lg: "h-12 px-6 text-base",
 };
 
+// Kelas tombol dipakai ulang oleh elemen non-button (mis. <Link> "Lanjut")
+// agar tampilan tombol selalu seragam.
+export function buttonClass({ variant = "primary", size = "md", className = "" } = {}) {
+  return `btn-base ${VARIANTS[variant] ?? VARIANTS.primary} ${
+    SIZES[size] ?? SIZES.md
+  } ${className}`;
+}
+
 function Spinner({ className = "" }) {
   return (
     <svg

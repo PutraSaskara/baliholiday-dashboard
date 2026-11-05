@@ -2,8 +2,16 @@
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
 import useTourStore from '../stores/useTourStore';
+import { useToast } from "./ui/Toast";
+import FormShell from './forms/FormShell';
+import FormSection from './forms/FormSection';
+import FormActions from './forms/FormActions';
+import Button, { buttonClass } from './ui/Button';
+import Input from './ui/Input';
+import Select from './ui/Select';
 
 function EditOther({ Id }) {
+  const toast = useToast();
   const [formData1, setFormData1] = useState({
     include1: '',
     include2: '',
@@ -74,14 +82,14 @@ function EditOther({ Id }) {
   const handleSubmit1 = async () => {
     const { success, status, data, message } = await updateTourInclude(Id, formData1);
     if (success) {
-      alert('Tour includes successfully updated.');
+      toast.success('Tour includes successfully updated.');
     } else {
       if (status) {
         console.error('Server responded with error status:', status);
         const errorMessage = data ? JSON.stringify(data) : message;
-        alert(`Server responded with an error: ${status}. ${errorMessage}`);
+        toast.error(`Server responded with an error: ${status}. ${errorMessage}`);
       } else {
-        alert(message || 'An error occurred during update.');
+        toast.error(message || 'An error occurred during update.');
       }
     }
   };
@@ -89,14 +97,14 @@ function EditOther({ Id }) {
   const handleSubmit2 = async () => {
     const { success, status, data, message } = await updateTourNotInclude(Id, formData2);
     if (success) {
-      alert('Tour not includes successfully updated.');
+      toast.success('Tour not includes successfully updated.');
     } else {
       if (status) {
         console.error('Server responded with error status:', status);
         const errorMessage = data ? JSON.stringify(data) : message;
-        alert(`Server responded with an error: ${status}. ${errorMessage}`);
+        toast.error(`Server responded with an error: ${status}. ${errorMessage}`);
       } else {
-        alert(message || 'An error occurred during update.');
+        toast.error(message || 'An error occurred during update.');
       }
     }
   };
@@ -104,84 +112,125 @@ function EditOther({ Id }) {
   const handleSubmit3 = async () => {
     const { success, status, data, message } = await updateTourCancellation(Id, formData3);
     if (success) {
-      alert('Tour cancellation successfully updated.');
+      toast.success('Tour cancellation successfully updated.');
     } else {
       if (status) {
         console.error('Server responded with error status:', status);
         const errorMessage = data ? JSON.stringify(data) : message;
-        alert(`Server responded with an error: ${status}. ${errorMessage}`);
+        toast.error(`Server responded with an error: ${status}. ${errorMessage}`);
       } else {
-        alert(message || 'An error occurred during update.');
+        toast.error(message || 'An error occurred during update.');
       }
     }
   };
 
   return (
-    <div className='max-w-screen-lg mx-auto'>
-      <h1 className='my-10 text-xl font-bold'>Please Edit Tour Include, Not Include, and Cancellation</h1>
+    <FormShell
+      title="Edit Tour Include, Not Include, and Cancellation"
+      description="Update what is included, what is not included, and the cancellation policy for this tour."
+      actions={
+        <FormActions
+          left={
+            <Link href={'/'} className={buttonClass({ variant: "secondary" })}>
+              Back to Dashboard
+            </Link>
+          }
+          right={
+            <>
+              <Button type="button" onClick={handleSubmit1}>
+                Save Include
+              </Button>
+              <Button type="button" onClick={handleSubmit2}>
+                Save Not Include
+              </Button>
+              <Button type="button" onClick={handleSubmit3}>
+                Save Cancellation
+              </Button>
+            </>
+          }
+        />
+      }
+    >
+      <div className="space-y-8">
+        {/* Include Form */}
+        <FormSection title="What's Included" columns={1}>
+          <Select
+            label="Choose Tour Title For this Tour Plan"
+            name="tourId"
+            value={formData1.tourId}
+            onChange={handleChange}
+          >
+            <option value="">Select a Tour</option>
+            {tourOptions.map(tour => (
+              <option key={tour?.id} value={tour?.id}>{tour?.title}</option>
+            ))}
+          </Select>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            {[...Array(3)].map((_, index) => (
+              <Input
+                key={index}
+                label={`Include ${index + 1}`}
+                name={`include${index + 1}`}
+                value={formData1[`include${index + 1}`]}
+                onChange={handleChange}
+              />
+            ))}
+          </div>
+        </FormSection>
 
-      {/* Include Form */}
-      <div className="mb-6">
-        <label htmlFor="tourId" className="block mb-2 text-sm font-medium text-gray-900">Choose Tour Title For this Tour Plan</label>
-        <select id="tourId" name="tourId" value={formData1.tourId} onChange={handleChange} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-          <option value="">Select a Tour</option>
-          {tourOptions.map(tour => (
-            <option key={tour?.id} value={tour?.id}>{tour?.title}</option>
-          ))}
-        </select>
-      </div>
-      {[...Array(3)].map((_, index) => (
-        <div key={index} className="mb-6">
-          <label htmlFor={`include${index + 1}`} className="block text-sm font-medium text-gray-900">Include {index + 1}</label>
-          <input id={`Include${index + 1}`} name={`include${index + 1}`} value={formData1[`include${index + 1}`]} onChange={handleChange} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
-        </div>
-      ))}
-      <button type="button" onClick={handleSubmit1} className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mb-10">Save Include</button>
+        {/* Not Include Form */}
+        <FormSection title="What's NOT Included" columns={1}>
+          <Select
+            label="Choose Tour Title For this Tour Plan"
+            name="tourId"
+            value={formData2.tourId}
+            onChange={handleChange}
+          >
+            <option value="">Select a Tour</option>
+            {tourOptions.map(tour => (
+              <option key={tour?.id} value={tour?.id}>{tour?.title}</option>
+            ))}
+          </Select>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            {[...Array(3)].map((_, index) => (
+              <Input
+                key={index}
+                label={`Not Include ${index + 1}`}
+                name={`notinclude${index + 1}`}
+                value={formData2[`notinclude${index + 1}`]}
+                onChange={handleChange}
+              />
+            ))}
+          </div>
+        </FormSection>
 
-      {/* Not Include Form */}
-      <h1 className='my-10 text-xl font-bold'>Please input Tour Not Include</h1>
-      <div className="mb-6">
-        <label htmlFor="tourId" className="block mb-2 text-sm font-medium text-gray-900">Choose Tour Title For this Tour Plan</label>
-        <select id="tourId" name="tourId" value={formData2.tourId} onChange={handleChange} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-          <option value="">Select a Tour</option>
-          {tourOptions.map(tour => (
-            <option key={tour?.id} value={tour?.id}>{tour?.title}</option>
-          ))}
-        </select>
+        {/* Cancellation Form */}
+        <FormSection title="Cancellation" columns={1}>
+          <Select
+            label="Choose Tour Title For this Tour Plan"
+            name="tourId"
+            value={formData3.tourId}
+            onChange={handleChange}
+          >
+            <option value="">Select a Tour</option>
+            {tourOptions.map(tour => (
+              <option key={tour?.id} value={tour?.id}>{tour?.title}</option>
+            ))}
+          </Select>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {[...Array(2)].map((_, index) => (
+              <Input
+                key={index}
+                label={`Cancellation ${index + 1}`}
+                name={`cancel${index + 1}`}
+                value={formData3[`cancel${index + 1}`]}
+                onChange={handleChange}
+              />
+            ))}
+          </div>
+        </FormSection>
       </div>
-      {[...Array(3)].map((_, index) => (
-        <div key={index} className="mb-6">
-          <label htmlFor={`notinclude${index + 1}`} className="block text-sm font-medium text-gray-900">Not Include {index + 1}</label>
-          <input id={`notinclude${index + 1}`} name={`notinclude${index + 1}`} value={formData2[`notinclude${index + 1}`]} onChange={handleChange} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
-        </div>
-      ))}
-      <button type="button" onClick={handleSubmit2} className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mb-10">Save Not Include</button>
-
-      {/* Cancellation Form */}
-      <h1 className='my-10 text-xl font-bold'>Please input Tour Cancellation</h1>
-      <div className="mb-6">
-        <label htmlFor="tourId" className="block mb-2 text-sm font-medium text-gray-900">Choose Tour Title For this Tour Plan</label>
-        <select id="tourId" name="tourId" value={formData3.tourId} onChange={handleChange} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-          <option value="">Select a Tour</option>
-          {tourOptions.map(tour => (
-            <option key={tour?.id} value={tour?.id}>{tour?.title}</option>
-          ))}
-        </select>
-      </div>
-      {[...Array(2)].map((_, index) => (
-        <div key={index} className="mb-6">
-          <label htmlFor={`cancel${index + 1}`} className="block text-sm font-medium text-gray-900">Cancellation {index + 1}</label>
-          <input id={`cancel${index + 1}`} name={`cancel${index + 1}`} value={formData3[`cancel${index + 1}`]} onChange={handleChange} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
-        </div>
-      ))}
-
-      <div className='flex justify-between'>
-        <button type="button" onClick={handleSubmit3} className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mb-10">Save Cancellation</button>
-        <Link href={'/'} className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mb-10">
-          Back to Dashboard
-        </Link>
-      </div>
-    </div>
+    </FormShell>
   );
 }
 

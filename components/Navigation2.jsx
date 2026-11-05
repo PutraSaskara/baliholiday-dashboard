@@ -1,58 +1,52 @@
 "use client";
 
 import React, { useState } from "react";
+import Stepper from "./ui/Stepper";
+
+// Urutan langkah edit article sama dengan alur tambah:
+// Single Article -> Paragraph -> Image.
+const STEPS = [
+  { label: "Edit Single Article" },
+  { label: "Edit Paragraph" },
+  { label: "Edit Image" },
+];
 
 function Navigation2({ editSingleArticle, EditParagraph, EditImage }) {
-  const [activeItem, setActiveItem] = useState("editSingleArticle");
+  const [activeItem, setActiveItem] = useState(0);
+  // Batas langkah yang boleh diklik: hanya langkah yang sudah dilalui.
+  const [visited, setVisited] = useState(0);
 
-  const handleItemClick = (itemName) => {
-    setActiveItem(itemName);
+  const handleSelect = (index) => {
+    if (index > visited) return;
+    setActiveItem(index);
   };
 
-  return (
-    <div>
-      <ul className="flex justify-between items-center py-2 border-b-2 mb-5 lg:w-full lg:mx-auto lg:justify-start lg:gap-5 lg:pl-10">
-        <li
-          className={`text-black font-bold text-[10px] sm:text-[16px] hover:text-primary ${
-            activeItem === "editSingleArticle"
-              ? "text-primary border-b-2 border-b-primary transition duration-500"
-              : ""
-          }`}
-          onClick={() => handleItemClick("editSingleArticle")}
-        >
-          <button>
-            <p>Edit Single Article</p>
-          </button>
-        </li>
-        <li
-          className={`text-black font-bold text-[10px] sm:text-[16px] hover:text-primary ${
-            activeItem === "EditParagraph"
-              ? "text-primary border-b-2 border-b-primary transition duration-500"
-              : ""
-          }`}
-          onClick={() => handleItemClick("EditParagraph")}
-        >
-          <button>
-            <p>Edit Paragraph</p>
-          </button>
-        </li>
-        <li
-          className={`text-black font-bold text-[10px] sm:text-[16px] hover:text-primary ${
-            activeItem === "EditImage"
-              ? "text-primary border-b-2 border-b-primary transition duration-500"
-              : ""
-          }`}
-          onClick={() => handleItemClick("EditImage")}
-        >
-          <button>
-            <p>Edit Image</p>
-          </button>
-        </li>
-      </ul>
+  const goNext = () => {
+    const next = Math.min(activeItem + 1, STEPS.length - 1);
+    setActiveItem(next);
+    setVisited((prev) => Math.max(prev, next));
+  };
 
-      {activeItem === "editSingleArticle" && React.cloneElement(editSingleArticle, { onNext: () => setActiveItem("EditParagraph") })}
-      {activeItem === "EditParagraph" && React.cloneElement(EditParagraph, { onNext: () => setActiveItem("EditImage") })}
-      {activeItem === "EditImage" && EditImage}
+  const items = [editSingleArticle, EditParagraph, EditImage];
+  const content =
+    activeItem === STEPS.length - 1
+      ? items[activeItem]
+      : items[activeItem]
+      ? React.cloneElement(items[activeItem], { onNext: goNext })
+      : null;
+
+  return (
+    <div className="py-2">
+      <div className="mb-5 border-b border-slate-200 pb-4">
+        <Stepper
+          steps={STEPS}
+          current={activeItem}
+          maxVisited={visited}
+          onSelect={handleSelect}
+        />
+      </div>
+
+      {content}
     </div>
   );
 }

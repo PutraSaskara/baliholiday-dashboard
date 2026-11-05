@@ -4,6 +4,13 @@ import { useState, useEffect } from 'react';
 import useTourStore from '../stores/useTourStore';
 import useWarnIfUnsavedChanges from '../hooks/useWarnIfUnsavedChanges';
 import useDestinationStore from '../stores/useDestinationStore';
+import FormShell from './forms/FormShell';
+import FormActions from './forms/FormActions';
+import Button, { buttonClass } from './ui/Button';
+import Input from './ui/Input';
+import Select from './ui/Select';
+import Textarea from './ui/Textarea';
+import { useToast } from './ui/Toast';
 
 function AddTourPlan() {
   const { 
@@ -14,6 +21,7 @@ function AddTourPlan() {
     setDraftTourPlan,
     hasUnsavedTourChanges
   } = useTourStore();
+  const toast = useToast();
 
   const { fetchAllDestinationsList, createDestination } = useDestinationStore();
   const [destinations, setDestinations] = useState([]);
@@ -142,11 +150,11 @@ function AddTourPlan() {
 
   const handleModalSave = async () => {
     if (!modalData.name || !modalData.lat || !modalData.lng || !modalData.description) {
-      alert("Name, Latitude, Longitude, and Description are required to save a destination.");
+      toast.error("Name, Latitude, Longitude, and Description are required to save a destination.");
       return;
     }
     if (!modalData.file) {
-      alert("Please select an image file for the destination.");
+      toast.error("Please select an image file for the destination.");
       return;
     }
 
@@ -163,7 +171,7 @@ function AddTourPlan() {
 
     const res = await createDestination(payload);
     if (res.success) {
-      alert("Destination saved successfully!");
+      toast.success("Destination saved successfully!");
       const list = await fetchAllDestinationsList();
       setDestinations(list);
       
@@ -178,7 +186,7 @@ function AddTourPlan() {
       }));
       setModalOpen(false);
     } else {
-      alert(res.message || "Failed to save destination.");
+      toast.error(res.message || "Failed to save destination.");
     }
   };
 
@@ -193,66 +201,73 @@ function AddTourPlan() {
   const handleSubmit = async () => {
     // Validation
     if (!draftTour && !formData.tourId) {
-      alert("Please choose a Tour Title to associate this plan with.");
+      toast.error("Please choose a Tour Title to associate this plan with.");
       return;
     }
 
     setDraftTourPlan(formData);
 
-    alert('Draft Plan saved locally. Please proceed to the next step!');
+    toast.success('Draft Plan saved locally. Please proceed to the next step!');
     setIsSaved(true);
   };
 
   if (!mounted) return null;
 
   return (
-    <div className='max-w-4xl mx-auto py-10 px-4'>
-      {/* Wizard Progress Indicator */}
-      <div className="mb-12">
-        <div className="flex items-center justify-between mb-4 px-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-blue-600">Step 4 of 6</span>
-            <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Itinerary & Tour Plan</span>
-        </div>
-        <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-          <div className="w-[66.66%] h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full transition-all duration-500"></div>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-gray-200/50 border border-gray-100 p-8 md:p-12 transition-all duration-300">
-        <header className="mb-10">
-            <h1 className='text-3xl font-black tracking-tight text-gray-900 mb-2'>Tour Itinerary</h1>
-            <p className="text-gray-500 text-lg">Detail each stop of the journey with coordinates and descriptions.</p>
-        </header>
-
+    <FormShell
+      title="Tour Itinerary"
+      description="Detail each stop of the journey with coordinates and descriptions."
+      actions={
+        <FormActions
+          left={
+            <>
+              <Link
+                href={'/add-tour-package/add-tour-desc'}
+                className={buttonClass({ variant: "secondary" })}
+              >
+                Back
+              </Link>
+              <Button variant="secondary" onClick={handleSubmit}>
+                {isSaved ? 'Draf Saved' : 'Save as Draf'}
+              </Button>
+            </>
+          }
+          right={
+            isSaved ? (
+              <Link href={'/add-tour-package/add-other'} className={buttonClass()}>
+                Continue to Other Info
+              </Link>
+            ) : (
+              <Button disabled>Continue to Other Info</Button>
+            )
+          }
+        />
+      }
+    >
+      <div className="space-y-8">
         {/* Draft Mode Notice */}
         {draftTour && (
-            <div className="mb-10 p-5 rounded-3xl bg-blue-50/50 border border-blue-100/50 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-blue-500 flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-200">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                </div>
+            <div className="flex items-center gap-4 rounded-xl border border-brand-200 bg-brand-50 p-4">
                 <div>
-                    <h4 className="text-blue-900 font-bold">Draft Mode Active</h4>
-                    <p className="text-blue-700/80 text-sm">Assigning itinerary to &quot;{draftTour.title}&quot;</p>
+                    <h4 className="font-semibold text-brand-900">Draft Mode Active</h4>
+                    <p className="text-sm text-brand-700">Assigning itinerary to &quot;{draftTour.title}&quot;</p>
                 </div>
             </div>
         )}
 
         {!draftTour && (
-            <div className="mb-10 group">
-                <label htmlFor="tourId" className="block mb-2.5 text-sm font-bold text-gray-700 ml-1 group-focus-within:text-blue-600 transition-colors">Select Target Tour</label>
-                <select 
-                    id="tourId" 
-                    name="tourId" 
-                    value={formData.tourId} 
-                    onChange={handleChange} 
-                    className="w-full px-6 py-4 bg-gray-50/50 border border-gray-200 text-gray-900 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white transition-all outline-none font-semibold appearance-none cursor-pointer shadow-sm"
-                >
-                    <option value="">Choose a Tour Package...</option>
-                    {tourOptions.map(tour => (
-                        <option key={tour?.id} value={tour?.id}>{tour?.title}</option>
-                    ))}
-                </select>
-            </div>
+            <Select
+                label="Select Target Tour"
+                name="tourId"
+                required
+                value={formData.tourId}
+                onChange={handleChange}
+            >
+                <option value="">Choose a Tour Package...</option>
+                {tourOptions.map(tour => (
+                    <option key={tour?.id} value={tour?.id}>{tour?.title}</option>
+                ))}
+            </Select>
         )}
 
         <div className="space-y-12">
@@ -265,10 +280,10 @@ function AddTourPlan() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                              <div className="md:col-span-2 flex flex-col md:flex-row gap-4 items-end bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
                                 <div className="flex-1 group w-full space-y-2 relative">
-                                    <label className="block text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Search & Select Destination</label>
-                                    <input
-                                        type="text"
-                                        placeholder="🔍 Search destination name..."
+                                    <Input
+                                        label="Search & Select Destination"
+                                        name={`search-destination-${index + 1}`}
+                                        placeholder="Search destination name..."
                                         value={searchQueries[index + 1] !== undefined ? searchQueries[index + 1] : (formData[`title${index + 1}`] || '')}
                                         onChange={(e) => {
                                             setSearchQueries(prev => ({ ...prev, [index + 1]: e.target.value }));
@@ -276,7 +291,6 @@ function AddTourPlan() {
                                         }}
                                         onFocus={() => setOpenDropdown(index + 1)}
                                         onBlur={() => setTimeout(() => setOpenDropdown(null), 200)}
-                                        className="w-full px-4 py-2.5 bg-white border border-gray-200 text-gray-900 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-400 transition-all outline-none font-semibold text-xs shadow-sm"
                                     />
                                     
                                     {openDropdown === index + 1 && (
@@ -304,13 +318,14 @@ function AddTourPlan() {
                                         </div>
                                     )}
                                 </div>
-                                <button
-                                    type="button"
+                                <Button
+                                    variant="secondary"
+                                    size="sm"
                                     onClick={() => openSaveDestinationModal(index + 1)}
-                                    className="px-4 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[10px] font-bold rounded-xl transition-all shadow-sm h-[38px] flex items-center justify-center gap-1 w-full md:w-auto"
+                                    className="w-full md:w-auto"
                                 >
-                                    <span>💾</span> Save as New Destination
-                                </button>
+                                    Save as New Destination
+                                </Button>
                             </div>
 
                             {formData[`title${index + 1}`] ? (
@@ -338,14 +353,12 @@ function AddTourPlan() {
                                         </div>
                                     </div>
                                     <div className="w-full mt-2 border-t border-indigo-100 pt-3">
-                                        <label className="block mb-1 text-[10px] font-black uppercase text-indigo-400 tracking-widest ml-1">🔗 Blog Article Link (Optional)</label>
-                                        <input 
-                                            type="text" 
+                                        <Input
+                                            label="Blog Article Link (Optional)"
                                             name={`link${index + 1}`}
                                             placeholder="https://baliholiday.xyz/blog/..."
                                             value={formData[`link${index + 1}`]} 
                                             onChange={handleChange} 
-                                            className="w-full px-4 py-2 bg-white border border-indigo-100 rounded-xl focus:ring-2 focus:ring-indigo-400/50 outline-none font-medium text-xs text-indigo-700"
                                         />
                                     </div>
                                 </div>
@@ -362,31 +375,6 @@ function AddTourPlan() {
             </div>
         </div>
 
-        <div className='mt-12 pt-8 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4'>
-            <button 
-                type="button" 
-                onClick={handleSubmit} 
-                className="w-full sm:w-auto px-10 py-4 text-base font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-2xl transition-all duration-200 shadow-sm hover:shadow-md active:scale-95"
-            >
-                {isSaved ? 'Draf Saved' : 'Save as Draf'}
-            </button>
-
-            {isSaved ? (
-                <Link 
-                    href={'/add-tour-package/add-other'} 
-                    className="w-full sm:w-auto px-10 py-4 text-base font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl text-center shadow-[0_4px_14px_0_rgba(37,99,235,0.39)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.23)] hover:-translate-y-0.5 transition-all duration-200"
-                >
-                    Continue to Other Info →
-                </Link>
-            ) : (
-                <button 
-                    disabled 
-                    className="w-full sm:w-auto px-10 py-4 text-base font-bold text-gray-400 bg-gray-100 cursor-not-allowed rounded-2xl text-center"
-                >
-                    Continue to Other Info →
-                </button>
-            )}
-        </div>
       {/* Save Destination Modal */}
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
@@ -395,76 +383,56 @@ function AddTourPlan() {
             <p className="text-xs text-gray-500">This will add the location to your destinations database for reuse in other packages.</p>
             
             <div className="space-y-3">
-              <div>
-                <label className="block mb-1 text-xs font-bold text-gray-500">Destination Name</label>
-                <input
-                  type="text"
-                  value={modalData.name}
-                  onChange={(e) => setModalData(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none text-sm font-medium"
+              <Input
+                label="Destination Name"
+                name="modal-destination-name"
+                value={modalData.name}
+                onChange={(e) => setModalData(prev => ({ ...prev, name: e.target.value }))}
+              />
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Input
+                  label="Latitude"
+                  name="modal-destination-lat"
+                  value={modalData.lat}
+                  onChange={(e) => setModalData(prev => ({ ...prev, lat: e.target.value }))}
+                />
+                <Input
+                  label="Longitude"
+                  name="modal-destination-lng"
+                  value={modalData.lng}
+                  onChange={(e) => setModalData(prev => ({ ...prev, lng: e.target.value }))}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block mb-1 text-xs font-bold text-gray-500">Latitude</label>
-                  <input
-                    type="text"
-                    value={modalData.lat}
-                    onChange={(e) => setModalData(prev => ({ ...prev, lat: e.target.value }))}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none text-sm font-medium"
-                  />
-                </div>
-                <div>
-                  <label className="block mb-1 text-xs font-bold text-gray-500">Longitude</label>
-                  <input
-                    type="text"
-                    value={modalData.lng}
-                    onChange={(e) => setModalData(prev => ({ ...prev, lng: e.target.value }))}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none text-sm font-medium"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block mb-1 text-xs font-bold text-gray-500">Description</label>
-                <textarea
-                  value={modalData.description}
-                  onChange={(e) => setModalData(prev => ({ ...prev, description: e.target.value }))}
-                  rows={3}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none text-sm font-medium resize-none"
-                />
-              </div>
-              <div>
-                <label className="block mb-1 text-xs font-bold text-gray-500">Destination Image</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setModalData(prev => ({ ...prev, file: e.target.files[0] }))}
-                  className="w-full text-xs text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none"
-                />
-              </div>
+              <Textarea
+                label="Description"
+                name="modal-destination-description"
+                rows={3}
+                value={modalData.description}
+                onChange={(e) => setModalData(prev => ({ ...prev, description: e.target.value }))}
+              />
+              <Input
+                label="Destination Image"
+                name="modal-destination-image"
+                type="file"
+                accept="image/*"
+                onChange={(e) => setModalData(prev => ({ ...prev, file: e.target.files[0] }))}
+                className="text-sm file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-xs file:font-medium"
+              />
             </div>
 
-            <div className="flex justify-end gap-3 pt-3">
-              <button
-                type="button"
-                onClick={() => setModalOpen(false)}
-                className="px-4 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-xl transition-all"
-              >
+            <div className="flex flex-col-reverse gap-2 pt-3 sm:flex-row sm:justify-end">
+              <Button variant="secondary" onClick={() => setModalOpen(false)}>
                 Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleModalSave}
-                className="px-4 py-2 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md shadow-indigo-200"
-              >
+              </Button>
+              <Button variant="primary" onClick={handleModalSave}>
                 Save Destination
-              </button>
+              </Button>
             </div>
           </div>
         </div>
       )}
       </div>
-    </div>
+    </FormShell>
   );
 }
 
