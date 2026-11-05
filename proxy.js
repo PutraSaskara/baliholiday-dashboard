@@ -54,7 +54,6 @@ export async function proxy(request) {
 export const config = {
   matcher: [
     '/',
-    '/dashboard/:path*',
     '/add-article/:path*',
     '/add-tour-package/:path*',
     '/edit-article/:path*',

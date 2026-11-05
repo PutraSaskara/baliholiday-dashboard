@@ -2,8 +2,14 @@
 
 import { NextResponse } from 'next/server';
 import { serialize } from 'cookie';
+import { isSameOriginRequest, forbiddenResponse } from '../../../lib/originCheck';
 
-export async function POST() {
+export async function POST(request) {
+  // Origin check: reject cross-origin and Origin-less POST outright.
+  if (!isSameOriginRequest(request)) {
+    return forbiddenResponse();
+  }
+
   // Clear the JWT token cookie by setting it to expire immediately
   const cookie = serialize('token', '', {
     httpOnly: true,

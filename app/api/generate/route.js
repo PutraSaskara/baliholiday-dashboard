@@ -63,9 +63,13 @@ Please generate the JSON for the missing or weak fields focusing on the topic: "
     });
 
     if (!response.ok) {
+        // Log upstream detail server-side only; never forward it to the client.
         const errorText = await response.text();
         console.error("OpenRouter API Error:", errorText);
-        return NextResponse.json({ error: 'Failed to generate content from OpenRouter', details: errorText }, { status: response.status });
+        return NextResponse.json(
+            { error: 'AI request failed', code: 'AI_UPSTREAM_ERROR' },
+            { status: 502 }
+        );
     }
 
     const data = await response.json();
@@ -79,7 +83,11 @@ Please generate the JSON for the missing or weak fields focusing on the topic: "
     return NextResponse.json(parsedJson);
 
   } catch (error) {
+    // error.message can embed upstream body snippets (JSON parse failures).
     console.error('API /generate error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: 'AI request failed', code: 'AI_INTERNAL_ERROR' },
+      { status: 500 }
+    );
   }
 }
