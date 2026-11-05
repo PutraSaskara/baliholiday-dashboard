@@ -1,8 +1,16 @@
 import { NextResponse } from 'next/server';
+import { guardAiRequest } from '../../../lib/aiGuard';
 
 export async function POST(req) {
   try {
-    const { formData, model } = await req.json();
+    // Auth (valid JWT cookie) + model allowlist + 100 KB body cap + rate limit.
+    const guard = await guardAiRequest(req);
+    if (!guard.ok) {
+      return guard.response;
+    }
+
+    const { formData } = guard.body;
+    const model = guard.model;
 
     const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) {
@@ -45,7 +53,7 @@ Please generate the JSON for the missing or weak fields focusing on the topic: "
         'X-Title': 'BaliHoliday Dashboard'
       },
       body: JSON.stringify({
-        model: model || 'google/gemini-flash-1.5',
+        model: model,
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }

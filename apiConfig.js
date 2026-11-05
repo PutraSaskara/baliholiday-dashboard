@@ -109,15 +109,18 @@ api.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-// Response interceptor — handle 401 unauthorized (expired token)
+// Response interceptor — handle 401 unauthorized and 403 forbidden
+// (expired/invalid token) by clearing the cache and redirecting to login.
 api.interceptors.response.use(
     (response) => response,
     async (error) => {
-        if (error.response && error.response.status === 401) {
+        const status = error.response && error.response.status;
+        if (status === 401 || status === 403) {
             // Token expired or invalid — clear cache and redirect to login
             clearTokenCache();
 
-            // Redirect to login (only in browser)
+            // Redirect to login (only in browser, never while already there —
+            // avoids a redirect loop).
             if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
                 window.location.href = '/login';
             }

@@ -14,17 +14,15 @@ export default function LoginForm({ onLoginSuccess }) {
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuthStore();
 
-  // Load saved credentials on mount
+  // Load saved username on mount
   useState(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('rememberedCredentials');
-      if (saved) {
-        try {
-          const { username: savedUser, password: savedPass } = JSON.parse(saved);
-          setUsername(savedUser || '');
-          setPassword(savedPass || '');
-          setRememberMe(true);
-        } catch {}
+      // SECURITY: the legacy key stored the password in plain text — remove it.
+      localStorage.removeItem('rememberedCredentials');
+      const savedUser = localStorage.getItem('rememberedUsername');
+      if (savedUser) {
+        setUsername(savedUser);
+        setRememberMe(true);
       }
     }
   });
@@ -38,11 +36,12 @@ export default function LoginForm({ onLoginSuccess }) {
       const { success, message } = await login(username, password);
 
       if (success) {
-        // Save or clear credentials based on remember me
+        // Only the username is ever persisted — never the password.
+        localStorage.removeItem('rememberedCredentials');
         if (rememberMe) {
-          localStorage.setItem('rememberedCredentials', JSON.stringify({ username, password }));
+          localStorage.setItem('rememberedUsername', username);
         } else {
-          localStorage.removeItem('rememberedCredentials');
+          localStorage.removeItem('rememberedUsername');
         }
         if (onLoginSuccess) onLoginSuccess();
       } else {
@@ -146,7 +145,7 @@ export default function LoginForm({ onLoginSuccess }) {
                 className="w-4 h-4 rounded border-white/20 bg-white/5 text-teal-500 focus:ring-teal-500/50 focus:ring-offset-0"
               />
               <label htmlFor="remember-me" className="text-sm text-slate-400 select-none cursor-pointer">
-                Ingat username & password
+                Ingat username
               </label>
             </div>
 

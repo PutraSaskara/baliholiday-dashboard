@@ -1,13 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import SearchableModelDropdown from './SearchableModelDropdown';
-
-const PRIORITY_MODELS = [
-  'google/gemini-2.5-flash',
-  'google/gemini-flash-1.5',
-  'meta-llama/llama-3-8b-instruct:free',
-  'openai/gpt-4o-mini',
-  'anthropic/claude-3.5-sonnet',
-];
+import { ALLOWED_AI_MODELS, DEFAULT_AI_MODEL } from '../lib/aiModels';
 
 export default function AIAssistantModal({ 
   isOpen, 
@@ -22,9 +15,12 @@ export default function AIAssistantModal({
   const [models, setModels] = useState([]);
   const [selectedModel, setSelectedModel] = useState(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('defaultAIModel') || 'google/gemini-flash-1.5';
+      const saved = localStorage.getItem('defaultAIModel');
+      // Only accept a saved default that is on the server-side allowlist.
+      if (saved && ALLOWED_AI_MODELS.includes(saved)) return saved;
+      return DEFAULT_AI_MODEL;
     }
-    return 'google/gemini-flash-1.5';
+    return DEFAULT_AI_MODEL;
   });
   const [defaultSavedVisible, setDefaultSavedVisible] = useState(false);
   const [loadingModels, setLoadingModels] = useState(true);
@@ -46,23 +42,25 @@ export default function AIAssistantModal({
         
         if (data && data.data) {
           const allModels = data.data.map(m => m.id);
-          const otherModels = allModels.filter(m => !PRIORITY_MODELS.includes(m)).sort();
-          
-          const sortedModels = [
-            ...PRIORITY_MODELS.filter(m => allModels.includes(m)),
-            ...otherModels
-          ];
-          setModels(sortedModels);
+          // Only models on the server allowlist (lib/aiModels.js) can be used —
+          // the API routes reject anything else with 400.
+          const sortedModels = ALLOWED_AI_MODELS.filter(m => allModels.includes(m));
+          const availableModels = sortedModels.length > 0 ? sortedModels : [...ALLOWED_AI_MODELS];
+          setModels(availableModels);
           
           const savedDefault = localStorage.getItem('defaultAIModel');
-          if (savedDefault && sortedModels.includes(savedDefault)) {
+          if (savedDefault && availableModels.includes(savedDefault)) {
             setSelectedModel(savedDefault);
-          } else if (sortedModels.length > 0 && !sortedModels.includes(selectedModel)) {
-            setSelectedModel(sortedModels[0]);
+          } else if (availableModels.length > 0 && !availableModels.includes(selectedModel)) {
+            setSelectedModel(availableModels[0]);
           }
+        } else {
+          setModels([...ALLOWED_AI_MODELS]);
         }
       } catch (err) {
         console.error('Failed to fetch OpenRouter models', err);
+        // Fall back to the static allowlist so the dropdown stays usable.
+        setModels([...ALLOWED_AI_MODELS]);
       } finally {
         setLoadingModels(false);
       }

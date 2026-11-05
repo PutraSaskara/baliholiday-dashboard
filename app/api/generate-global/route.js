@@ -1,9 +1,17 @@
 import { NextResponse } from 'next/server';
+import { guardAiRequest } from '../../../lib/aiGuard';
 
 export const maxDuration = 300; // Vercel Hobby tier with Fluid compute allows a maximum of 300 seconds.
 export async function POST(req) {
   try {
-    const { model, mode, tourId, blogId, targetSection, drafts, currentSectionData } = await req.json();
+    // Auth (valid JWT cookie) + model allowlist + 100 KB body cap + rate limit.
+    const guard = await guardAiRequest(req);
+    if (!guard.ok) {
+      return guard.response;
+    }
+
+    const { mode, tourId, blogId, targetSection, drafts, currentSectionData } = guard.body;
+    const model = guard.model; // already validated against the allowlist
 
     const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) {
@@ -147,7 +155,7 @@ Please generate the required missing fields in JSON format.`;
         'X-Title': 'BaliHoliday Dashboard'
       },
       body: JSON.stringify({
-        model: model || 'google/gemini-flash-1.5',
+        model: model,
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
