@@ -8,7 +8,7 @@ function Page() {
   const { id } = useParams();
 
   return (
-    <div className="min-h-screen bg-gray-100 w-full">
+    <div className="w-full">
       <EditDestination id={id} />
     </div>
   );

@@ -1,72 +1,100 @@
-import Image from "next/image";
-import React from "react";
-import { MdDelete } from "react-icons/md";
-import { FaEdit } from "react-icons/fa";
-import Link from "next/link";
-import { FiExternalLink } from "react-icons/fi";
+// components/Card.jsx
+// Kartu tur: gambar rasio 4/3, judul, harga, badge status/catin, aksi ikon 44px.
 
-function Card({ title, author, img, desc, link, link2, onDelete }) {
+import Image from "next/image";
+import Link from "next/link";
+import { FiEdit2, FiExternalLink, FiTrash2 } from "react-icons/fi";
+import Badge from "./ui/Badge";
+import { iconButtonClass } from "./ui/IconButton";
+
+const STATUS_VARIANTS = {
+  Paid: "success",
+  Active: "success",
+  Published: "success",
+  Pending: "warning",
+  Draft: "warning",
+  Failed: "danger",
+  Inactive: "neutral",
+};
+
+function Card({ title, price, priceNote, status, img, desc, link, link2, onDelete }) {
   const handleDelete = (event) => {
     event.preventDefault();
     onDelete();
   };
 
+  // Tur tidak punya field status; jatuh ke catatan harga (mis. "Per Person").
+  const badgeLabel = status ?? priceNote;
+  const badge = badgeLabel ? (
+    <Badge
+      variant={status ? STATUS_VARIANTS[status] ?? "neutral" : "brand"}
+    >
+      {badgeLabel}
+    </Badge>
+  ) : null;
+
   return (
-    <div className="group w-full max-w-sm bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden dark:bg-gray-800 dark:border-gray-700 flex flex-col justify-between">
-      <div className="relative w-full aspect-[4/3] overflow-hidden bg-gray-100">
-        <Link href={link}>
-          <Image 
-            fill 
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            className="object-cover group-hover:scale-105 transition-transform duration-500" 
-            src={img || '/placeholder.jpg'} 
-            alt={title || 'Image'} 
+    <div className="card group flex h-full flex-col overflow-hidden transition-shadow hover:shadow-card-hover">
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100">
+        <Link href={link} className="block h-full w-full">
+          <Image
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            src={img || "/placeholder.jpg"}
+            alt={title || "Tour image"}
           />
         </Link>
+        {badge ? (
+          <span className="absolute left-3 top-3 rounded-full bg-white/95 px-2.5 py-1 shadow-sm">
+            {badge}
+          </span>
+        ) : null}
       </div>
-      
-      <div className="p-5 flex flex-col flex-grow">
-        <div className="flex-grow">
-          <Link href={link}>
-            <h5 className="mb-2 text-xl font-bold tracking-tight text-gray-900 dark:text-white line-clamp-2 hover:text-blue-600 transition-colors">
-              {title}
-            </h5>
-            {author && (
-              <p className="mb-3 font-medium text-blue-600 dark:text-blue-400 text-xs uppercase tracking-wider">
-                {author}
-              </p>
-            )}
+
+      <div className="flex flex-1 flex-col p-4 sm:p-5">
+        <Link
+          href={link}
+          className="line-clamp-2 text-base font-semibold text-slate-900 hover:text-brand-700"
+        >
+          {title}
+        </Link>
+
+        {price ? (
+          <p className="mt-2 text-lg font-bold text-brand-700">${price}</p>
+        ) : null}
+
+        <p className="mt-2 line-clamp-3 flex-1 text-sm leading-relaxed text-slate-500">
+          {desc}
+        </p>
+
+        <div className="mt-4 flex items-center gap-2 border-t border-slate-100 pt-3">
+          <Link
+            href={link}
+            aria-label={`Edit ${title}`}
+            title="Edit"
+            className={iconButtonClass("brand")}
+          >
+            <FiEdit2 className="h-5 w-5" aria-hidden="true" />
           </Link>
-          <p className="mb-4 font-normal text-gray-600 dark:text-gray-400 line-clamp-3 text-sm leading-relaxed">
-            {desc}
-          </p>
-        </div>
-
-        <div className="mt-auto space-y-3">
-          <div className="flex justify-between items-center gap-2">
-            <Link
-              href={link}
-              className="flex-1 inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors dark:bg-gray-700 dark:text-blue-400 dark:hover:bg-gray-600"
-            >
-              <FaEdit className="mr-2" />
-              Edit
-            </Link>
-            <button
-              onClick={handleDelete}
-              className="flex-1 inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded-xl transition-colors dark:bg-gray-700 dark:text-red-400 dark:hover:bg-gray-600"
-            >
-              <MdDelete className="mr-2" />
-              Delete
-            </button>
-          </div>
-
+          <button
+            type="button"
+            onClick={handleDelete}
+            aria-label={`Delete ${title}`}
+            title="Delete"
+            className={iconButtonClass("danger")}
+          >
+            <FiTrash2 className="h-5 w-5" aria-hidden="true" />
+          </button>
           <Link
             href={link2}
-            className="w-full inline-flex justify-center items-center px-4 py-2.5 text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 rounded-xl shadow-sm transition-colors dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
             target="_blank"
+            rel="noopener noreferrer"
+            aria-label="View public page"
+            title="View public page"
+            className={`${iconButtonClass()} ml-auto`}
           >
-            <FiExternalLink className="mr-2" />
-            View Public Page
+            <FiExternalLink className="h-5 w-5" aria-hidden="true" />
           </Link>
         </div>
       </div>

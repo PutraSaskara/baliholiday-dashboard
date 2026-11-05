@@ -2,42 +2,64 @@
 
 import { useState } from "react";
 
-function NavList({ ListArticle, ListTour, DestinationsList, ListArea, ListCustomTourPrices, ListBookings }) {
-  const [activeItem, setActiveItem] = useState("ListArticle");
+// Segmented tabs: satu baris pil di atas konten, bisa digeser horizontal
+// di layar sempit tanpa membuat body meluber.
+const TABS = [
+  { id: "ListArticle", label: "Articles" },
+  { id: "ListTour", label: "Tour Packages" },
+  { id: "DestinationsList", label: "Destinations" },
+  { id: "ListArea", label: "Pickup Areas" },
+  { id: "ListCustomTourPrices", label: "Custom Tour Prices" },
+  { id: "ListBookings", label: "Bookings & Inquiries" },
+];
 
-  const handleItemClick = (itemName) => {
-    setActiveItem(itemName);
-  };
+function NavList({
+  ListArticle,
+  ListTour,
+  DestinationsList,
+  ListArea,
+  ListCustomTourPrices,
+  ListBookings,
+}) {
+  const [activeItem, setActiveItem] = useState("ListArticle");
 
   return (
     <div className="w-full">
-      <div className="mb-8 w-full overflow-x-auto pb-2 nice-scrollbar">
-        <ul className="flex sm:justify-start gap-2 p-1.5 bg-gray-100/80 dark:bg-gray-800/80 rounded-2xl w-max">
-          {[
-            { id: "ListArticle", label: "Articles" },
-            { id: "ListTour", label: "Tour Packages" },
-            { id: "DestinationsList", label: "Destinations" },
-            { id: "ListArea", label: "Pickup Areas" },
-            { id: "ListCustomTourPrices", label: "Custom Tour Prices" },
-            { id: "ListBookings", label: "Bookings & Inquiries" },
-          ].map((item) => (
-            <li key={item.id} className="relative">
+      <div className="mb-6 w-full overflow-x-auto pb-1 nice-scrollbar">
+        <div
+          role="tablist"
+          aria-label="Bagian dashboard"
+          className="flex w-max gap-1 rounded-xl bg-slate-100 p-1"
+        >
+          {TABS.map((item) => {
+            const isActive = activeItem === item.id;
+            return (
               <button
-                onClick={() => handleItemClick(item.id)}
-                className={`relative px-5 py-2.5 text-sm sm:text-base font-semibold transition-all duration-300 rounded-xl whitespace-nowrap ${
-                  activeItem === item.id
-                    ? "text-blue-700 bg-white shadow-sm dark:bg-gray-700 dark:text-blue-400"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-200/50 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-700/50"
+                key={item.id}
+                type="button"
+                role="tab"
+                id={`tab-${item.id}`}
+                aria-selected={isActive}
+                aria-controls={`panel-${item.id}`}
+                onClick={() => setActiveItem(item.id)}
+                className={`h-10 whitespace-nowrap rounded-lg px-4 text-sm font-semibold transition-colors ${
+                  isActive
+                    ? "bg-brand-600 text-white shadow-sm"
+                    : "text-slate-600 hover:bg-white/70 hover:text-slate-900"
                 }`}
               >
                 {item.label}
               </button>
-            </li>
-          ))}
-        </ul>
+            );
+          })}
+        </div>
       </div>
 
-      <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div
+        role="tabpanel"
+        id={`panel-${activeItem}`}
+        aria-labelledby={`tab-${activeItem}`}
+      >
         {activeItem === "ListArticle" && ListArticle}
         {activeItem === "ListTour" && ListTour}
         {activeItem === "DestinationsList" && DestinationsList}

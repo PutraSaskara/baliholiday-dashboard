@@ -1,15 +1,30 @@
+// components/ListCustomTourPrices.jsx
+// Editor harga custom tour (bukan daftar baris): header + Card per kategori,
+// field memakai primitive Input/Button, umpan balik lewat toast.
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
 import { api } from '@/apiConfig';
-import { FiClock, FiUsers, FiSave, FiRefreshCw } from "react-icons/fi";
+import { FiClock, FiRefreshCw, FiSave, FiUsers } from "react-icons/fi";
+import Card from './ui/Card';
+import Button from './ui/Button';
+import Input from './ui/Input';
+import Skeleton from './ui/Skeleton';
+import { useToast } from './ui/Toast';
+
+const TIERS = [
+  { key: 'price_1_3', label: 'Tier 1: 1 - 3 People (USD)' },
+  { key: 'price_4_7', label: 'Tier 2: 4 - 7 People (USD)' },
+  { key: 'price_8_12', label: 'Tier 3: 8 - 12 People (USD)' },
+];
 
 function ListCustomTourPrices() {
   const [prices, setPrices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const toast = useToast();
 
   // Temporary local state for editing
   const [editedPrices, setEditedPrices] = useState({
@@ -17,6 +32,8 @@ function ListCustomTourPrices() {
     fullDay: { price_1_3: '', price_4_7: '', price_8_12: '' }
   });
 
+  // Dipanggil dari effect: hanya memakai setter + api (tanpa toast) supaya
+  // tidak menambah warning exhaustive-deps.
   const fetchPrices = async () => {
     setLoading(true);
     setError('');
@@ -24,7 +41,7 @@ function ListCustomTourPrices() {
       const response = await api.get('/api/custom-tour-prices');
       const data = response.data;
       setPrices(data);
-      
+
       // Populate local editing state
       const localState = {
         halfDay: { price_1_3: '', price_4_7: '', price_8_12: '' },
@@ -68,8 +85,6 @@ function ListCustomTourPrices() {
   const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true);
-    setError('');
-    setSuccess('');
 
     try {
       const payload = {
@@ -91,205 +106,111 @@ function ListCustomTourPrices() {
 
       const response = await api.put('/api/custom-tour-prices', payload);
       if (response.status === 200) {
-        setSuccess('Custom tour prices updated successfully!');
+        toast.success('Custom tour prices updated successfully!');
         // Refresh prices
         await fetchPrices();
       }
     } catch (err) {
       console.error("Error updating prices:", err);
-      setError(err.response?.data?.error || 'Failed to update prices. Please check credentials or try again.');
+      toast.error(err.response?.data?.error || 'Failed to update prices. Please check credentials or try again.');
     } finally {
       setSaving(false);
     }
   };
 
-  return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto">
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+  const renderCategory = (category, title, tone) => (
+    <Card className="space-y-5">
+      <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+        <span
+          className={`flex h-10 w-10 items-center justify-center rounded-xl ${
+            tone === 'brand'
+              ? 'bg-brand-50 text-brand-600'
+              : 'bg-gold-50 text-gold-700'
+          }`}
+        >
+          <FiClock className="h-5 w-5" aria-hidden="true" />
+        </span>
         <div>
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Custom Tour Prices</h2>
-          <p className="text-gray-500 dark:text-gray-400">Configure base rates for different custom tour durations and group sizes.</p>
-        </div>
-        <div>
-          <button
-            type="button"
-            onClick={fetchPrices}
-            className="flex items-center gap-2 px-5 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 font-semibold rounded-2xl transition cursor-pointer"
-          >
-            <FiRefreshCw className={loading ? "animate-spin" : ""} /> Refresh
-          </button>
+          <h3 className="text-base font-semibold text-slate-900">{title}</h3>
+          <p className="text-xs text-slate-500">Duration category: {category}</p>
         </div>
       </div>
 
+      <div className="space-y-4">
+        {TIERS.map((tier) => (
+          <Input
+            key={tier.key}
+            label={tier.label}
+            name={`${category}-${tier.key}`}
+            type="text"
+            inputMode="numeric"
+            value={editedPrices[category][tier.key]}
+            onChange={(e) => handlePriceChange(category, tier.key, e.target.value)}
+            leading={
+              <span className="font-semibold text-slate-400" aria-hidden="true">
+                $
+              </span>
+            }
+            required
+          />
+        ))}
+      </div>
+    </Card>
+  );
+
+  return (
+    <div className="w-full">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Custom Tour Prices</h1>
+          <p className="mt-1 text-sm text-slate-500">
+            Configure base rates for different custom tour durations and group sizes.
+          </p>
+        </div>
+        <Button variant="secondary" onClick={fetchPrices}>
+          <FiRefreshCw
+            className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`}
+            aria-hidden="true"
+          />
+          Refresh
+        </Button>
+      </div>
+
+      {error && !loading ? (
+        <div
+          role="alert"
+          className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+        >
+          {error}
+        </div>
+      ) : null}
+
       {loading ? (
-        <div className="flex justify-center items-center h-64">
-           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div
+          aria-hidden="true"
+          className="grid max-w-4xl grid-cols-1 gap-4 md:grid-cols-2"
+        >
+          {Array.from({ length: 2 }).map((_, i) => (
+            <div key={i} className="card space-y-4 p-4 sm:p-5">
+              <Skeleton className="h-10 w-1/2" />
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+            </div>
+          ))}
         </div>
       ) : (
-        <form onSubmit={handleSave} className="space-y-8 max-w-4xl">
-          {error && (
-            <div className="p-4 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-2xl border border-red-100 dark:border-red-800 text-sm">
-              {error}
-            </div>
-          )}
-          {success && (
-            <div className="p-4 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-2xl border border-green-100 dark:border-green-800 text-sm">
-              {success}
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Half Day Tour Prices */}
-            <div className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 dark:bg-gray-800 dark:border-gray-700 shadow-sm space-y-6">
-              <div className="flex items-center gap-3 pb-4 border-b border-gray-100 dark:border-gray-700">
-                <div className="w-10 h-10 bg-teal-50 dark:bg-teal-900/30 rounded-xl flex items-center justify-center text-teal-600 dark:text-teal-400">
-                  <FiClock size={20} />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">Half Day Tour</h3>
-                  <p className="text-xs text-gray-400 dark:text-gray-500">Duration category: halfDay</p>
-                </div>
-              </div>
-
-              <div className="space-y-5">
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1.5">
-                    <FiUsers size={14} className="text-gray-400" /> Tier 1: 1 - 3 People (USD)
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 font-semibold">$</div>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={editedPrices.halfDay.price_1_3}
-                      onChange={(e) => handlePriceChange('halfDay', 'price_1_3', e.target.value)}
-                      className="w-full pl-9 pr-4 py-3 bg-white border border-gray-200 rounded-2xl text-sm focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all shadow-sm dark:bg-gray-900 dark:border-gray-750 dark:text-white"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1.5">
-                    <FiUsers size={14} className="text-gray-400" /> Tier 2: 4 - 7 People (USD)
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 font-semibold">$</div>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={editedPrices.halfDay.price_4_7}
-                      onChange={(e) => handlePriceChange('halfDay', 'price_4_7', e.target.value)}
-                      className="w-full pl-9 pr-4 py-3 bg-white border border-gray-200 rounded-2xl text-sm focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all shadow-sm dark:bg-gray-900 dark:border-gray-750 dark:text-white"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1.5">
-                    <FiUsers size={14} className="text-gray-400" /> Tier 3: 8 - 12 People (USD)
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 font-semibold">$</div>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={editedPrices.halfDay.price_8_12}
-                      onChange={(e) => handlePriceChange('halfDay', 'price_8_12', e.target.value)}
-                      className="w-full pl-9 pr-4 py-3 bg-white border border-gray-200 rounded-2xl text-sm focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all shadow-sm dark:bg-gray-900 dark:border-gray-750 dark:text-white"
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Full Day Tour Prices */}
-            <div className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 dark:bg-gray-800 dark:border-gray-700 shadow-sm space-y-6">
-              <div className="flex items-center gap-3 pb-4 border-b border-gray-100 dark:border-gray-700">
-                <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/30 rounded-xl flex items-center justify-center text-blue-600 dark:text-blue-400">
-                  <FiClock size={20} />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">Full Day Tour</h3>
-                  <p className="text-xs text-gray-400 dark:text-gray-500">Duration category: fullDay</p>
-                </div>
-              </div>
-
-              <div className="space-y-5">
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1.5">
-                    <FiUsers size={14} className="text-gray-400" /> Tier 1: 1 - 3 People (USD)
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 font-semibold">$</div>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={editedPrices.fullDay.price_1_3}
-                      onChange={(e) => handlePriceChange('fullDay', 'price_1_3', e.target.value)}
-                      className="w-full pl-9 pr-4 py-3 bg-white border border-gray-200 rounded-2xl text-sm focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all shadow-sm dark:bg-gray-900 dark:border-gray-750 dark:text-white"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1.5">
-                    <FiUsers size={14} className="text-gray-400" /> Tier 2: 4 - 7 People (USD)
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 font-semibold">$</div>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={editedPrices.fullDay.price_4_7}
-                      onChange={(e) => handlePriceChange('fullDay', 'price_4_7', e.target.value)}
-                      className="w-full pl-9 pr-4 py-3 bg-white border border-gray-200 rounded-2xl text-sm focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all shadow-sm dark:bg-gray-900 dark:border-gray-750 dark:text-white"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1.5">
-                    <FiUsers size={14} className="text-gray-400" /> Tier 3: 8 - 12 People (USD)
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 font-semibold">$</div>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={editedPrices.fullDay.price_8_12}
-                      onChange={(e) => handlePriceChange('fullDay', 'price_8_12', e.target.value)}
-                      className="w-full pl-9 pr-4 py-3 bg-white border border-gray-200 rounded-2xl text-sm focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all shadow-sm dark:bg-gray-900 dark:border-gray-750 dark:text-white"
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
+        <form onSubmit={handleSave} className="max-w-4xl space-y-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {renderCategory('halfDay', 'Half Day Tour', 'brand')}
+            {renderCategory('fullDay', 'Full Day Tour', 'gold')}
           </div>
 
-          <div className="flex justify-end pt-4">
-            <button
-              type="submit"
-              disabled={saving}
-              className="flex items-center gap-2 px-8 py-3.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold rounded-2xl transition shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 cursor-pointer disabled:cursor-not-allowed"
-            >
-              {saving ? (
-                <>
-                  <svg className="animate-spin h-5 w-5 mr-3 text-white" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
-                  Saving Changes...
-                </>
-              ) : (
-                <>
-                  <FiSave size={18} /> Save Price Configuration
-                </>
-              )}
-            </button>
+          <div className="flex justify-end pt-2">
+            <Button type="submit" loading={saving}>
+              <FiSave className="h-4 w-4" aria-hidden="true" />
+              {saving ? 'Saving Changes...' : 'Save Price Configuration'}
+            </Button>
           </div>
         </form>
       )}

@@ -5,7 +5,7 @@ import AddDestination from '@/components/AddDestination';
 
 function page() {
   return (
-    <div className="min-h-screen bg-gray-100 w-full">
+    <div className="w-full">
       <AddDestination />
     </div>
   );

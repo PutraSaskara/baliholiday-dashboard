@@ -5,7 +5,7 @@ import ViewArea from '@/components/ViewArea';
 
 function ViewAreaPage() {
   return (
-    <div className="min-h-screen bg-gray-100 w-full">
+    <div className="w-full">
       <ViewArea />
     </div>
   );

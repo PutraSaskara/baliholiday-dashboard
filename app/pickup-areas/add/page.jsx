@@ -5,7 +5,7 @@ import AddArea from '@/components/AddArea';
 
 function AddAreaPage() {
   return (
-    <div className="min-h-screen bg-gray-100 w-full">
+    <div className="w-full">
       <AddArea />
     </div>
   );

@@ -1,151 +1,170 @@
+// components/ListTours.jsx
+// Daftar paket tur: grid kartu modern, search berikon, pagination primitive,
+// empty state, skeleton, dan konfirmasi hapus via ConfirmDialog.
+
 "use client";
-import React, { useState, useEffect } from "react";
-import { FiSearch } from "react-icons/fi";
+
+import { useEffect, useState } from "react";
+import { FiMap, FiPlus, FiSearch } from "react-icons/fi";
+import { useRouter } from "next/navigation";
 import Card from "./Card";
+import Button from "./ui/Button";
+import Input from "./ui/Input";
+import Pagination from "./ui/Pagination";
+import EmptyState from "./ui/EmptyState";
+import ConfirmDialog from "./ui/ConfirmDialog";
+import Skeleton from "./ui/Skeleton";
+import { useToast } from "./ui/Toast";
 import useTourStore from "../stores/useTourStore";
 
+const ITEMS_PER_PAGE = 6;
+
 function ListTours() {
-  const { tours, loading, error, fetchTours, deleteTour } = useTourStore();
+  const { tours, loading, fetchTours, deleteTour } = useTourStore();
+  const router = useRouter();
+  const toast = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 6; // Define how many items per page
+  const [pendingDelete, setPendingDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     fetchTours();
   }, [fetchTours]);
 
-  const handleDelete = async (Id) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this tour?"
-    );
-
-    if (confirmDelete) {
-      await deleteTour(Id);
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleting(true);
+    const ok = await deleteTour(pendingDelete.id);
+    setDeleting(false);
+    setPendingDelete(null);
+    if (ok) {
+      toast.success(`Tour "${pendingDelete.title}" dihapus.`);
+    } else {
+      toast.error("Gagal menghapus tour. Coba lagi.");
     }
   };
 
-  // Handle pagination logic
-  const paginate = (pageNumber) => {
-    setCurrentPage(pageNumber);
-  };
-
-  // Filter tours based on search query
   const filteredTours = tours.filter((tour) =>
-    tour.title.toLowerCase().includes(searchQuery.toLowerCase())
+    (tour.title || "").toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Calculate the current page data
-  const indexOfLastTour = currentPage * itemsPerPage;
-  const indexOfFirstTour = indexOfLastTour - itemsPerPage;
-  const currentTours = filteredTours.slice(indexOfFirstTour, indexOfLastTour);
+  const totalPages = Math.ceil(filteredTours.length / ITEMS_PER_PAGE);
+  const safePage = Math.min(currentPage, Math.max(totalPages, 1));
+  const currentTours = filteredTours.slice(
+    (safePage - 1) * ITEMS_PER_PAGE,
+    safePage * ITEMS_PER_PAGE
+  );
 
-  // Calculate total pages
-  const totalPages = Math.ceil(filteredTours.length / itemsPerPage);
+  const convertSpaceToDash = (title) => title.replace(/\s+/g, "-");
 
-  // Function to replace spaces with hyphens in the title for the URL
-  const convertSpaceToDash = (title) => {
-    return title.replace(/\s+/g, '-'); // Replace spaces with hyphens
-  };
+  const isLoading = loading && tours.length === 0;
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto">
-      {/* Header and Search Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+    <div className="w-full">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Tour Packages</h1>
-          <p className="text-gray-500 dark:text-gray-400">Manage your tours and packages catalog.</p>
+          <h1 className="text-2xl font-bold text-slate-900">Tour Packages</h1>
+          <p className="mt-1 text-sm text-slate-500">
+            Manage your tours and packages catalog.
+          </p>
         </div>
-
-        <div className="relative w-full md:w-96 group">
-          <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-            <FiSearch className="text-gray-400 group-focus-within:text-blue-500 transition-colors" />
-          </div>
-          <input
-            type="text"
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <Input
+            type="search"
+            name="search-tours"
+            aria-label="Search tours by name"
             placeholder="Search tours by name..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-2xl text-sm focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
+            leading={<FiSearch className="h-4 w-4" aria-hidden="true" />}
+            className="sm:w-80"
           />
+          <Button onClick={() => router.push("/add-tour-package")}>
+            <FiPlus className="h-4 w-4" aria-hidden="true" />
+            Add Tour
+          </Button>
         </div>
       </div>
 
-      {loading && tours.length === 0 ? (
-        <div className="flex justify-center items-center h-64">
-           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      {isLoading ? (
+        <div
+          aria-hidden="true"
+          className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
+        >
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="card overflow-hidden">
+              <Skeleton className="aspect-[4/3] w-full" rounded="rounded-none" />
+              <div className="space-y-3 p-4">
+                <Skeleton className="h-5 w-3/4" />
+                <Skeleton className="h-6 w-1/3" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-11 w-full" />
+              </div>
+            </div>
+          ))}
         </div>
+      ) : filteredTours.length === 0 ? (
+        <EmptyState
+          icon={<FiMap className="h-5 w-5" aria-hidden="true" />}
+          title="No tours found"
+          description={
+            searchQuery
+              ? "No tours match that title. Try another keyword."
+              : "Create your first tour package to get started."
+          }
+          action={
+            <Button onClick={() => router.push("/add-tour-package")}>
+              <FiPlus className="h-4 w-4" aria-hidden="true" />
+              Add Tour
+            </Button>
+          }
+        />
       ) : (
         <>
-          {filteredTours.length === 0 ? (
-            <div className="text-center py-20 bg-gray-50 dark:bg-gray-800/50 rounded-3xl border border-gray-200 dark:border-gray-700">
-               <p className="text-gray-500 dark:text-gray-400 text-lg">No tours found matching that title.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6 justify-items-center">
-        {currentTours.map((tour) => (
-          <Card
-            key={tour.id}
-            title={tour.title}
-            author={tour.price1}
-            img={tour.image?.imageUrl1}
-            desc={tour.tour_description?.paragraf1}
-            link={`edit-tour-package/${tour.id}`}
-            link2={`https://baliholiday.xyz/package/${tour.slug || convertSpaceToDash(tour.title).toLowerCase().replace(/[^\w\-]+/g, '')}`}
-            onDelete={() => handleDelete(tour.id)}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+            {currentTours.map((tour) => (
+              <Card
+                key={tour.id}
+                title={tour.title}
+                price={tour.price1}
+                priceNote={tour.pricenote1}
+                status={tour.status}
+                img={tour.image?.imageUrl1}
+                desc={tour.tour_description?.paragraf1}
+                link={`edit-tour-package/${tour.id}`}
+                link2={`https://baliholiday.xyz/package/${
+                  tour.slug ||
+                  convertSpaceToDash(tour.title)
+                    .toLowerCase()
+                    .replace(/[^\w-]+/g, "")
+                }`}
+                onDelete={() => setPendingDelete(tour)}
+              />
+            ))}
+          </div>
+
+          <Pagination
+            page={safePage}
+            totalPages={totalPages}
+            onChange={setCurrentPage}
+            className="mt-8"
           />
-        ))}
-      </div>
-          )}
-
-      {/* Pagination Controls */}
-      {totalPages > 0 && (
-        <div className="flex justify-center mt-12 mb-16">
-          <nav aria-label="Page navigation" className="flex items-center gap-2 sm:gap-4">
-            {/* First Button */}
-            <button
-              onClick={() => paginate(1)}
-              disabled={currentPage === 1}
-              className="flex items-center justify-center px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-blue-600 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white disabled:opacity-50 disabled:hover:bg-white disabled:dark:hover:bg-gray-800 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm"
-            >
-              First
-            </button>
-
-            {/* Previous Button */}
-            <button
-              onClick={() => paginate(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="flex items-center justify-center px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-blue-600 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white disabled:opacity-50 disabled:hover:bg-white disabled:dark:hover:bg-gray-800 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm"
-            >
-              Previous
-            </button>
-
-            {/* Current Page Number */}
-            <div className="flex items-center px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg shadow-inner">
-              Page <span className="font-bold text-gray-900 dark:text-white mx-1.5">{currentPage}</span> of <span className="font-bold text-gray-900 dark:text-white mx-1.5">{totalPages}</span>
-            </div>
-
-            {/* Next Button */}
-            <button
-              onClick={() => paginate(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className="flex items-center justify-center px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-blue-600 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white disabled:opacity-50 disabled:hover:bg-white disabled:dark:hover:bg-gray-800 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm"
-            >
-              Next
-            </button>
-
-            {/* Last Button */}
-            <button
-              onClick={() => paginate(totalPages)}
-              disabled={currentPage === totalPages}
-              className="flex items-center justify-center px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-blue-600 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white disabled:opacity-50 disabled:hover:bg-white disabled:dark:hover:bg-gray-800 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm"
-            >
-              Last
-            </button>
-          </nav>
-        </div>
-      )}
         </>
       )}
+
+      <ConfirmDialog
+        open={Boolean(pendingDelete)}
+        title="Hapus tour ini?"
+        description={`"${pendingDelete?.title}" akan dihapus permanen dan tidak bisa dikembalikan.`}
+        confirmLabel="Hapus"
+        loading={deleting}
+        onConfirm={confirmDelete}
+        onClose={() => setPendingDelete(null)}
+      />
     </div>
   );
 }

@@ -5,7 +5,7 @@ import ListAreas from '@/components/ListAreas';
 
 function PickupAreasPage() {
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="w-full">
       <ListAreas />
     </div>
   );
