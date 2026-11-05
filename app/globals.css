@@ -2,3 +2,67 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased;
+  }
+
+  /* Fokus keyboard selalu terlihat: ring 2px brand, offset 2px. */
+  :focus-visible {
+    @apply outline-none ring-2 ring-brand-500 ring-offset-2;
+  }
+
+  /* Native select/textarea ikut token input. */
+  select,
+  textarea {
+    @apply bg-white;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-xl border border-slate-200 bg-white shadow-card;
+  }
+
+  .input-base {
+    @apply w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900
+      placeholder:text-slate-400 transition-colors duration-150
+      focus:border-brand-500 focus:ring-0 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2
+      disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500;
+  }
+
+  .btn-base {
+    @apply inline-flex select-none items-center justify-center gap-2 whitespace-nowrap rounded-xl
+      text-sm font-semibold transition-colors duration-150
+      focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2
+      disabled:cursor-not-allowed disabled:opacity-60;
+  }
+}
+
+/* Scrollbar tipis untuk seluruh aplikasi. */
+.nice-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: theme("colors.slate.300") transparent;
+}
+
+.nice-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.nice-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.nice-scrollbar::-webkit-scrollbar-thumb {
+  background-color: theme("colors.slate.300");
+  border-radius: 9999px;
+}
+
+.nice-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: theme("colors.slate.400");
+}
