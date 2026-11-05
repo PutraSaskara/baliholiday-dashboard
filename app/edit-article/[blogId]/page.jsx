@@ -3,12 +3,11 @@ import EditSingleArticle from '../../../components/EditSingleArticle'
 import EditArticleParagraf from '../../../components/EditArticleParagraf'
 import EditArticleImage from '../../../components/EditArticleImage'
 
-function page(blogId) {
-  console.log('tourId data', blogId)
-    let params = blogId.params.blogId
+async function page({ params }) {
+    const { blogId } = await params
   return (
     <div className="w-full">
-        <Navigation2 editSingleArticle={<EditSingleArticle id={params} />} EditParagraph={<EditArticleParagraf id={params} />} EditImage={<EditArticleImage Id={params} />} />
+        <Navigation2 editSingleArticle={<EditSingleArticle id={blogId} />} EditParagraph={<EditArticleParagraf id={blogId} />} EditImage={<EditArticleImage Id={blogId} />} />
     </div>
   )
 }

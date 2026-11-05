@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-export function middleware(request) {
+export function proxy(request) {
   const { pathname } = request.nextUrl;
 
   // If on login page and already has token, redirect to dashboard
@@ -24,7 +24,7 @@ export function middleware(request) {
   return NextResponse.next();
 }
 
-// Apply middleware to all dashboard routes and login page
+// Apply proxy to all dashboard routes and login page
 export const config = {
   matcher: [
     '/',

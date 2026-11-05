@@ -2,9 +2,10 @@
 "use client";
 
 import ViewDestination from '@/components/ViewDestination';
+import { useParams } from 'next/navigation';
 
-function page({ params }) {
-  const { id } = params;
+function Page() {
+  const { id } = useParams();
 
   return (
     <div className="min-h-screen bg-gray-100 w-full">
@@ -13,4 +14,4 @@ function page({ params }) {
   );
 }
 
-export default page;
+export default Page;

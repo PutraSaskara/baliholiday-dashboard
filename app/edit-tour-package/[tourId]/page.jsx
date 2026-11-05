@@ -6,12 +6,11 @@ import EditDesc from '../../../components/EditDesc'
 import EditPlan from '../../../components/EditPlan'
 import EditImage from '../../../components/EditImage'
 import EditOther from '../../../components/EditOther'
-function page(tourId) {
-    console.log('tourId data', tourId)
-    let params = tourId.params.tourId
+async function page({ params }) {
+    const { tourId } = await params
   return (
     <div className='w-full h-[100vh] overflow-y-auto'>
-        <Navigation editTour={<EditTour id={params}/>} EditDetail={<EditDetail tourDetailId={params}/>}  EditDesc={<EditDesc tourId={params} />} editPlan={<EditPlan tourId={params} />} editImage={<EditImage Id={params} />} editOther={<EditOther Id={params} />}/>
+        <Navigation editTour={<EditTour id={tourId}/>} EditDetail={<EditDetail tourDetailId={tourId}/>}  EditDesc={<EditDesc tourId={tourId} />} editPlan={<EditPlan tourId={tourId} />} editImage={<EditImage Id={tourId} />} editOther={<EditOther Id={tourId} />}/>
         
     </div>
   )

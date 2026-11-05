@@ -3,16 +3,11 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useParams } from "next/navigation";
 import DestinationForm from "../../../components/DestinationForm";
 import Navbar from "../../../components/Navbar";
 import axios from "axios";
 import baseURL from "@/apiConfig";
-
-interface PageProps {
-  params: {
-    destinationId: string;
-  };
-}
 
 interface Destination {
   id: string;
@@ -24,8 +19,8 @@ interface Destination {
   // Add other fields as necessary
 }
 
-const Page: React.FC<PageProps> = ({ params }) => {
-  const { destinationId } = params;
+const Page: React.FC = () => {
+  const { destinationId } = useParams<{ destinationId: string }>();
   const [existingData, setExistingData] = useState<Destination | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);

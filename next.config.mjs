@@ -1,8 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     images: {
-        domains: ['api.saskaraputra.my.id', 'localhost', 'res.cloudinary.com'],
-      },
+        remotePatterns: [
+            { hostname: 'api.saskaraputra.my.id' },
+            { hostname: 'localhost' },
+            { hostname: 'res.cloudinary.com' },
+        ],
+    },
 };
 
 export default nextConfig;

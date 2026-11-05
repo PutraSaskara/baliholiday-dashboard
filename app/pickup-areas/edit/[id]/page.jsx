@@ -3,9 +3,7 @@
 
 import EditArea from '@/components/EditArea';
 
-function EditAreaPage({ params }) {
-  const { id } = params;
-
+function EditAreaPage() {
   return (
     <div className="min-h-screen bg-gray-100 w-full">
       <EditArea />

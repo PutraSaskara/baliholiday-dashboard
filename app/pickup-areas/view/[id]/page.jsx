@@ -3,9 +3,7 @@
 
 import ViewArea from '@/components/ViewArea';
 
-function ViewAreaPage({ params }) {
-  const { id } = params;
-
+function ViewAreaPage() {
   return (
     <div className="min-h-screen bg-gray-100 w-full">
       <ViewArea />
