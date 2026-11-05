@@ -86,8 +86,7 @@ function AddSingleArticle() {
 
     // Save to Zustand Draft memory instead of calling API
     setDraftArticle(formData);
-    
-    console.log('Draft Article saved locally:', formData);
+
     alert('Draft Article saved locally. Please proceed to the next step!');
     setIsSaved(true);
   };

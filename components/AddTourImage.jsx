@@ -185,7 +185,6 @@ function AddTourImage() {
       const { success, status, data, message } = result;
 
       if (success) {
-        console.log("Process completed successfully:", data || message);
         setIsSaved(true);
         setTourId("");
         setImages1([]);

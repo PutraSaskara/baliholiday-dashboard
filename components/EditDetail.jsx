@@ -47,7 +47,6 @@ function EditDetail({ tourDetailId, onNext }) {
     const { success, status, data, message } = await updateTourDetail(tourDetailId, formData);
 
     if (success) {
-      console.log('Data updated:', data);
       alert('Tour details successfully updated.');
     } else {
       if (status) {

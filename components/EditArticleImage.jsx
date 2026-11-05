@@ -78,10 +78,6 @@ function EditArticleImage({ Id }) {
     loadData();
   }, [loadData]);
 
-  console.log('data existingdata:', existingData)
-
-
-
   const handleTourIdChange = (event) => {
     setBlogId(event.target.value);
   };
@@ -174,7 +170,6 @@ function EditArticleImage({ Id }) {
     const { success, status, data, message } = await updateArticleImage(Id, formData);
 
     if (success) {
-      console.log("Images uploaded successfully:", data);
       alert("Images updated successfully");
       setImages1([]);
       setImages2([]);

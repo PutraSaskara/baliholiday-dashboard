@@ -188,7 +188,6 @@ function AddTourPlan({ tourId, onNext }) {
     const { success, status, data, message } = await updateTourPlan(tourId, formData);
 
     if (success) {
-      console.log('Data submitted:', data);
       alert('Tour plan saved successfully!');
     } else {
       if (status) {

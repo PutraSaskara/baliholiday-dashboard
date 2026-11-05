@@ -38,3 +38,6 @@ next-env.d.ts
 
 # agent/editor artifacts
 .zcode/
+
+# database dumps
+*.sql

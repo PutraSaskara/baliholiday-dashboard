@@ -74,7 +74,6 @@ function EditOther({ Id }) {
   const handleSubmit1 = async () => {
     const { success, status, data, message } = await updateTourInclude(Id, formData1);
     if (success) {
-      console.log('Data submitted:', data);
       alert('Tour includes successfully updated.');
     } else {
       if (status) {
@@ -90,7 +89,6 @@ function EditOther({ Id }) {
   const handleSubmit2 = async () => {
     const { success, status, data, message } = await updateTourNotInclude(Id, formData2);
     if (success) {
-      console.log('Data submitted:', data);
       alert('Tour not includes successfully updated.');
     } else {
       if (status) {
@@ -106,7 +104,6 @@ function EditOther({ Id }) {
   const handleSubmit3 = async () => {
     const { success, status, data, message } = await updateTourCancellation(Id, formData3);
     if (success) {
-      console.log('Data submitted:', data);
       alert('Tour cancellation successfully updated.');
     } else {
       if (status) {

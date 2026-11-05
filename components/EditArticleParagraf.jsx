@@ -60,7 +60,6 @@ function EditArticleParagraf({ id, onNext }) {
     const { success, status, data, message } = await updateArticleParagraf(id, formData);
 
     if (success) {
-      console.log('Data submitted:', data);
       alert('Article paragraph saved successfully!');
     } else {
       if (status) {

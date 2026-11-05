@@ -91,8 +91,7 @@ function AddTour() {
     }
 
     setDraftTour(formData);
-    
-    console.log('Draft Tour saved locally:', formData);
+
     alert('Draft Tour saved locally. Please proceed to the next step!');
     setIsSaved(true);
   };

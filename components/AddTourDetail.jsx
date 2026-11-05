@@ -58,8 +58,7 @@ function AddTourDetail() {
     }
 
     setDraftTourDetail(formData);
-    
-    console.log('Draft Detail saved locally:', formData);
+
     alert('Draft Detail saved locally. Please proceed to the next step!');
     setIsSaved(true);
   };

@@ -198,8 +198,7 @@ function AddTourPlan() {
     }
 
     setDraftTourPlan(formData);
-    
-    console.log('Draft Plan saved locally:', formData);
+
     alert('Draft Plan saved locally. Please proceed to the next step!');
     setIsSaved(true);
   };

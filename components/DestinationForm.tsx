@@ -72,7 +72,7 @@ const DestinationForm: React.FC<DestinationFormProps> = ({ isEditMode, existingD
         alert("Destination created successfully.");
       }
 
-      router.push("/dashboard/destinations");
+      router.push("/destinations");
     } catch (err: any) {
       console.error("Error submitting form:", err);
       setError(err.response?.data?.message || "An error occurred.");

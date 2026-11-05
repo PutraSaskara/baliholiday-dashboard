@@ -76,7 +76,6 @@ function AddArticleParagrafs() {
     // Save to Zustand Draft memory instead of calling API
     setDraftParagraph(formData);
 
-    console.log('Draft Paragraph saved locally:', formData);
     alert('Draft Paragraph saved locally. Please proceed to the final step!');
     setIsSaved(true);
   };

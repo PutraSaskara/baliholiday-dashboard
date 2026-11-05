@@ -52,8 +52,7 @@ function AddTourDesc() {
     }
 
     setDraftTourDesc(formData);
-    
-    console.log('Draft Description saved locally:', formData);
+
     alert('Draft Description saved locally. Please proceed to the next step!');
     setIsSaved(true);
   };

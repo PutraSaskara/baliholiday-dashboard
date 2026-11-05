@@ -44,7 +44,6 @@ function EditDesc({ tourId, onNext }) {
     const { success, status, data, message } = await updateTourDesc(tourId, formData);
 
     if (success) {
-      console.log("Data submitted:", data);
       alert("Description saved successfully!");
     } else {
       if (status) {

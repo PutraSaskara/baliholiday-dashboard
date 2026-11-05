@@ -187,7 +187,6 @@ function AddArticleImage() {
        // Standalone flow (Add image to existing article)
        const { success, status, data, message } = await createArticleImage(formData);
        if (success) {
-         console.log("Images uploaded successfully:", data);
          setIsSaved(true);
          setBlogId("");
          setImages1([]);

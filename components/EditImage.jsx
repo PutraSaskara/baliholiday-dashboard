@@ -172,7 +172,6 @@ function EditTourImage({ Id, onNext }) {
       const { success, status, data, message } = await updateTourImage(Id, formData);
 
       if (success) {
-        console.log("Images uploaded successfully:", data);
         alert("Images updated successfully");
         setImages1([]);
         setImages2([]);
