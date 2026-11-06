@@ -323,6 +323,7 @@ function AddArticleImage() {
                   <input
                     type="file"
                     accept="image/*"
+                    aria-label={img.label}
                     onChange={img.handler}
                     className="absolute inset-0 cursor-pointer opacity-0"
                   />

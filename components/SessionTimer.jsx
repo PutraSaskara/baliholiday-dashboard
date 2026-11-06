@@ -46,31 +46,30 @@ export default function SessionTimer() {
   const seconds = remaining % 60;
   const formattedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
-  // Warning levels
+  // Warning levels: merah < 1 menit, amber < 5 menit.
   const isWarning = remaining <= 300; // 5 minutes
   const isCritical = remaining <= 60;  // 1 minute
 
-  const getColorClass = () => {
-    if (isCritical) return 'text-red-400';
-    if (isWarning) return 'text-amber-400';
-    return 'text-slate-300';
+  const getBadgeClass = () => {
+    if (isCritical) return 'border-red-200 bg-red-50 text-red-600 animate-pulse';
+    if (isWarning) return 'border-amber-200 bg-amber-50 text-amber-700';
+    return 'border-slate-200 bg-white text-slate-600';
   };
 
-  const getBgClass = () => {
-    if (isCritical) return 'bg-red-500/10 border-red-500/30 animate-pulse';
-    if (isWarning) return 'bg-amber-500/10 border-amber-500/30';
-    return 'bg-white/5 border-white/10';
+  const getIconClass = () => {
+    if (isCritical) return 'text-red-500';
+    if (isWarning) return 'text-amber-500';
+    return 'text-slate-400';
   };
 
   return (
     <div
-      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all duration-300 ${getBgClass()}`}
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold tabular-nums transition-colors duration-300 ${getBadgeClass()}`}
       title="Sisa waktu sesi"
     >
-      <FiClock className={`w-3.5 h-3.5 ${getColorClass()}`} />
-      <span className={getColorClass()}>
-        {formattedTime}
-      </span>
+      <FiClock className={`h-3.5 w-3.5 ${getIconClass()}`} aria-hidden="true" />
+      <span className="sr-only">Sisa waktu sesi</span>
+      <span>{formattedTime}</span>
     </div>
   );
 }

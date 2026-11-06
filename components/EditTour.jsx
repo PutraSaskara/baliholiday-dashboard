@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import useTourStore from "../stores/useTourStore";
 import Link from "next/link";
-import AIAssistantModal from "./AIAssistantModal";
+import AIAssistantModal from "./AIAssistantLazy";
 import { useToast } from "./ui/Toast";
 import FormShell from "./forms/FormShell";
 import FormSection from "./forms/FormSection";

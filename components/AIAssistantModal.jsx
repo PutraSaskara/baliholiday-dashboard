@@ -1,21 +1,39 @@
-import React, { useState, useEffect } from 'react';
-import SearchableModelDropdown from './SearchableModelDropdown';
-import { ALLOWED_AI_MODELS, DEFAULT_AI_MODEL } from '../lib/aiModels';
+// components/AIAssistantModal.jsx
+// Modal AI global: restyle memakai primitives (Card/Select/Button/Skeleton),
+// role dialog + aria-modal, Escape menutup, focus trap, dan fokus kembali ke
+// pemicu setelah tutup. Error yang tampil selalu generik; detail upstream
+// hanya dicatat ke console. Dimuat lazy lewat components/AIAssistantLazy.jsx.
 
-export default function AIAssistantModal({ 
-  isOpen, 
-  onClose, 
+"use client";
+
+import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import Button from "./ui/Button";
+import Card from "./ui/Card";
+import Select from "./ui/Select";
+import Skeleton from "./ui/Skeleton";
+import { ALLOWED_AI_MODELS, DEFAULT_AI_MODEL } from "../lib/aiModels";
+
+const FOCUSABLE =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+// Pesan aman untuk user. Penyebab sebenarnya tetap masuk console.error.
+const GENERIC_ERROR = "Failed to generate content. Please try again.";
+
+export default function AIAssistantModal({
+  isOpen = true,
+  onClose,
   mode, // 'add' or 'edit'
   tourId, // required if edit tour
   blogId, // required if edit article
   targetSection, // e.g. 'tour', 'detail', 'desc', 'article', 'article-paragraphs'
   drafts, // In Add mode: the full state. In Edit mode: the current form state
-  onApply 
+  onApply,
 }) {
   const [models, setModels] = useState([]);
   const [selectedModel, setSelectedModel] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('defaultAIModel');
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("defaultAIModel");
       // Only accept a saved default that is on the server-side allowlist.
       if (saved && ALLOWED_AI_MODELS.includes(saved)) return saved;
       return DEFAULT_AI_MODEL;
@@ -25,53 +43,124 @@ export default function AIAssistantModal({
   const [defaultSavedVisible, setDefaultSavedVisible] = useState(false);
   const [loadingModels, setLoadingModels] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
-  
   const [previewData, setPreviewData] = useState(null);
   const [error, setError] = useState(null);
 
+  const dialogRef = useRef(null);
+  const closeRef = useRef(null);
+  // onClose diambil lewat ref supaya handler Escape/Tab stabil antar render.
+  const onCloseRef = useRef(onClose);
+  const titleId = useId();
+  const descId = useId();
+
   useEffect(() => {
-    if (!isOpen) return;
-    setPreviewData(null);
-    setError(null);
+    onCloseRef.current = onClose;
+  });
+
+  const handleKeyDown = useCallback((event) => {
+    if (event.key === "Escape") {
+      event.stopPropagation();
+      if (onCloseRef.current) onCloseRef.current();
+      return;
+    }
+    if (event.key !== "Tab") return;
+
+    const root = dialogRef.current;
+    if (!root) return;
+    const focusables = [...root.querySelectorAll(FOCUSABLE)].filter(
+      (el) => el.offsetParent !== null || el === document.activeElement
+    );
+    if (focusables.length === 0) return;
+
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }, []);
+
+  // Kunci scroll, pasang listener keyboard, pindahkan fokus ke dialog, dan
+  // kembalikan fokus ke pemicu saat modal ditutup/di-unmount.
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    const previouslyFocused = document.activeElement;
+    const { overflow } = document.body.style;
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", handleKeyDown, true);
+
+    const focusTarget = closeRef.current ?? dialogRef.current;
+    if (focusTarget) focusTarget.focus();
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown, true);
+      document.body.style.overflow = overflow;
+      if (previouslyFocused && typeof previouslyFocused.focus === "function") {
+        previouslyFocused.focus();
+      }
+    };
+  }, [isOpen, handleKeyDown]);
+
+  // Komponen hanya dipasang saat terbuka, jadi state awal sudah bersih
+  // (previewData null, loadingModels true) dan tidak perlu di-reset di sini.
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    let cancelled = false;
 
     const fetchModels = async () => {
       try {
-        setLoadingModels(true);
-        const res = await fetch('https://openrouter.ai/api/v1/models');
+        const res = await fetch("https://openrouter.ai/api/v1/models");
         const data = await res.json();
-        
+        if (cancelled) return;
+
         if (data && data.data) {
-          const allModels = data.data.map(m => m.id);
+          const allModels = data.data.map((m) => m.id);
           // Only models on the server allowlist (lib/aiModels.js) can be used —
           // the API routes reject anything else with 400.
-          const sortedModels = ALLOWED_AI_MODELS.filter(m => allModels.includes(m));
-          const availableModels = sortedModels.length > 0 ? sortedModels : [...ALLOWED_AI_MODELS];
+          const sortedModels = ALLOWED_AI_MODELS.filter((m) =>
+            allModels.includes(m)
+          );
+          const availableModels =
+            sortedModels.length > 0 ? sortedModels : [...ALLOWED_AI_MODELS];
           setModels(availableModels);
-          
-          const savedDefault = localStorage.getItem('defaultAIModel');
-          if (savedDefault && availableModels.includes(savedDefault)) {
-            setSelectedModel(savedDefault);
-          } else if (availableModels.length > 0 && !availableModels.includes(selectedModel)) {
-            setSelectedModel(availableModels[0]);
-          }
+
+          const savedDefault = localStorage.getItem("defaultAIModel");
+          setSelectedModel((prev) => {
+            if (savedDefault && availableModels.includes(savedDefault)) {
+              return savedDefault;
+            }
+            if (
+              availableModels.length > 0 &&
+              !availableModels.includes(prev)
+            ) {
+              return availableModels[0];
+            }
+            return prev;
+          });
         } else {
           setModels([...ALLOWED_AI_MODELS]);
         }
       } catch (err) {
-        console.error('Failed to fetch OpenRouter models', err);
+        console.error("Failed to fetch OpenRouter models", err);
         // Fall back to the static allowlist so the dropdown stays usable.
-        setModels([...ALLOWED_AI_MODELS]);
+        if (!cancelled) setModels([...ALLOWED_AI_MODELS]);
       } finally {
-        setLoadingModels(false);
+        if (!cancelled) setLoadingModels(false);
       }
     };
 
     fetchModels();
-  }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen]);
 
   const handleSetDefault = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('defaultAIModel', selectedModel);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("defaultAIModel", selectedModel);
       setDefaultSavedVisible(true);
       setTimeout(() => setDefaultSavedVisible(false), 3000);
     }
@@ -90,188 +179,249 @@ export default function AIAssistantModal({
         targetSection,
       };
 
-      if (mode === 'add') {
-         payload.drafts = drafts; // Whole store drafts
+      if (mode === "add") {
+        payload.drafts = drafts; // Whole store drafts
       } else {
-         payload.currentSectionData = drafts; // Just the current form
+        payload.currentSectionData = drafts; // Just the current form
       }
 
-      const res = await fetch('/api/generate-global', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+      const res = await fetch("/api/generate-global", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
-        let errMsg = 'Failed to generate content. The server might have timed out.';
-        try {
-          const text = await res.text();
-          try {
-            const errData = JSON.parse(text);
-            errMsg = errData.error || errData.details || errMsg;
-          } catch(e) {
-            if (res.status === 504) {
-              errMsg = 'Server Timeout (504): The AI took too long to respond. This is common on shared hosting. Try again or use a faster model like Gemini Flash.';
-            } else {
-              errMsg = `Server Error (${res.status}): The server returned an invalid response.`;
-            }
-          }
-        } catch(e) {
-          errMsg = `Server Error (${res.status})`;
-        }
-        throw new Error(errMsg);
+        // Detail upstream tidak boleh tampil ke user.
+        console.error("AI generate failed with status", res.status);
+        setError(GENERIC_ERROR);
+        return;
       }
 
       const generatedData = await res.json();
       setPreviewData(generatedData);
     } catch (err) {
       console.error(err);
-      setError(err.message);
+      setError(GENERIC_ERROR);
     } finally {
       setIsGenerating(false);
     }
   };
 
   const handleApply = () => {
-    if (previewData) {
+    if (previewData && onApply) {
       onApply(previewData);
     }
-    onClose();
+    if (onCloseRef.current) onCloseRef.current();
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || typeof document === "undefined") return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh]">
-        
+  const modelOptions = models.map((m) => ({ value: m, label: m }));
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-[2px]"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget && onCloseRef.current) {
+          onCloseRef.current();
+        }
+      }}
+    >
+      <Card
+        ref={dialogRef}
+        padding={false}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        aria-describedby={descId}
+        className="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden"
+      >
         {/* Header */}
-        <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-          <div>
-            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <span className="text-xl">✨</span> Global AI Editor
+        <div className="flex items-start justify-between gap-4 border-b border-slate-100 bg-slate-50/70 px-5 py-4">
+          <div className="min-w-0">
+            <h2
+              id={titleId}
+              className="flex items-center gap-2 text-lg font-semibold text-slate-900"
+            >
+              <span aria-hidden="true">✨</span> Global AI Editor
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
-              {mode === 'add' 
+            <p id={descId} className="mt-1 text-sm leading-relaxed text-slate-500">
+              {mode === "add"
                 ? "The AI will read ALL your drafts and fill missing fields across the entire tour."
                 : `The AI is reading the full tour from the database to perfectly generate the missing ${targetSection} fields.`}
             </p>
           </div>
-          <button 
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-700 hover:bg-gray-200/50 p-2 rounded-full transition-colors"
+          <button
+            ref={closeRef}
+            type="button"
+            onClick={() => onCloseRef.current && onCloseRef.current()}
+            aria-label="Close dialog"
+            className="-mr-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
           >
-            ✕
+            <svg
+              className="h-5 w-5"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              aria-hidden="true"
+            >
+              <path d="M18 6 6 18M6 6l12 12" />
+            </svg>
           </button>
         </div>
 
         {/* Body */}
-        <div className="p-6 overflow-y-auto flex-1 space-y-6">
-          
+        <div className="flex-1 space-y-5 overflow-y-auto px-5 py-5">
           {/* Top Controls */}
-          <div className="flex flex-col sm:flex-row gap-4 items-end bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
-            <div className="flex-1 w-full relative">
-              <div className="flex justify-between items-center mb-1.5">
-                <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide">
-                  Select AI Model
-                </label>
-                <button
+          <div className="rounded-xl border border-brand-100 bg-brand-50/50 p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+              <div className="min-w-0 flex-1">
+                {loadingModels ? (
+                  <div className="space-y-1.5">
+                    <span className="block text-sm font-medium text-slate-700">
+                      AI Model
+                    </span>
+                    <Skeleton className="h-[42px] w-full" />
+                  </div>
+                ) : (
+                  <Select
+                    label="AI Model"
+                    name="aiModel"
+                    value={selectedModel}
+                    onChange={(e) => setSelectedModel(e.target.value)}
+                    options={modelOptions}
+                    disabled={isGenerating}
+                  />
+                )}
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={handleSetDefault}
-                  className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2 py-0.5 rounded transition-colors"
+                  disabled={loadingModels || isGenerating}
                 >
                   {defaultSavedVisible ? "✓ Saved" : "Set as Default"}
-                </button>
+                </Button>
+                <Button
+                  onClick={handleGenerate}
+                  loading={isGenerating}
+                  disabled={loadingModels}
+                  className="sm:whitespace-nowrap"
+                >
+                  {isGenerating
+                    ? "Generating..."
+                    : "✨ Auto-Fill Empty Fields"}
+                </Button>
               </div>
-              <SearchableModelDropdown 
-                models={models} 
-                value={selectedModel} 
-                onChange={setSelectedModel} 
-                disabled={loadingModels || isGenerating}
-              />
             </div>
-            <button
-              onClick={handleGenerate}
-              disabled={isGenerating || loadingModels}
-              className="w-full sm:w-auto px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap h-[42px]"
-            >
-              {isGenerating ? 'Generating Context...' : '✨ Auto-Fill Empty Fields'}
-            </button>
+            <p role="status" className="mt-2 h-4 text-xs font-medium text-brand-700">
+              {defaultSavedVisible ? "Default model saved." : ""}
+            </p>
           </div>
 
           {error && (
-            <div className="p-4 bg-red-50 text-red-700 border border-red-200 rounded-xl text-sm">
-              <strong>Error:</strong> {error}
+            <div
+              role="alert"
+              className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700"
+            >
+              {error}
             </div>
           )}
 
           {/* Generated Content Preview */}
-          <div className="grid grid-cols-1 gap-4">
-            <h3 className="text-sm font-bold text-gray-900 border-b border-gray-100 pb-2">Fields generated by AI:</h3>
-            
+          <div className="space-y-3">
+            <h3 className="border-b border-slate-100 pb-2 text-sm font-semibold text-slate-900">
+              Fields generated by AI
+            </h3>
+
             {!previewData && !isGenerating && (
-                <div className="py-8 text-center text-gray-400 italic text-sm">
-                    Click the generate button above to see what the AI creates.
-                </div>
+              <p className="py-8 text-center text-sm italic text-slate-400">
+                Click the generate button above to see what the AI creates.
+              </p>
             )}
 
             {isGenerating && (
-                <div className="py-8 text-center text-blue-500 font-bold text-sm animate-pulse">
-                    AI is analyzing the global context and writing...
-                </div>
+              <div
+                role="status"
+                className="grid grid-cols-1 gap-4 md:grid-cols-2"
+              >
+                <p className="col-span-full text-center text-sm font-semibold text-brand-700">
+                  Generating content...
+                </p>
+                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-20 w-full" />
+              </div>
             )}
 
             {previewData && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-6 rounded-2xl border border-gray-100">
-                    {/* Render everything returned dynamically since we have many fields across sections */}
-                    {Object.entries(previewData).map(([key, val]) => {
-                        if (key === 'faq') return null; // handle separately
-                        return (
-                            <div key={key} className="space-y-1">
-                                <span className="text-xs font-bold text-gray-500 uppercase">{key.replace(/_/g, ' ')}</span>
-                                <div className="text-sm p-3 bg-white rounded-lg border border-gray-200 min-h-[48px] text-green-700 font-medium">
-                                    {val}
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
+              <div className="grid grid-cols-1 gap-4 rounded-xl border border-slate-100 bg-slate-50 p-5 md:grid-cols-2">
+                {/* Render everything returned dynamically since we have many fields across sections */}
+                {Object.entries(previewData).map(([key, val]) => {
+                  if (key === "faq") return null; // handle separately
+                  return (
+                    <div key={key} className="space-y-1">
+                      <span className="text-xs font-bold uppercase text-slate-500">
+                        {key.replace(/_/g, " ")}
+                      </span>
+                      <div className="min-h-[48px] rounded-lg border border-emerald-200 bg-white p-3 text-sm font-medium text-emerald-700">
+                        {val}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             )}
 
             {previewData?.faq && Array.isArray(previewData.faq) && (
-                <div className="space-y-2 mt-2">
-                    <span className="text-xs font-bold text-gray-500 uppercase">Generated FAQs</span>
-                    <div className="space-y-2">
-                    {previewData.faq.map((f, i) => (
-                        <div key={i} className="p-3 bg-green-50/50 border border-green-200 rounded-lg">
-                        <p className="text-sm font-bold text-green-900">Q: {f.question}</p>
-                        <p className="text-sm text-green-800 mt-1">A: {f.answer}</p>
-                        </div>
-                    ))}
+              <div className="space-y-2">
+                <span className="text-xs font-bold uppercase text-slate-500">
+                  Generated FAQs
+                </span>
+                <div className="space-y-2">
+                  {previewData.faq.map((f, i) => (
+                    <div
+                      key={i}
+                      className="rounded-lg border border-emerald-200 bg-emerald-50/50 p-3"
+                    >
+                      <p className="text-sm font-bold text-emerald-900">
+                        Q: {f.question}
+                      </p>
+                      <p className="mt-1 text-sm text-emerald-800">
+                        A: {f.answer}
+                      </p>
                     </div>
+                  ))}
                 </div>
+              </div>
             )}
-
           </div>
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
-          <button
-            onClick={onClose}
-            className="px-5 py-2.5 text-sm font-bold text-gray-600 hover:text-gray-900 transition-colors"
+        <div className="flex flex-col-reverse gap-2 border-t border-slate-100 bg-slate-50 px-5 py-4 sm:flex-row sm:justify-end">
+          <Button
+            variant="secondary"
+            onClick={() => onCloseRef.current && onCloseRef.current()}
+            disabled={isGenerating}
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={handleApply}
-            disabled={!previewData}
-            className="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white font-bold text-sm rounded-xl transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={!previewData || isGenerating}
           >
-            Apply Changes & Close
-          </button>
+            Apply Changes &amp; Close
+          </Button>
         </div>
-
-      </div>
-    </div>
+      </Card>
+    </div>,
+    document.body
   );
 }

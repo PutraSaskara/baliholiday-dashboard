@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import useTourStore from "../stores/useTourStore";
 import Image from "next/image";
 import useWarnIfUnsavedChanges from '../hooks/useWarnIfUnsavedChanges';
-import AIAssistantModal from './AIAssistantModal';
+import AIAssistantModal from './AIAssistantLazy';
 import Link from "next/link";
 import { useToast } from "./ui/Toast";
 import FormShell from "./forms/FormShell";

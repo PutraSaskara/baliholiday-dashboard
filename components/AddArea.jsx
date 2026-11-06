@@ -221,11 +221,13 @@ function AddArea() {
                 type="file"
                 accept="image/webp"
                 onChange={handleImageChange}
+                aria-invalid={errors.image ? true : undefined}
+                aria-describedby={errors.image ? "area-image-upload-error" : undefined}
                 className="hidden"
               />
             </div>
             {errors.image ? (
-              <p role="alert" className="mt-1.5 text-center text-sm text-red-600">{errors.image}</p>
+              <p id="area-image-upload-error" role="alert" className="mt-1.5 text-center text-sm text-red-600">{errors.image}</p>
             ) : null}
           </div>
         </FormSection>
