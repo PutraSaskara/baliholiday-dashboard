@@ -137,3 +137,24 @@ untuk reset counter sebelum run Lighthouse/Playwright panjang.
 - Commit lokal per fase setelah build + lint hijau.
 - Jangan cetak kredensial di laporan/log.
 - Jangan mengubah store/API/skema data saat restyle.
+## Status akhir (2026-11-07)
+P4 `72317fe`, P5 `881b6d1`, perbaikan temuan review `2e8933c`.
+
+Hasil Lighthouse (build produksi QA, data lokal):
+- `/` mobile: perf 100, FCP 764 ms, LCP 764 ms, TBT 38 ms, CLS 0.008
+- `/` desktop: perf 93, FCP 215 ms, LCP 1724 ms, TBT 0, CLS 0.014
+- `/login` mobile: perf 100, FCP/LCP 758 ms, TBT 55 ms, CLS 0
+
+UI review final: REVISION_REQUIRED -> sudah diperbaiki semua:
+- beforeunload tidak lagi memblokir navigasi internal; proteksi reload tetap ada
+- `.env.development.local` mengarah ke backend lokal (login dev tidak loop)
+- drawer mobile selalu menampilkan label + grup
+- title halaman benar (Tour Packages / Articles / BaliHoliday Admin)
+- typo Draf -> Draft
+
+Sisa backlog:
+1. Deploy backend lebih dulu (auth/verify masih 404 di produksi).
+2. Widget Cloudinary butuh akun login di browser agar upload jalan.
+3. Desktop LCP 1,7 s menunggu data API.
+4. Lint warning 35 (pre-existing).
+5. Wizard article 3 langkah (bukan 4).
