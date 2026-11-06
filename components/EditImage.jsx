@@ -9,6 +9,7 @@ import FormActions from "./forms/FormActions";
 import Button, { buttonClass } from "./ui/Button";
 import Input from "./ui/Input";
 import Select from "./ui/Select";
+import CloudinaryWidgetScript from "./CloudinaryWidgetScript";
 
 function EditTourImage({ Id, onNext }) {
   const toast = useToast();
@@ -206,9 +207,11 @@ function EditTourImage({ Id, onNext }) {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <FormShell
-        title="Edit Tour Image"
+    <>
+      <CloudinaryWidgetScript />
+      <form onSubmit={handleSubmit}>
+        <FormShell
+          title="Edit Tour Image"
         description="Note: Please remember use .webp image type and make sure image size maximum 5mb."
         actions={
           <FormActions
@@ -302,7 +305,8 @@ function EditTourImage({ Id, onNext }) {
           )}
         </div>
       </FormShell>
-    </form>
+      </form>
+    </>
   );
 }
 

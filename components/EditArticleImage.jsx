@@ -9,6 +9,7 @@ import FormActions from "./forms/FormActions";
 import Button, { buttonClass } from "./ui/Button";
 import Input from "./ui/Input";
 import Select from "./ui/Select";
+import CloudinaryWidgetScript from "./CloudinaryWidgetScript";
 
 function EditArticleImage({ Id }) {
   const toast = useToast();
@@ -200,9 +201,11 @@ function EditArticleImage({ Id }) {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <FormShell
-        title="Edit Article Image"
+    <>
+      <CloudinaryWidgetScript />
+      <form onSubmit={handleSubmit}>
+        <FormShell
+          title="Edit Article Image"
         description="Note: Please remember use .webp image type and make sure image size maximum 5mb."
         actions={
           <FormActions
@@ -288,7 +291,8 @@ function EditArticleImage({ Id }) {
           )}
         </div>
       </FormShell>
-    </form>
+      </form>
+    </>
   );
 }
 

@@ -1,13 +1,26 @@
 // Sprint 1 (hardening): conservative, enforced CSP + baseline security headers
 // applied to every path. Keep origin lists in sync with the actual runtime
 // dependencies (Cloudinary widgets, backend API, OpenRouter proxy).
+const CONNECT_SRC = [
+    "'self'",
+    "https://api.saskaraputra.my.id",
+    "https://res.cloudinary.com",
+    "https://openrouter.ai",
+];
+
+// Local backend origin is allowed ONLY outside production builds so QA/dev
+// against http://localhost:5000 needs no manual CSP patch. Production stays tight.
+if (process.env.NODE_ENV !== "production") {
+    CONNECT_SRC.push("http://localhost:5000");
+}
+
 const CONTENT_SECURITY_POLICY = [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://media-library.cloudinary.com https://product-gallery.cloudinary.com",
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https://res.cloudinary.com https://api.saskaraputra.my.id https://localhost",
-    "connect-src 'self' https://api.saskaraputra.my.id https://res.cloudinary.com https://openrouter.ai",
-    "frame-src 'self' https://media-library.cloudinary.com https://product-gallery.cloudinary.com",
+    `connect-src ${CONNECT_SRC.join(" ")}`,
+    "frame-src 'self' https://media-library.cloudinary.com https://product-gallery.cloudinary.com https://console.cloudinary.com",
     "font-src 'self' data:",
     "object-src 'none'",
     "base-uri 'self'",

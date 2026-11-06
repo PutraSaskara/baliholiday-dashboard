@@ -10,6 +10,7 @@ import FormShell from "./forms/FormShell";
 import FormActions from "./forms/FormActions";
 import Button, { buttonClass } from "./ui/Button";
 import Select from "./ui/Select";
+import CloudinaryWidgetScript from "./CloudinaryWidgetScript";
 
 function AddTourImage() {
   const toast = useToast();
@@ -257,6 +258,7 @@ function AddTourImage() {
 
   return (
     <>
+    <CloudinaryWidgetScript />
     <form onSubmit={handleSubmit}>
       <FormShell
         title="Tour Media"

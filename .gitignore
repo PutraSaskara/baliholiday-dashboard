@@ -41,3 +41,7 @@ next-env.d.ts
 
 # database dumps
 *.sql
+
+# QA artifacts
+.playwright-mcp/
+

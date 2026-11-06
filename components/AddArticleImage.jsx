@@ -9,6 +9,7 @@ import FormShell from "./forms/FormShell";
 import FormActions from "./forms/FormActions";
 import Button, { buttonClass } from "./ui/Button";
 import Select from "./ui/Select";
+import CloudinaryWidgetScript from "./CloudinaryWidgetScript";
 
 function AddArticleImage() {
   const toast = useToast();
@@ -170,7 +171,6 @@ function AddArticleImage() {
        // Draft flow (New Article)
        const { success, message } = await submitAllDrafts(formData);
        if (success) {
-         console.log("All drafts submitted successfully");
          setIsSaved(true);
          setImages1([]);
          setImages2([]);
@@ -222,9 +222,11 @@ function AddArticleImage() {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <FormShell
-        title="Upload Images & Publish"
+    <>
+      <CloudinaryWidgetScript />
+      <form onSubmit={handleSubmit}>
+        <FormShell
+          title="Upload Images & Publish"
         description="Final step! Add eye-catching images to your article."
         actions={
           <FormActions
@@ -348,7 +350,8 @@ function AddArticleImage() {
           )}
         </div>
       </FormShell>
-    </form>
+      </form>
+    </>
   );
 }
 

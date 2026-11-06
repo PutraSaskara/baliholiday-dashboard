@@ -6,11 +6,13 @@ import baseURL, { api } from '@/apiConfig';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useToast } from './ui/Toast';
 
 function ViewArea() {
   const [area, setArea] = useState(null);
   const [toggling, setToggling] = useState(false);
   const { id } = useParams();
+  const toast = useToast();
 
   const { fetchAreaById } = useAreaStore();
 
@@ -20,9 +22,9 @@ function ViewArea() {
       setArea(data);
     } catch (error) {
       console.error('Error fetching pickup area:', error);
-      alert('Failed to fetch pickup area details.');
+      toast.error('Failed to fetch pickup area details.');
     }
-  }, [id, fetchAreaById]);
+  }, [id, fetchAreaById, toast]);
 
   useEffect(() => {
     if (id) {
@@ -45,11 +47,11 @@ function ViewArea() {
           is_active: updatedStatus
         }));
       } else {
-        alert("Failed to toggle area coverage status.");
+        toast.error("Failed to toggle area coverage status.");
       }
     } catch (error) {
       console.error("Error toggling area status:", error);
-      alert("An error occurred while updating coverage status.");
+      toast.error("An error occurred while updating coverage status.");
     } finally {
       setToggling(false);
     }

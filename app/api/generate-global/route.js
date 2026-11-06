@@ -141,11 +141,6 @@ ${JSON.stringify(fullContext, null, 2)}
 
 Please generate the required missing fields in JSON format.`;
 
-    console.log("SENDING TO OPENROUTER: ", { targetSection, tourId, blogId, fullContextKeys: Object.keys(fullContext) });
-    if (fullContext.Detail) console.log("Detail exists");
-    if (fullContext.Plan) console.log("Plan exists");
-    if (fullContext.Description) console.log("Description exists");
-
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
