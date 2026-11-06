@@ -282,9 +282,20 @@ export default function AppShell({ children }) {
     })),
   ];
 
+  // Sidebar desktop mengikuti state collapse; drawer mobile SELALU tampil
+  // penuh (label + grup section) tanpa peduli state collapse desktop.
   const sidebar = (
     <SidebarContent
       collapsed={collapsed}
+      onToggleCollapse={toggleCollapse}
+      onNavigate={closeOverlays}
+      activeHref={pathname}
+    />
+  );
+
+  const drawerSidebar = (
+    <SidebarContent
+      collapsed={false}
       onToggleCollapse={toggleCollapse}
       onNavigate={closeOverlays}
       activeHref={pathname}
@@ -324,7 +335,7 @@ export default function AppShell({ children }) {
             >
               <FiX className="h-5 w-5" aria-hidden="true" />
             </button>
-            {sidebar}
+            {drawerSidebar}
           </div>
         </div>
       )}

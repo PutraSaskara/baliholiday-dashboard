@@ -38,8 +38,11 @@ function AddTour() {
   const [faqs, setFaqs] = useState([]);
   const [isSaved, setIsSaved] = useState(false);
   const [mounted, setMounted] = useState(false);
+  // Ada perubahan form yang belum disimpan ke draft. Listener unload hanya
+  // dipasang saat ini true; hilang otomatis setelah draft disimpan.
+  const [dirty, setDirty] = useState(false);
 
-  useWarnIfUnsavedChanges(hasUnsavedTourChanges);
+  useWarnIfUnsavedChanges(hasUnsavedTourChanges && dirty);
 
   // Pre-fill form on mount
   useEffect(() => {
@@ -47,6 +50,7 @@ function AddTour() {
     if (draftTour) {
       setFormData(draftTour);
       setIsSaved(true);
+      setDirty(false);
       try {
         setFaqs(JSON.parse(draftTour.faq || '[]'));
       } catch (e) {
@@ -57,6 +61,7 @@ function AddTour() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    setDirty(true);
     setFormData(prevState => ({
       ...prevState,
       [name]: value
@@ -67,6 +72,7 @@ function AddTour() {
     const newFaqs = [...faqs];
     newFaqs[index][field] = value;
     setFaqs(newFaqs);
+    setDirty(true);
     setFormData(prev => ({
       ...prev,
       faq: JSON.stringify(newFaqs)
@@ -76,6 +82,7 @@ function AddTour() {
   const addFaq = () => {
     const newFaqs = [...faqs, { question: "", answer: "" }];
     setFaqs(newFaqs);
+    setDirty(true);
     setFormData(prev => ({
       ...prev,
       faq: JSON.stringify(newFaqs)
@@ -85,6 +92,7 @@ function AddTour() {
   const removeFaq = (index) => {
     const newFaqs = faqs.filter((_, i) => i !== index);
     setFaqs(newFaqs);
+    setDirty(true);
     setFormData(prev => ({
       ...prev,
       faq: JSON.stringify(newFaqs)
@@ -102,6 +110,7 @@ function AddTour() {
 
     toast.success('Draft Tour saved locally. Please proceed to the next step!');
     setIsSaved(true);
+    setDirty(false); // draft tersimpan: lepas listener unload
   };
 
   if (!mounted) return null; // Prevent hydration mismatch
@@ -114,7 +123,7 @@ function AddTour() {
         <FormActions
           left={
             <Button variant="secondary" onClick={handleSubmit}>
-              {isSaved ? 'Draf Saved' : 'Save as Draf'}
+              {isSaved ? 'Draft Saved' : 'Save as Draft'}
             </Button>
           }
           right={

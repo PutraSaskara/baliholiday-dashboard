@@ -82,7 +82,7 @@ function AddTourDesc() {
                 Back
               </Link>
               <Button variant="secondary" onClick={handleSubmit}>
-                {isSaved ? 'Draf Saved' : 'Save as Draf'}
+                {isSaved ? 'Draft Saved' : 'Save as Draft'}
               </Button>
             </>
           }
