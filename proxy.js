@@ -62,6 +62,7 @@ export const config = {
     '/destinations/:path*',
     '/pickup-areas/:path*',
     '/activities/:path*',
+    '/seo/:path*',
     '/login',
   ],
 };

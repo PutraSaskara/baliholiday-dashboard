@@ -18,6 +18,7 @@ import {
   FiMap,
   FiMapPin,
   FiMenu,
+  FiSearch,
   FiStar,
   FiUser,
   FiX,
@@ -68,6 +69,7 @@ const MENU = [
       { label: "Tours", href: "/add-tour-package", icon: FiMap },
       { label: "Articles", href: "/add-article", icon: FiFileText },
       { label: "Activities", href: "/activities", icon: FiStar },
+      { label: "SEO", href: "/seo", icon: FiSearch },
     ],
   },
   {
@@ -80,6 +82,7 @@ const MENU = [
 ];
 
 const SEGMENT_LABELS = {
+  seo: "SEO",
   activities: "Activities",
   destinations: "Destinations",
   "pickup-areas": "Pickup Areas",
