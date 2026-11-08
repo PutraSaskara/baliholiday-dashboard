@@ -1,16 +1,18 @@
 // app/seo/page.jsx
-// Halaman /seo: dua tab — Metadata (CRUD + publish) dan Agent API
-// (kelola key + audit log).
+// Halaman /seo: tiga tab — Metadata (CRUD + publish), Agent API
+// (kelola key + audit log), dan Statis (read-only).
 
 "use client";
 
 import { useState } from "react";
 import AgentApiTab from "@/components/seo/AgentApiTab";
 import SeoMetadataTab from "@/components/seo/SeoMetadataTab";
+import SeoStaticTab from "@/components/seo/SeoStaticTab";
 
 const TABS = [
   { id: "metadata", label: "Metadata" },
   { id: "agent-api", label: "Agent API" },
+  { id: "static", label: "Statis" },
 ];
 
 export default function SeoPage() {
@@ -62,7 +64,13 @@ export default function SeoPage() {
         id={`seo-panel-${activeTab}`}
         aria-labelledby={`seo-tab-${activeTab}`}
       >
-        {activeTab === "metadata" ? <SeoMetadataTab /> : <AgentApiTab />}
+        {activeTab === "metadata" ? (
+          <SeoMetadataTab />
+        ) : activeTab === "agent-api" ? (
+          <AgentApiTab />
+        ) : (
+          <SeoStaticTab />
+        )}
       </div>
     </div>
   );

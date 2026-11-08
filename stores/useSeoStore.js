@@ -99,6 +99,37 @@ const useSeoStore = create((set) => ({
             throw error;
         }
     },
+
+    // --- Data SEO statis/otomatis web (read-only, via proxy dashboard) ---
+    seoStatic: null,
+    seoStaticLoading: true,
+    seoStaticError: null,
+
+    // Mengembalikan 'unauthorized' saat cookie JWT tidak valid (401) agar
+    // pemanggil bisa redirect ke /login.
+    fetchSeoStatic: async () => {
+        set({ seoStaticLoading: true, seoStaticError: null });
+        try {
+            const res = await fetch('/api/seo-static', {
+                cache: 'no-store',
+                signal: AbortSignal.timeout(15000),
+            });
+            if (res.status === 401) {
+                set({ seoStaticLoading: false, seoStaticError: null });
+                return 'unauthorized';
+            }
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            set({ seoStatic: data, seoStaticLoading: false, seoStaticError: null });
+        } catch (error) {
+            console.error('Error fetching static SEO data:', error);
+            set({
+                seoStaticLoading: false,
+                seoStaticError: (error && error.message) || 'Gagal memuat data',
+            });
+        }
+        return true;
+    },
 }));
 
 export default useSeoStore;
