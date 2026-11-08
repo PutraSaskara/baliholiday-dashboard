@@ -6,21 +6,38 @@
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { FiAlertTriangle, FiCode, FiX } from "react-icons/fi";
+import {
+  FiAlertTriangle,
+  FiChevronDown,
+  FiClock,
+  FiCode,
+  FiRefreshCw,
+  FiX,
+} from "react-icons/fi";
 import { api } from "@/apiConfig";
+import useSeoStore from "@/stores/useSeoStore";
+import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import EmptyState from "@/components/ui/EmptyState";
 import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
+import Skeleton from "@/components/ui/Skeleton";
 import Textarea from "@/components/ui/Textarea";
 import { useToast } from "@/components/ui/Toast";
 import {
   CUSTOM_PAGE_KEY,
   ENTITY_TYPES,
+  LOCALE_PATTERN,
   NOINDEX_PAGE_KEYS,
   PAGE_KEY_OPTIONS,
   SITE_BASE_URL,
+  SITE_NAME_MAX,
+  TITLE_TEMPLATE_MAX,
   extractApiError,
+  formatDateTime,
   isAbsoluteHttpUrl,
+  isGlobalPageKey,
   isPresetPageKey,
   resolvePageKey,
 } from "./seoUtils";
@@ -37,6 +54,10 @@ const EMPTY_FORM = {
   pageKeyCustom: "",
   entityType: "page",
   entityId: "",
+  // Hanya untuk record global pageKey '*'.
+  siteName: "",
+  titleTemplate: "",
+  locale: "",
   title: "",
   description: "",
   canonical: "",
@@ -57,12 +78,17 @@ const EMPTY_FORM = {
 function formFromRecord(record) {
   if (!record) return EMPTY_FORM;
   const preset = isPresetPageKey(record.pageKey);
+  const isGlobal = isGlobalPageKey(record.pageKey);
   return {
     pageKeyMode: preset ? "preset" : "custom",
     pageKey: preset ? record.pageKey : "/",
     pageKeyCustom: preset ? "" : record.pageKey || "",
     entityType: record.entityType || "page",
     entityId: record.entityId || "",
+    // Field global hanya relevan untuk pageKey '*'; record lain dikosongkan.
+    siteName: isGlobal ? record.siteName || "" : "",
+    titleTemplate: isGlobal ? record.titleTemplate || "" : "",
+    locale: isGlobal ? record.locale || "" : "",
     title: record.title || "",
     description: record.description || "",
     canonical: record.canonical || "",
@@ -98,6 +124,20 @@ function validateForm(form) {
 
   if (form.entityType !== "page" && !form.entityId.trim()) {
     errors.entityId = "entityId wajib diisi untuk entitas non-page.";
+  }
+
+  // Field global hanya divalidasi bila targetnya record '*'.
+  if (isGlobalPageKey(pageKey)) {
+    if (form.siteName.length > SITE_NAME_MAX) {
+      errors.siteName = `siteName maksimal ${SITE_NAME_MAX} karakter.`;
+    }
+    if (form.titleTemplate.length > TITLE_TEMPLATE_MAX) {
+      errors.titleTemplate = `titleTemplate maksimal ${TITLE_TEMPLATE_MAX} karakter.`;
+    }
+    const locale = form.locale.trim();
+    if (locale && !LOCALE_PATTERN.test(locale)) {
+      errors.locale = "locale harus format ISO, mis. en_US atau id.";
+    }
   }
   if (form.title.length > 70) {
     errors.title = "Title maksimal 70 karakter.";
@@ -277,14 +317,33 @@ export default function SeoEditor({ open, record, onClose, onSaved }) {
   const [form, setForm] = useState(() => formFromRecord(record));
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
+  // Record terbaru dari server; diperbarui setelah rollback agar form ikut sinkron.
+  const [current, setCurrent] = useState(record);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [pendingRollback, setPendingRollback] = useState(null);
+  const [rollingBack, setRollingBack] = useState(false);
   const [mounted] = useState(() => typeof document !== "undefined");
   const dialogRef = useRef(null);
   const closeRef = useRef(null);
   const onCloseRef = useRef(onClose);
   const titleId = useId();
+  const { revisions, revisionsForId, revisionsLoading, fetchRevisions, rollbackRevision } =
+    useSeoStore();
 
   useEffect(() => {
     onCloseRef.current = onClose;
+  });
+
+  // Riwayat dimuat saat section dibuka pertama kali (record harus sudah tersimpan).
+  useEffect(() => {
+    if (!open || !historyOpen || !current?.id) return;
+    fetchRevisions(current.id);
+  }, [open, historyOpen, current, fetchRevisions]);
+
+  // Saat ConfirmDialog rollback terbuka, trap fokus & Escape diserahkan ke dialog.
+  const confirmOpenRef = useRef(false);
+  useEffect(() => {
+    confirmOpenRef.current = Boolean(pendingRollback);
   });
 
   const setField = useCallback((name, value) => {
@@ -300,6 +359,7 @@ export default function SeoEditor({ open, record, onClose, onSaved }) {
     document.body.style.overflow = "hidden";
 
     const onKey = (event) => {
+      if (confirmOpenRef.current) return;
       if (event.key === "Escape") {
         event.stopPropagation();
         if (!saving && onCloseRef.current) onCloseRef.current();
@@ -338,8 +398,9 @@ export default function SeoEditor({ open, record, onClose, onSaved }) {
 
   const buildPayload = useCallback(() => {
     const trimOrNull = (value) => (value.trim() ? value.trim() : null);
-    return {
-      pageKey: resolvePageKey(form),
+    const pageKey = resolvePageKey(form);
+    const payload = {
+      pageKey,
       entityType: form.entityType,
       entityId: form.entityType === "page" ? "" : form.entityId.trim(),
       title: trimOrNull(form.title),
@@ -358,6 +419,17 @@ export default function SeoEditor({ open, record, onClose, onSaved }) {
       twitterImage: trimOrNull(form.twitterImage),
       jsonld: form.jsonld.trim() ? form.jsonld.trim() : null,
     };
+
+    // Field global: hanya dikirim bila record '*' dan isian tidak kosong.
+    if (isGlobalPageKey(pageKey)) {
+      if (form.siteName.trim()) payload.siteName = form.siteName.trim();
+      if (form.titleTemplate.trim()) {
+        payload.titleTemplate = form.titleTemplate.trim();
+      }
+      if (form.locale.trim()) payload.locale = form.locale.trim();
+    }
+
+    return payload;
   }, [form]);
 
   const save = useCallback(
@@ -376,8 +448,8 @@ export default function SeoEditor({ open, record, onClose, onSaved }) {
       try {
         const payload = buildPayload();
         let data;
-        if (record) {
-          const res = await api.put(`/api/seo/${record.id}`, {
+        if (current) {
+          const res = await api.put(`/api/seo/${current.id}`, {
             ...payload,
             ...(publish ? {} : { status: "draft" }),
           });
@@ -407,8 +479,30 @@ export default function SeoEditor({ open, record, onClose, onSaved }) {
         setSaving(false);
       }
     },
-    [form, buildPayload, record, onSaved, toast]
+    [form, buildPayload, current, onSaved, toast]
   );
+
+  // Rollback: pulihkan snapshot, lalu muat ulang record + riwayat di editor.
+  const confirmRollback = useCallback(async () => {
+    if (!pendingRollback || !current?.id) return;
+    setRollingBack(true);
+    try {
+      await rollbackRevision(current.id, pendingRollback.id);
+      const res = await api.get(`/api/seo/${current.id}`);
+      const updated = res.data.data;
+      setCurrent(updated);
+      setForm(formFromRecord(updated));
+      setErrors({});
+      await fetchRevisions(current.id);
+      setPendingRollback(null);
+      toast.success("Dipulihkan sebagai draft.");
+      if (onSaved) onSaved(updated);
+    } catch (err) {
+      toast.error(extractApiError(err, "Gagal memulihkan revisi."));
+    } finally {
+      setRollingBack(false);
+    }
+  }, [pendingRollback, current, rollbackRevision, fetchRevisions, onSaved, toast]);
 
   const formatJsonld = useCallback(() => {
     const raw = form.jsonld.trim();
@@ -426,7 +520,10 @@ export default function SeoEditor({ open, record, onClose, onSaved }) {
   if (!open || !mounted) return null;
 
   const pageKey = resolvePageKey(form);
+  const isGlobal = isGlobalPageKey(pageKey);
   const noindexWarning = NOINDEX_PAGE_KEYS.includes(pageKey);
+  // Riwayat di store hanya valid bila masih menunjuk record yang sedang dibuka.
+  const historyLoaded = revisionsForId === current?.id;
   const pageKeySelectValue =
     form.pageKeyMode === "custom" ? CUSTOM_PAGE_KEY : form.pageKey;
 
@@ -439,7 +536,12 @@ export default function SeoEditor({ open, record, onClose, onSaved }) {
     <div
       className="fixed inset-0 z-[80] flex items-stretch justify-center bg-slate-900/40 backdrop-blur-[2px] sm:items-center sm:p-4"
       onMouseDown={(event) => {
-        if (event.target === event.currentTarget && !saving && onClose) {
+        if (
+          event.target === event.currentTarget &&
+          !saving &&
+          !pendingRollback &&
+          onClose
+        ) {
           onClose();
         }
       }}
@@ -458,7 +560,7 @@ export default function SeoEditor({ open, record, onClose, onSaved }) {
               id={titleId}
               className="truncate text-lg font-semibold text-slate-900"
             >
-              {record ? "Edit metadata SEO" : "Tambah metadata SEO"}
+              {current ? "Edit metadata SEO" : "Tambah metadata SEO"}
             </h2>
             <p className="mt-0.5 truncate text-sm text-slate-500">
               {pageKey || "Tentukan pageKey halaman"}
@@ -575,6 +677,66 @@ export default function SeoEditor({ open, record, onClose, onSaved }) {
                   />
                 </div>
               </section>
+
+              {/* Field global — hanya untuk pageKey '*' */}
+              {isGlobal ? (
+                <section className="space-y-4">
+                  <h3 className="border-b border-slate-100 pb-2 text-sm font-semibold text-slate-900">
+                    Pengaturan global situs
+                  </h3>
+
+                  <div
+                    role="status"
+                    className="flex gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3"
+                  >
+                    <FiAlertTriangle
+                      className="mt-0.5 h-4 w-4 shrink-0 text-amber-600"
+                      aria-hidden="true"
+                    />
+                    <p className="text-sm leading-relaxed text-amber-800">
+                      Field di bawah hanya berlaku untuk pageKey{" "}
+                      <span className="font-mono font-semibold">*</span>. Nilai
+                      global ini{" "}
+                      <span className="font-semibold">
+                        belum diterapkan otomatis oleh web
+                      </span>
+                      ; web tetap membaca title halaman masing-masing.
+                    </p>
+                  </div>
+
+                  <Input
+                    label="siteName"
+                    name="siteName"
+                    placeholder="BaliHoliday"
+                    value={form.siteName}
+                    onChange={(e) => setField("siteName", e.target.value)}
+                    error={errors.siteName}
+                    maxLength={SITE_NAME_MAX}
+                    hint={`Nama situs untuk seluruh halaman (maks. ${SITE_NAME_MAX}).`}
+                  />
+
+                  <Input
+                    label="titleTemplate"
+                    name="titleTemplate"
+                    placeholder="%s | BaliHoliday"
+                    value={form.titleTemplate}
+                    onChange={(e) => setField("titleTemplate", e.target.value)}
+                    error={errors.titleTemplate}
+                    maxLength={TITLE_TEMPLATE_MAX}
+                    hint={`Contoh: %s | BaliHoliday (maks. ${TITLE_TEMPLATE_MAX}, satu placeholder %s).`}
+                  />
+
+                  <Input
+                    label="locale"
+                    name="locale"
+                    placeholder="en_US"
+                    value={form.locale}
+                    onChange={(e) => setField("locale", e.target.value)}
+                    error={errors.locale}
+                    hint="Contoh: en_US atau id."
+                  />
+                </section>
+              ) : null}
 
               {/* Konten utama */}
               <section className="space-y-4">
@@ -752,6 +914,136 @@ export default function SeoEditor({ open, record, onClose, onSaved }) {
                   hint="Object atau array JSON valid. Kosongkan bila tidak dipakai."
                 />
               </section>
+
+              {/* Riwayat revisi — hanya untuk record yang sudah punya id */}
+              {current?.id ? (
+                <section className="space-y-4">
+                  <div className="border-b border-slate-100 pb-2">
+                    <button
+                      type="button"
+                      onClick={() => setHistoryOpen((prev) => !prev)}
+                      aria-expanded={historyOpen}
+                      aria-controls="seo-revision-history"
+                      className="flex w-full items-center justify-between gap-3 rounded-lg text-left transition-colors hover:text-brand-700"
+                    >
+                      <span className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                        Riwayat
+                        <Badge variant="neutral">
+                          {historyLoaded ? revisions.length : "–"}
+                        </Badge>
+                      </span>
+                      <span className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
+                        {historyOpen ? "Sembunyikan" : "Tampilkan"}
+                        <FiChevronDown
+                          className={`h-4 w-4 transition-transform ${
+                            historyOpen ? "rotate-180" : ""
+                          }`}
+                          aria-hidden="true"
+                        />
+                      </span>
+                    </button>
+                  </div>
+
+                  {historyOpen ? (
+                    <div id="seo-revision-history" className="space-y-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-xs text-slate-500">
+                          Snapshot perubahan terakhir (maks. 50). Rollback selalu
+                          menghasilkan draft.
+                        </p>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => fetchRevisions(current.id)}
+                          disabled={revisionsLoading}
+                          aria-label="Muat ulang riwayat revisi"
+                        >
+                          <FiRefreshCw
+                            className={`h-4 w-4 ${
+                              revisionsLoading ? "animate-spin" : ""
+                            }`}
+                            aria-hidden="true"
+                          />
+                          Muat ulang
+                        </Button>
+                      </div>
+
+                      {revisionsLoading || !historyLoaded ? (
+                        <div aria-hidden="true" className="space-y-2">
+                          <Skeleton className="h-16 w-full" />
+                          <Skeleton className="h-16 w-full" />
+                        </div>
+                      ) : revisions.length === 0 ? (
+                        <EmptyState
+                          icon={
+                            <FiClock className="h-5 w-5" aria-hidden="true" />
+                          }
+                          title="Belum ada revisi"
+                          description="Revisi dibuat saat record dipublikasikan."
+                        />
+                      ) : (
+                        <ul className="space-y-2">
+                          {revisions.map((revision) => (
+                            <li
+                              key={revision.id}
+                              className="rounded-xl border border-slate-200 px-3.5 py-3"
+                            >
+                              <div className="flex flex-wrap items-start justify-between gap-2">
+                                <div className="min-w-0">
+                                  <p className="text-sm font-medium text-slate-700">
+                                    {formatDateTime(revision.createdAt)}
+                                  </p>
+                                  <p className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
+                                    <span className="truncate">
+                                      {revision.actorLabel || "—"}
+                                    </span>
+                                    <Badge
+                                      variant={
+                                        revision.actorType === "agent"
+                                          ? "brand"
+                                          : "neutral"
+                                      }
+                                    >
+                                      {revision.actorType || "admin"}
+                                    </Badge>
+                                  </p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Badge
+                                    variant={
+                                      revision.status === "published"
+                                        ? "success"
+                                        : "warning"
+                                    }
+                                  >
+                                    {revision.status}
+                                  </Badge>
+                                  <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={() => setPendingRollback(revision)}
+                                    disabled={saving || rollingBack}
+                                  >
+                                    Pulihkan
+                                  </Button>
+                                </div>
+                              </div>
+                              {revision.snapshot?.title ? (
+                                <p
+                                  className="mt-1.5 truncate text-xs text-slate-400"
+                                  title={revision.snapshot.title}
+                                >
+                                  {revision.snapshot.title}
+                                </p>
+                              ) : null}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  ) : null}
+                </section>
+              ) : null}
             </div>
 
             {/* Kolom kanan: preview (ikut bergulir di mobile, sticky di desktop) */}
@@ -790,6 +1082,19 @@ export default function SeoEditor({ open, record, onClose, onSaved }) {
           </Button>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={Boolean(pendingRollback)}
+        tone="primary"
+        title="Pulihkan revisi ini?"
+        description={`Record dikembalikan ke snapshot ${formatDateTime(
+          pendingRollback?.createdAt
+        )} dan statusnya menjadi draft. Publish ulang bila ingin langsung tayang.`}
+        confirmLabel="Pulihkan"
+        loading={rollingBack}
+        onConfirm={confirmRollback}
+        onClose={() => setPendingRollback(null)}
+      />
     </div>,
     document.body
   );

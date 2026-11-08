@@ -64,6 +64,41 @@ const useSeoStore = create((set) => ({
         }
         return true;
     },
+
+    // --- Riwayat revisi per record metadata (dipakai editor SeoEditor) ---
+    revisions: [],
+    revisionsForId: null,
+    revisionsLoading: false,
+
+    fetchRevisions: async (id) => {
+        if (!id) return false;
+        set({ revisionsLoading: true, revisionsForId: id });
+        try {
+            const res = await api.get(`/api/seo/${id}/revisions`, {
+                params: { limit: 50 },
+            });
+            set({
+                revisions: res.data.items || [],
+                revisionsLoading: false,
+            });
+        } catch (error) {
+            console.error('Error fetching SEO revisions:', error);
+            set({ revisions: [], revisionsLoading: false });
+            return false;
+        }
+        return true;
+    },
+
+    // Rollback ke satu revisi. Record selalu kembali berstatus draft.
+    rollbackRevision: async (id, revisionId) => {
+        try {
+            const res = await api.post(`/api/seo/${id}/rollback`, { revisionId });
+            return res.data.data;
+        } catch (error) {
+            console.error('Error rolling back SEO revision:', error);
+            throw error;
+        }
+    },
 }));
 
 export default useSeoStore;

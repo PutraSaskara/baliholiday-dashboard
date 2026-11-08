@@ -17,7 +17,7 @@ import Input from "@/components/ui/Input";
 import Skeleton from "@/components/ui/Skeleton";
 import { iconButtonClass } from "@/components/ui/IconButton";
 import { useToast } from "@/components/ui/Toast";
-import { AGENT_SCOPES, extractApiError, formatDateTime } from "./seoUtils";
+import { AGENT_SCOPES, PUBLISH_MODES, extractApiError, formatDateTime } from "./seoUtils";
 
 const AUDIT_ACTION_VARIANTS = {
   create: "success",
@@ -30,8 +30,20 @@ const AUDIT_ACTION_VARIANTS = {
 
 function ScopeBadge({ scope }) {
   const variant =
-    scope === "seo:write" ? "brand" : scope === "seo:publish" ? "success" : "neutral";
+    scope === "seo:write" || scope === "seo:global"
+      ? "brand"
+      : scope === "seo:publish"
+        ? "success"
+        : "neutral";
   return <Badge variant={variant}>{scope}</Badge>;
+}
+
+function PublishModeBadge({ mode }) {
+  return mode === "draft-only" ? (
+    <Badge variant="warning">draft-only</Badge>
+  ) : (
+    <Badge variant="neutral">publish</Badge>
+  );
 }
 
 export default function AgentApiTab() {
@@ -46,7 +58,9 @@ export default function AgentApiTab() {
     "seo:read": true,
     "seo:write": false,
     "seo:publish": false,
+    "seo:global": false,
   });
+  const [publishMode, setPublishMode] = useState("publish");
   const [creating, setCreating] = useState(false);
   const [createdKey, setCreatedKey] = useState(null); // { key, warning }
   const [copied, setCopied] = useState(false);
@@ -76,10 +90,12 @@ export default function AgentApiTab() {
       const res = await api.post("/api/agent-keys", {
         name: name.trim(),
         scopes: selected,
+        publishMode,
       });
       setCreatedKey({ key: res.data.key, warning: res.data.warning });
       setCopied(false);
       setName("");
+      setPublishMode("publish");
       toast.success("Agent key dibuat. Salin plaintext-ya sekarang.");
       fetchAgentData();
     } catch (err) {
@@ -210,6 +226,41 @@ export default function AgentApiTab() {
                 </div>
               </fieldset>
 
+              <fieldset>
+                <legend className="mb-2 block text-sm font-medium text-slate-700">
+                  Publish mode
+                </legend>
+                <div className="space-y-2">
+                  {PUBLISH_MODES.map((mode) => (
+                    <label
+                      key={mode.value}
+                      className={`flex cursor-pointer items-start gap-3 rounded-xl border px-3.5 py-3 transition-colors hover:bg-slate-50 ${
+                        publishMode === mode.value
+                          ? "border-brand-300 bg-brand-50/40"
+                          : "border-slate-200"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="agentKeyPublishMode"
+                        value={mode.value}
+                        checked={publishMode === mode.value}
+                        onChange={() => setPublishMode(mode.value)}
+                        className="mt-0.5 h-5 w-5 rounded border-slate-300 text-brand-600 accent-brand-600"
+                      />
+                      <span className="min-w-0">
+                        <span className="block font-mono text-sm font-semibold text-slate-800">
+                          {mode.value}
+                        </span>
+                        <span className="block text-xs text-slate-500">
+                          {mode.hint}
+                        </span>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+
               <Button type="submit" loading={creating} className="w-full">
                 Buat key
               </Button>
@@ -253,6 +304,7 @@ export default function AgentApiTab() {
                         ) : (
                           <Badge variant="danger">Nonaktif</Badge>
                         )}
+                        <PublishModeBadge mode={key.publishMode} />
                       </div>
                       <p className="mt-0.5 font-mono text-xs text-slate-400">
                         {key.keyPrefix}…

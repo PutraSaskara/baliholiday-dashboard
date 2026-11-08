@@ -30,6 +30,15 @@ export const PAGE_KEY_OPTIONS = [
 
 export const CUSTOM_PAGE_KEY = "__custom__";
 
+// pageKey global: fallback untuk seluruh halaman, wajib scope seo:global di agent.
+export const GLOBAL_PAGE_KEY = "*";
+
+// Field tambahan yang hanya berlaku di record global (siteName/titleTemplate/locale).
+export const LOCALE_PATTERN = /^[a-z]{2}(_[A-Z]{2})?$/;
+
+export const SITE_NAME_MAX = 120;
+export const TITLE_TEMPLATE_MAX = 200;
+
 // Path yang dijalankan web dengan robots noindex terpaksa.
 export const NOINDEX_PAGE_KEYS = [
   "/booking/[slug]",
@@ -50,6 +59,21 @@ export const AGENT_SCOPES = [
   { value: "seo:read", label: "seo:read", hint: "Membaca daftar metadata" },
   { value: "seo:write", label: "seo:write", hint: "Membuat & mengubah metadata" },
   { value: "seo:publish", label: "seo:publish", hint: "Publish & revalidate" },
+  {
+    value: "seo:global",
+    label: "seo:global",
+    hint: "Wajib untuk record global '*' (tulis, hapus, publish, rollback)",
+  },
+];
+
+// Mode publish per key: draft-only menolak publish/rollback dengan 403.
+export const PUBLISH_MODES = [
+  { value: "publish", label: "Publish", hint: "Boleh publish & rollback." },
+  {
+    value: "draft-only",
+    label: "Draft-only",
+    hint: "Publish & rollback ditolak 403.",
+  },
 ];
 
 // Base URL situs untuk preview SERP/OG.
@@ -74,6 +98,11 @@ export function isAbsoluteHttpUrl(value) {
 export function resolvePageKey(form) {
   if (form.pageKeyMode === "custom") return form.pageKeyCustom.trim();
   return form.pageKey;
+}
+
+// Record global = pageKey '*'. Hanya di sini siteName/titleTemplate/locale berlaku.
+export function isGlobalPageKey(pageKey) {
+  return pageKey === GLOBAL_PAGE_KEY;
 }
 
 export function formatDateTime(value) {
