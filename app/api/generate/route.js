@@ -1,24 +1,24 @@
 import { NextResponse } from 'next/server';
 import { guardAiRequest } from '../../../lib/aiGuard';
 
+// Bentuk respons yang diminta backend /api/ai/proxy (object JSON).
+const JSON_RESPONSE_FORMAT = { type: 'json_object' };
+
 export async function POST(req) {
   try {
-    // Auth (valid JWT cookie) + model allowlist + 100 KB body cap + rate limit.
+    // Auth (valid JWT cookie) + validasi provider/model + 100 KB body cap + rate limit.
     const guard = await guardAiRequest(req);
     if (!guard.ok) {
       return guard.response;
     }
 
-    const { formData } = guard.body;
-    const model = guard.model;
-
-    const apiKey = process.env.OPENROUTER_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: 'OpenRouter API Key is missing in environment variables.' },
-        { status: 500 }
-      );
-    }
+    const { formData, maxTokens } = guard.body;
+    const { provider, model } = guard;
+    // maxTokens opsional: diteruskan ke proxy bila client minta generate pendek.
+    const maxTokensInt =
+      Number.isInteger(maxTokens) && maxTokens >= 1 && maxTokens <= 100000
+        ? maxTokens
+        : undefined;
 
     const title = formData.title || 'Bali Tour';
     
@@ -44,36 +44,44 @@ ${JSON.stringify(formData, null, 2)}
 
 Please generate the JSON for the missing or weak fields focusing on the topic: "${title}".`;
 
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': process.env.NEXT_PUBLIC_BACKEND_URL || 'https://baliholiday.xyz',
-        'X-Title': 'BaliHoliday Dashboard'
-      },
-      body: JSON.stringify({
-        model: model,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        response_format: { type: "json_object" } // Tell the model to return JSON if supported
-      }),
-    });
+    // Semua pemanggilan provider lewat backend (/api/ai/proxy) — dashboard
+    // tidak lagi memegang API key provider.
+    const proxyRes = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000'}/api/ai/proxy`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': process.env.NEXT_PUBLIC_API_KEY || '',
+        },
+        body: JSON.stringify({
+          provider,
+          model,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt },
+          ],
+          responseFormat: JSON_RESPONSE_FORMAT,
+          ...(maxTokensInt ? { maxTokens: maxTokensInt } : {}),
+        }),
+      }
+    );
 
-    if (!response.ok) {
+    if (!proxyRes.ok) {
         // Log upstream detail server-side only; never forward it to the client.
-        const errorText = await response.text();
-        console.error("OpenRouter API Error:", errorText);
+        const errorText = await proxyRes.text();
+        console.error("AI proxy error:", proxyRes.status, errorText);
         return NextResponse.json(
             { error: 'AI request failed', code: 'AI_UPSTREAM_ERROR' },
             { status: 502 }
         );
     }
 
-    const data = await response.json();
-    let content = data.choices[0].message.content;
+    const data = await proxyRes.json();
+    if (!data || typeof data.content !== 'string') {
+      throw new Error('AI proxy returned unexpected payload.');
+    }
+    let content = data.content;
 
     // Clean up potential markdown wrapper just in case
     content = content.replace(/^```json/i, '').replace(/^```/, '').replace(/```$/, '').trim();

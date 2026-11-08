@@ -12,6 +12,7 @@ import {
   FiChevronsLeft,
   FiChevronsRight,
   FiCompass,
+  FiCpu,
   FiFileText,
   FiHome,
   FiLogOut,
@@ -70,6 +71,7 @@ const MENU = [
       { label: "Articles", href: "/add-article", icon: FiFileText },
       { label: "Activities", href: "/activities", icon: FiStar },
       { label: "SEO", href: "/seo", icon: FiSearch },
+      { label: "AI", href: "/ai", icon: FiCpu },
     ],
   },
   {
@@ -83,6 +85,7 @@ const MENU = [
 
 const SEGMENT_LABELS = {
   seo: "SEO",
+  ai: "AI",
   activities: "Activities",
   destinations: "Destinations",
   "pickup-areas": "Pickup Areas",

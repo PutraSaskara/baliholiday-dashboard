@@ -1,11 +1,11 @@
 // Sprint 1 (hardening): conservative, enforced CSP + baseline security headers
 // applied to every path. Keep origin lists in sync with the actual runtime
-// dependencies (Cloudinary widgets, backend API, OpenRouter proxy).
+// dependencies (Cloudinary widgets, backend API). AI provider calls go through
+// the backend proxy, so no OpenRouter origin is needed here.
 const CONNECT_SRC = [
     "'self'",
     "https://api.saskaraputra.my.id",
     "https://res.cloudinary.com",
-    "https://openrouter.ai",
 ];
 
 // Local backend origin is allowed ONLY outside production builds so QA/dev

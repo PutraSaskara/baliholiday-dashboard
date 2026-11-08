@@ -3,6 +3,9 @@
 // role dialog + aria-modal, Escape menutup, focus trap, dan fokus kembali ke
 // pemicu setelah tutup. Error yang tampil selalu generik; detail upstream
 // hanya dicatat ke console. Dimuat lazy lewat components/AIAssistantLazy.jsx.
+// Sumber model: backend /api/ai/models (per provider) + /api/ai/settings
+// untuk default; pilihan terakhir disimpan di localStorage (ai.provider,
+// ai.model) dan divalidasi ulang terhadap katalog.
 
 "use client";
 
@@ -12,7 +15,16 @@ import Button from "./ui/Button";
 import Card from "./ui/Card";
 import Select from "./ui/Select";
 import Skeleton from "./ui/Skeleton";
-import { ALLOWED_AI_MODELS, DEFAULT_AI_MODEL } from "../lib/aiModels";
+import ModelCombobox from "./ai/ModelCombobox";
+import {
+  AI_PROVIDERS,
+  fetchAiModels,
+  fetchAiSettings,
+  readAiChoice,
+  resolveInitialModel,
+  resolveInitialProvider,
+  saveAiChoice,
+} from "../lib/aiModels";
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -30,16 +42,9 @@ export default function AIAssistantModal({
   drafts, // In Add mode: the full state. In Edit mode: the current form state
   onApply,
 }) {
+  const [provider, setProvider] = useState("openrouter");
   const [models, setModels] = useState([]);
-  const [selectedModel, setSelectedModel] = useState(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("defaultAIModel");
-      // Only accept a saved default that is on the server-side allowlist.
-      if (saved && ALLOWED_AI_MODELS.includes(saved)) return saved;
-      return DEFAULT_AI_MODEL;
-    }
-    return DEFAULT_AI_MODEL;
-  });
+  const [selectedModel, setSelectedModel] = useState("");
   const [defaultSavedVisible, setDefaultSavedVisible] = useState(false);
   const [loadingModels, setLoadingModels] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -110,68 +115,92 @@ export default function AIAssistantModal({
     if (!isOpen) return undefined;
     let cancelled = false;
 
-    const fetchModels = async () => {
+    const loadCatalog = async () => {
+      const saved = readAiChoice();
+      let settings = null;
       try {
-        const res = await fetch("https://openrouter.ai/api/v1/models");
-        const data = await res.json();
-        if (cancelled) return;
-
-        if (data && data.data) {
-          const allModels = data.data.map((m) => m.id);
-          // Only models on the server allowlist (lib/aiModels.js) can be used —
-          // the API routes reject anything else with 400.
-          const sortedModels = ALLOWED_AI_MODELS.filter((m) =>
-            allModels.includes(m)
-          );
-          const availableModels =
-            sortedModels.length > 0 ? sortedModels : [...ALLOWED_AI_MODELS];
-          setModels(availableModels);
-
-          const savedDefault = localStorage.getItem("defaultAIModel");
-          setSelectedModel((prev) => {
-            if (savedDefault && availableModels.includes(savedDefault)) {
-              return savedDefault;
-            }
-            if (
-              availableModels.length > 0 &&
-              !availableModels.includes(prev)
-            ) {
-              return availableModels[0];
-            }
-            return prev;
-          });
-        } else {
-          setModels([...ALLOWED_AI_MODELS]);
-        }
+        settings = await fetchAiSettings();
       } catch (err) {
-        console.error("Failed to fetch OpenRouter models", err);
-        // Fall back to the static allowlist so the dropdown stays usable.
-        if (!cancelled) setModels([...ALLOWED_AI_MODELS]);
+        console.error("Failed to fetch AI settings", err);
+      }
+
+      const initProvider = resolveInitialProvider({ saved, settings });
+      try {
+        const items = await fetchAiModels({ provider: initProvider, chat: true });
+        if (cancelled) return;
+        setProvider(initProvider);
+        setModels(items);
+        setSelectedModel(
+          resolveInitialModel({ saved, settings, provider: initProvider, items })
+        );
+      } catch (err) {
+        console.error("Failed to fetch AI models", err);
+        if (!cancelled) {
+          setProvider(initProvider);
+          setModels([]);
+          setSelectedModel("");
+        }
       } finally {
         if (!cancelled) setLoadingModels(false);
       }
     };
 
-    fetchModels();
+    loadCatalog();
     return () => {
       cancelled = true;
     };
   }, [isOpen]);
 
+  // Ganti provider: muat ulang katalog lalu reset model terpilih.
+  const handleProviderChange = async (event) => {
+    const next = event.target.value;
+    setProvider(next);
+    setSelectedModel("");
+    setModels([]);
+    setLoadingModels(true);
+    try {
+      const items = await fetchAiModels({ provider: next, chat: true });
+      const saved = readAiChoice();
+      const nextModel = resolveInitialModel({
+        saved,
+        settings: null,
+        provider: next,
+        items,
+      });
+      setModels(items);
+      setSelectedModel(nextModel);
+      saveAiChoice(next, nextModel);
+    } catch (err) {
+      console.error("Failed to fetch AI models", err);
+    } finally {
+      setLoadingModels(false);
+    }
+  };
+
+  const handleModelChange = (modelId) => {
+    setSelectedModel(modelId);
+    saveAiChoice(provider, modelId);
+  };
+
   const handleSetDefault = () => {
     if (typeof window !== "undefined") {
-      localStorage.setItem("defaultAIModel", selectedModel);
+      saveAiChoice(provider, selectedModel);
       setDefaultSavedVisible(true);
       setTimeout(() => setDefaultSavedVisible(false), 3000);
     }
   };
 
   const handleGenerate = async () => {
+    if (!provider || !selectedModel) {
+      setError("Please choose an AI model first.");
+      return;
+    }
     try {
       setIsGenerating(true);
       setError(null);
 
       const payload = {
+        provider,
         model: selectedModel,
         mode,
         tourId,
@@ -216,8 +245,6 @@ export default function AIAssistantModal({
   };
 
   if (!isOpen || typeof document === "undefined") return null;
-
-  const modelOptions = models.map((m) => ({ value: m, label: m }));
 
   return createPortal(
     <div
@@ -279,6 +306,16 @@ export default function AIAssistantModal({
           {/* Top Controls */}
           <div className="rounded-xl border border-brand-100 bg-brand-50/50 p-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+              <div className="sm:w-48">
+                <Select
+                  label="Provider"
+                  name="aiProvider"
+                  value={provider}
+                  onChange={handleProviderChange}
+                  options={AI_PROVIDERS}
+                  disabled={isGenerating || loadingModels}
+                />
+              </div>
               <div className="min-w-0 flex-1">
                 {loadingModels ? (
                   <div className="space-y-1.5">
@@ -288,12 +325,12 @@ export default function AIAssistantModal({
                     <Skeleton className="h-[42px] w-full" />
                   </div>
                 ) : (
-                  <Select
+                  <ModelCombobox
                     label="AI Model"
                     name="aiModel"
+                    models={models}
                     value={selectedModel}
-                    onChange={(e) => setSelectedModel(e.target.value)}
-                    options={modelOptions}
+                    onChange={handleModelChange}
                     disabled={isGenerating}
                   />
                 )}
@@ -303,14 +340,14 @@ export default function AIAssistantModal({
                   variant="ghost"
                   size="sm"
                   onClick={handleSetDefault}
-                  disabled={loadingModels || isGenerating}
+                  disabled={loadingModels || isGenerating || !selectedModel}
                 >
                   {defaultSavedVisible ? "✓ Saved" : "Set as Default"}
                 </Button>
                 <Button
                   onClick={handleGenerate}
                   loading={isGenerating}
-                  disabled={loadingModels}
+                  disabled={loadingModels || !selectedModel}
                   className="sm:whitespace-nowrap"
                 >
                   {isGenerating
