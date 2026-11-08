@@ -54,12 +54,12 @@ export default function AgentApiTab() {
 
   // Form buat key — input tetap local state (lihat stores/README.md).
   const [name, setName] = useState("");
-  const [scopes, setScopes] = useState({
-    "seo:read": true,
-    "seo:write": false,
-    "seo:publish": false,
-    "seo:global": false,
-  });
+  const [scopes, setScopes] = useState(() =>
+    AGENT_SCOPES.reduce(
+      (acc, scope) => ({ ...acc, [scope.value]: scope.value === "seo:read" }),
+      {}
+    )
+  );
   const [publishMode, setPublishMode] = useState("publish");
   const [creating, setCreating] = useState(false);
   const [createdKey, setCreatedKey] = useState(null); // { key, warning }

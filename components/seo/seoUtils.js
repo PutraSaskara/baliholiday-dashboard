@@ -57,6 +57,11 @@ export const ENTITY_TYPES = [
 
 export const AGENT_SCOPES = [
   { value: "seo:read", label: "seo:read", hint: "Membaca daftar metadata" },
+  {
+    value: "content:read",
+    label: "content:read",
+    hint: "Baca konten (tour, blog, activity, destinasi)",
+  },
   { value: "seo:write", label: "seo:write", hint: "Membuat & mengubah metadata" },
   { value: "seo:publish", label: "seo:publish", hint: "Publish & revalidate" },
   {
