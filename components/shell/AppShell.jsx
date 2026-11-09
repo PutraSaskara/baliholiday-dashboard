@@ -69,6 +69,7 @@ const MENU = [
     items: [
       { label: "Tours", href: "/add-tour-package", icon: FiMap },
       { label: "Articles", href: "/add-article", icon: FiFileText },
+      { label: "Notes", href: "/notes", icon: FiFileText },
       { label: "Activities", href: "/activities", icon: FiStar },
       { label: "SEO", href: "/seo", icon: FiSearch },
       { label: "AI", href: "/ai", icon: FiCpu },
@@ -90,6 +91,7 @@ const SEGMENT_LABELS = {
   destinations: "Destinations",
   "pickup-areas": "Pickup Areas",
   "add-article": "Articles",
+  notes: "Notes",
   "add-tour-package": "Tour Packages",
   "add-single-article": "New Article",
   "add-article-images": "Article Images",
