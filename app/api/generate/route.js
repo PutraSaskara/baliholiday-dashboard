@@ -4,6 +4,9 @@ import { guardAiRequest } from '../../../lib/aiGuard';
 // Bentuk respons yang diminta backend /api/ai/proxy (object JSON).
 const JSON_RESPONSE_FORMAT = { type: 'json_object' };
 
+export const maxDuration = 60;
+// Vercel Hobby membatasi maxDuration 60 detik. Naikkan hanya bila plan mendukung.
+
 export async function POST(req) {
   try {
     // Auth (valid JWT cookie) + validasi provider/model + 100 KB body cap + rate limit.

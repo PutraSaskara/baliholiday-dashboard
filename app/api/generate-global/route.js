@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { guardAiRequest } from '../../../lib/aiGuard';
 
-export const maxDuration = 300; // Vercel Hobby tier with Fluid compute allows a maximum of 300 seconds.
+export const maxDuration = 60;
+// Vercel Hobby membatasi maxDuration 60 detik. Naikkan hanya bila plan mendukung.
 export async function POST(req) {
   try {
     // Auth (valid JWT cookie) + validasi provider/model + 100 KB body cap + rate limit.
