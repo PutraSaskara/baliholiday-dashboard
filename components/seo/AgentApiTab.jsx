@@ -30,9 +30,9 @@ const AUDIT_ACTION_VARIANTS = {
 
 function ScopeBadge({ scope }) {
   const variant =
-    scope === "seo:write" || scope === "seo:global"
+    scope === "seo:write" || scope === "seo:global" || scope === "content:write"
       ? "brand"
-      : scope === "seo:publish"
+      : scope === "seo:publish" || scope === "content:publish"
         ? "success"
         : "neutral";
   return <Badge variant={variant}>{scope}</Badge>;
@@ -184,7 +184,7 @@ export default function AgentApiTab() {
           <Card>
             <CardHeader
               title="Buat agent key"
-              description="Key dipakai agent eksternal memanggil API SEO dengan scope terbatas."
+              description="Key dipakai agent eksternal memanggil API SEO & konten dengan scope terbatas."
             />
             <form onSubmit={handleCreate} className="space-y-4">
               <Input

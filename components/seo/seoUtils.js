@@ -62,6 +62,16 @@ export const AGENT_SCOPES = [
     label: "content:read",
     hint: "Baca konten (tour, blog, activity, destinasi)",
   },
+  {
+    value: "content:write",
+    label: "content:write",
+    hint: "Buat & ubah tour/activity (draft)",
+  },
+  {
+    value: "content:publish",
+    label: "content:publish",
+    hint: "Publish tour/activity ke situs",
+  },
   { value: "seo:write", label: "seo:write", hint: "Membuat & mengubah metadata" },
   { value: "seo:publish", label: "seo:publish", hint: "Publish & revalidate" },
   {
