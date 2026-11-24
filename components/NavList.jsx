@@ -7,6 +7,7 @@ import { useState } from "react";
 const TABS = [
   { id: "ListArticle", label: "Articles" },
   { id: "ListTour", label: "Tour Packages" },
+  { id: "ListActivities", label: "Activities" },
   { id: "DestinationsList", label: "Destinations" },
   { id: "ListArea", label: "Pickup Areas" },
   { id: "ListCustomTourPrices", label: "Custom Tour Prices" },
@@ -16,6 +17,7 @@ const TABS = [
 function NavList({
   ListArticle,
   ListTour,
+  ListActivities,
   DestinationsList,
   ListArea,
   ListCustomTourPrices,
@@ -62,6 +64,7 @@ function NavList({
       >
         {activeItem === "ListArticle" && ListArticle}
         {activeItem === "ListTour" && ListTour}
+        {activeItem === "ListActivities" && ListActivities}
         {activeItem === "DestinationsList" && DestinationsList}
         {activeItem === "ListArea" && ListArea}
         {activeItem === "ListCustomTourPrices" && ListCustomTourPrices}

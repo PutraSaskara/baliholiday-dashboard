@@ -19,6 +19,7 @@ import Button from "./ui/Button";
 import StatCard from "./StatCard";
 import NavList from "./NavList";
 import ListTours from "./ListTours";
+import ListActivities from "./ListActivities";
 import ListArticle from "./ListArticle";
 import ListDestinations from "./ListDestinations";
 import ListAreas from "./ListAreas";
@@ -155,6 +156,7 @@ export default function DashboardHome() {
       <NavList
         ListArticle={<ListArticle />}
         ListTour={<ListTours />}
+        ListActivities={<ListActivities />}
         DestinationsList={<ListDestinations />}
         ListArea={<ListAreas />}
         ListCustomTourPrices={<ListCustomTourPrices />}

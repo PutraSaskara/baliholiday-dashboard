@@ -15,10 +15,12 @@ import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import EmptyState from "@/components/ui/EmptyState";
 import Input from "@/components/ui/Input";
 import Pagination from "@/components/ui/Pagination";
+import Select from "@/components/ui/Select";
 import Skeleton from "@/components/ui/Skeleton";
 import { iconButtonClass } from "@/components/ui/IconButton";
 import { useToast } from "@/components/ui/Toast";
 import SeoEditor from "./SeoEditor";
+import { computeSeoScore, seoScoreTone } from "./seoScore";
 import { extractApiError, formatDateTime } from "./seoUtils";
 
 const LIMIT = 10;
@@ -28,6 +30,17 @@ const STATUS_FILTERS = [
   { value: "draft", label: "Draft" },
   { value: "published", label: "Published" },
 ];
+
+const SORT_OPTIONS = [
+  { value: "default", label: "Default" },
+  { value: "score", label: "Skor terendah" },
+];
+
+const SCORE_TEXT_CLASS = {
+  success: "text-emerald-600",
+  warning: "text-amber-600",
+  danger: "text-red-600",
+};
 
 function StatusBadge({ status }) {
   return status === "published" ? (
@@ -48,6 +61,7 @@ export default function SeoMetadataTab() {
   } = useSeoStore();
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState("");
+  const [sort, setSort] = useState("default");
   const [searchInput, setSearchInput] = useState("");
   const [query, setQuery] = useState("");
   const [pendingDelete, setPendingDelete] = useState(null);
@@ -78,6 +92,38 @@ export default function SeoMetadataTab() {
   };
 
   const reload = () => fetchSeoList({ page, limit: LIMIT, status, q: query });
+
+  // Skor dihitung dari halaman yang sedang tampil, murni di sisi klien.
+  const scores = seoItems.map((item) => computeSeoScore(item).score);
+  const averageScore = scores.length
+    ? Math.round(scores.reduce((total, value) => total + value, 0) / scores.length)
+    : 0;
+  const needsWorkCount = scores.filter((value) => value < 70).length;
+  const missingOgImageCount = seoItems.filter(
+    (item) => !String(item.ogImage ?? "").trim()
+  ).length;
+
+  // Urutan hanya mengubah array tampilan, tanpa fetch ulang/pagination.
+  const visibleItems =
+    sort === "score"
+      ? [...seoItems].sort(
+          (a, b) => computeSeoScore(a).score - computeSeoScore(b).score
+        )
+      : seoItems;
+
+  const renderScoreBadge = (item) => {
+    const { score, checks } = computeSeoScore(item);
+    const failedHints = checks.filter((check) => !check.ok).map((check) => check.hint);
+    const title = failedHints.length
+      ? failedHints.join(" · ")
+      : "Semua check skor lolos.";
+
+    return (
+      <Badge variant={seoScoreTone(score)} title={title}>
+        {score}
+      </Badge>
+    );
+  };
 
   const confirmDelete = async () => {
     if (!pendingDelete) return;
@@ -192,24 +238,36 @@ export default function SeoMetadataTab() {
         </div>
       </div>
 
-      {/* Filter status */}
-      <div className="mb-6 -mx-1 overflow-x-auto px-1 pb-1 nice-scrollbar">
-        <div className="flex w-max gap-1 rounded-xl bg-slate-100 p-1">
-          {STATUS_FILTERS.map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => changeStatus(opt.value)}
-              aria-pressed={status === opt.value}
-              className={`h-10 whitespace-nowrap rounded-lg px-4 text-sm font-semibold transition-colors ${
-                status === opt.value
-                  ? "bg-brand-600 text-white shadow-sm"
-                  : "text-slate-600 hover:bg-white/70 hover:text-slate-900"
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
+      {/* Filter status + urutan skor */}
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="-mx-1 overflow-x-auto px-1 pb-1 nice-scrollbar">
+          <div className="flex w-max gap-1 rounded-xl bg-slate-100 p-1">
+            {STATUS_FILTERS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => changeStatus(opt.value)}
+                aria-pressed={status === opt.value}
+                className={`h-10 whitespace-nowrap rounded-lg px-4 text-sm font-semibold transition-colors ${
+                  status === opt.value
+                    ? "bg-brand-600 text-white shadow-sm"
+                    : "text-slate-600 hover:bg-white/70 hover:text-slate-900"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="w-full sm:w-48">
+          <Select
+            name="seo-sort"
+            aria-label="Urutkan metadata"
+            value={sort}
+            onChange={(e) => setSort(e.target.value)}
+            options={SORT_OPTIONS}
+            className="h-10"
+          />
         </div>
       </div>
 
@@ -241,6 +299,46 @@ export default function SeoMetadataTab() {
         />
       ) : (
         <>
+          {/* Strip ringkas skor halaman ini */}
+          <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="card flex items-center justify-between p-4">
+              <span className="text-xs font-medium text-slate-500">
+                Rata-rata skor
+              </span>
+              <span
+                className={`text-lg font-bold ${
+                  SCORE_TEXT_CLASS[seoScoreTone(averageScore)]
+                }`}
+              >
+                {averageScore}
+              </span>
+            </div>
+            <div className="card flex items-center justify-between p-4">
+              <span className="text-xs font-medium text-slate-500">
+                Perlu dilengkapi
+              </span>
+              <span
+                className={`text-lg font-bold ${
+                  needsWorkCount > 0 ? "text-red-600" : "text-emerald-600"
+                }`}
+              >
+                {needsWorkCount}
+              </span>
+            </div>
+            <div className="card flex items-center justify-between p-4">
+              <span className="text-xs font-medium text-slate-500">
+                Tanpa og:image
+              </span>
+              <span
+                className={`text-lg font-bold ${
+                  missingOgImageCount > 0 ? "text-amber-600" : "text-emerald-600"
+                }`}
+              >
+                {missingOgImageCount}
+              </span>
+            </div>
+          </div>
+
           {/* Tabel desktop */}
           <div className="hidden overflow-hidden md:block">
             <table className="w-full text-left text-sm">
@@ -256,6 +354,9 @@ export default function SeoMetadataTab() {
                     Status
                   </th>
                   <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Skor
+                  </th>
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
                     Updated
                   </th>
                   <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -264,7 +365,7 @@ export default function SeoMetadataTab() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white">
-                {seoItems.map((item) => (
+                {visibleItems.map((item) => (
                   <tr key={item.id} className="hover:bg-slate-50">
                     <td className="px-4 py-3">
                       <span
@@ -289,6 +390,7 @@ export default function SeoMetadataTab() {
                     <td className="px-4 py-3">
                       <StatusBadge status={item.status} />
                     </td>
+                    <td className="px-4 py-3">{renderScoreBadge(item)}</td>
                     <td className="whitespace-nowrap px-4 py-3 text-slate-500">
                       {formatDateTime(item.updatedAt)}
                     </td>
@@ -305,7 +407,7 @@ export default function SeoMetadataTab() {
 
           {/* Kartu mobile */}
           <ul className="space-y-3 md:hidden">
-            {seoItems.map((item) => (
+            {visibleItems.map((item) => (
               <li key={item.id} className="card p-4">
                 <div className="flex min-w-0 items-start justify-between gap-3">
                   <div className="min-w-0">
@@ -320,7 +422,10 @@ export default function SeoMetadataTab() {
                       {item.entityId ? ` · ${item.entityId}` : ""}
                     </p>
                   </div>
-                  <StatusBadge status={item.status} />
+                  <div className="flex shrink-0 items-center gap-2">
+                    {renderScoreBadge(item)}
+                    <StatusBadge status={item.status} />
+                  </div>
                 </div>
                 <p
                   className="mt-2 truncate text-sm font-medium text-slate-700"
