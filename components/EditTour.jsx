@@ -10,6 +10,7 @@ import FormActions from "./forms/FormActions";
 import Button, { buttonClass } from "./ui/Button";
 import Input from "./ui/Input";
 import Textarea from "./ui/Textarea";
+import PackageCostEditor from "./PackageCostEditor";
 
 function EditTour({ id, onNext }) {
   const toast = useToast();
@@ -234,6 +235,16 @@ function EditTour({ id, onNext }) {
               );
             })}
           </div>
+          {/* Estimasi profit internal tour. */}
+          <PackageCostEditor
+            entityType="tour"
+            entityId={id}
+            tiers={[
+              { slot: 1, price: formData.price1 },
+              { slot: 2, price: formData.price2 },
+              { slot: 3, price: formData.price3 },
+            ]}
+          />
         </FormSection>
 
         <FormSection title="Custom URL Slug (Optional)" columns={1}>

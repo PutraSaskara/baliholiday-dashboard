@@ -11,6 +11,7 @@ import Button, { buttonClass } from "../../../../components/ui/Button";
 import Input from "../../../../components/ui/Input";
 import Select from "../../../../components/ui/Select";
 import Textarea from "../../../../components/ui/Textarea";
+import PackageCostEditor from "../../../../components/PackageCostEditor";
 
 export default function EditActivityPage() {
   const toast = useToast();
@@ -258,6 +259,16 @@ export default function EditActivityPage() {
                   );
                 })}
               </div>
+              {/* Estimasi profit internal activity. */}
+              <PackageCostEditor
+                entityType="activity"
+                entityId={params.id}
+                tiers={[
+                  { slot: 1, price: formData.price1 },
+                  { slot: 2, price: formData.price2 },
+                  { slot: 3, price: formData.price3 },
+                ]}
+              />
             </FormSection>
 
             {/* Details */}

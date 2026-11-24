@@ -10,6 +10,7 @@ import Button, { buttonClass } from './ui/Button';
 import Input from './ui/Input';
 import Textarea from './ui/Textarea';
 import { useToast } from './ui/Toast';
+import PackageCostEditor from './PackageCostEditor';
 
 function AddTour() {
   const { 
@@ -222,6 +223,16 @@ function AddTour() {
               );
             })}
           </div>
+          {/* Estimasi profit internal: disimpan setelah paket dibuat. */}
+          <PackageCostEditor
+            entityType="tour"
+            entityId={null}
+            tiers={[
+              { slot: 1, price: formData.price1 },
+              { slot: 2, price: formData.price2 },
+              { slot: 3, price: formData.price3 },
+            ]}
+          />
         </FormSection>
 
         {/* GEO Optimization & Local Insights */}

@@ -20,6 +20,44 @@ const categoryLabels = {
   ticket: "Ticket",
 };
 
+const rupiahFormatter = new Intl.NumberFormat("id-ID", {
+  style: "currency",
+  currency: "IDR",
+  maximumFractionDigits: 0,
+});
+
+const formatRupiah = (value) => rupiahFormatter.format(Number(value) || 0);
+
+// Margin tier 1 dari data bulk biaya; "—" bila biaya belum diisi.
+const getMarginDisplay = (item, costs) => {
+  const rows = Array.isArray(costs[String(item.id)]) ? costs[String(item.id)] : [];
+  const row = rows.find((entry) => String(entry.slot) === "1");
+  const cost =
+    row && row.cost !== null && row.cost !== undefined && row.cost !== ""
+      ? Number(row.cost)
+      : null;
+  const price =
+    Number(String(item.price1 ?? "").replace(/[^0-9.-]/g, "")) || 0;
+
+  if (cost === null || Number.isNaN(cost)) {
+    return { label: "—", className: "text-slate-400" };
+  }
+
+  const margin = price - cost;
+  const percent = price > 0 ? (margin / price) * 100 : 0;
+  const percentLabel = Number.isInteger(percent) ? percent : percent.toFixed(1);
+
+  return {
+    label: `${formatRupiah(margin)} (${percentLabel}%)`,
+    className:
+      margin > 0
+        ? "text-emerald-600"
+        : margin < 0
+          ? "text-red-600"
+          : "text-slate-500",
+  };
+};
+
 export default function ActivitiesPage() {
   const [activities, setActivities] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -27,6 +65,7 @@ export default function ActivitiesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [pendingDelete, setPendingDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [costs, setCosts] = useState({});
   const router = useRouter();
   const toast = useToast();
 
@@ -48,6 +87,35 @@ export default function ActivitiesPage() {
       setIsLoading(false);
     }
   };
+
+  // Ambil biaya semua activity sekali untuk kolom margin.
+  useEffect(() => {
+    if (activities.length === 0) {
+      setCosts({});
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    const fetchCosts = async () => {
+      try {
+        const ids = activities.map((item) => item.id).join(",");
+        const res = await api.get(
+          `/api/package-costs/bulk?entityType=activity&entityIds=${ids}`
+        );
+        if (!cancelled) setCosts(res.data?.data || {});
+      } catch (err) {
+        console.error("Error fetching activity costs:", err);
+        if (!cancelled) setCosts({});
+      }
+    };
+
+    fetchCosts();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activities]);
 
   const confirmDelete = async () => {
     if (!pendingDelete) return;
@@ -195,6 +263,9 @@ export default function ActivitiesPage() {
                     Price
                   </th>
                   <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Margin
+                  </th>
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
                     Status
                   </th>
                   <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -203,7 +274,9 @@ export default function ActivitiesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white">
-                {filteredActivities.map((item) => (
+                {filteredActivities.map((item) => {
+                  const margin = getMarginDisplay(item, costs);
+                  return (
                   <tr key={item.id} className="hover:bg-slate-50">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
@@ -235,6 +308,9 @@ export default function ActivitiesPage() {
                     <td className="px-4 py-3 font-semibold text-slate-700">
                       ${item.price1}
                     </td>
+                    <td className={`px-4 py-3 font-semibold ${margin.className}`}>
+                      {margin.label}
+                    </td>
                     <td className="px-4 py-3">
                       {item.isActive ? (
                         <Badge variant="success">Active</Badge>
@@ -248,14 +324,17 @@ export default function ActivitiesPage() {
                       </div>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
 
           {/* Kartu mobile */}
           <ul className="space-y-3 md:hidden">
-            {filteredActivities.map((item) => (
+            {filteredActivities.map((item) => {
+              const margin = getMarginDisplay(item, costs);
+              return (
               <li key={item.id} className="card p-4">
                 <div className="flex gap-3">
                   <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-slate-100">
@@ -290,11 +369,15 @@ export default function ActivitiesPage() {
                     <p className="mt-1 text-sm font-semibold text-slate-700">
                       ${item.price1}
                     </p>
+                    <p className={`mt-1 text-xs font-semibold ${margin.className}`}>
+                      Margin: {margin.label}
+                    </p>
                   </div>
                 </div>
                 <div className="mt-3">{renderActions(item, "between")}</div>
               </li>
-            ))}
+              );
+            })}
           </ul>
         </>
       )}

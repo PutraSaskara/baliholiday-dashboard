@@ -16,8 +16,47 @@ import ConfirmDialog from "./ui/ConfirmDialog";
 import Skeleton from "./ui/Skeleton";
 import { useToast } from "./ui/Toast";
 import useTourStore from "../stores/useTourStore";
+import { api } from "../apiConfig";
 
 const ITEMS_PER_PAGE = 6;
+
+const rupiahFormatter = new Intl.NumberFormat("id-ID", {
+  style: "currency",
+  currency: "IDR",
+  maximumFractionDigits: 0,
+});
+
+const formatRupiah = (value) => rupiahFormatter.format(Number(value) || 0);
+
+// Margin tier 1 dari data bulk biaya; "—" bila biaya belum diisi.
+const getMarginDisplay = (tour, costs) => {
+  const rows = Array.isArray(costs[String(tour.id)]) ? costs[String(tour.id)] : [];
+  const row = rows.find((entry) => String(entry.slot) === "1");
+  const cost =
+    row && row.cost !== null && row.cost !== undefined && row.cost !== ""
+      ? Number(row.cost)
+      : null;
+  const price =
+    Number(String(tour.price1 ?? "").replace(/[^0-9.-]/g, "")) || 0;
+
+  if (cost === null || Number.isNaN(cost)) {
+    return { label: "—", className: "text-slate-400" };
+  }
+
+  const margin = price - cost;
+  const percent = price > 0 ? (margin / price) * 100 : 0;
+  const percentLabel = Number.isInteger(percent) ? percent : percent.toFixed(1);
+
+  return {
+    label: `${formatRupiah(margin)} (${percentLabel}%)`,
+    className:
+      margin > 0
+        ? "text-emerald-600"
+        : margin < 0
+          ? "text-red-600"
+          : "text-slate-500",
+  };
+};
 
 function ListTours() {
   const { tours, loading, fetchTours, deleteTour } = useTourStore();
@@ -27,6 +66,7 @@ function ListTours() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pendingDelete, setPendingDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [costs, setCosts] = useState({});
 
   useEffect(() => {
     fetchTours();
@@ -55,6 +95,39 @@ function ListTours() {
     (safePage - 1) * ITEMS_PER_PAGE,
     safePage * ITEMS_PER_PAGE
   );
+
+  const pageIds = currentTours
+    .map((tour) => tour.id)
+    .slice(0, 200)
+    .join(",");
+
+  // Ambil biaya semua tour di halaman ini sekali untuk kolom margin.
+  useEffect(() => {
+    if (!pageIds) {
+      setCosts({});
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    const fetchCosts = async () => {
+      try {
+        const res = await api.get(
+          `/api/package-costs/bulk?eventType=tour&entityType=tour&entityIds=${pageIds}`
+        );
+        if (!cancelled) setCosts(res.data?.data || {});
+      } catch {
+        // Gagal ambil biaya: biarkan kosong, margin tampil "—".
+        if (!cancelled) setCosts({});
+      }
+    };
+
+    fetchCosts();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [pageIds]);
 
   const convertSpaceToDash = (title) => title.replace(/\s+/g, "-");
 
@@ -143,6 +216,7 @@ function ListTours() {
                     .replace(/[^\w-]+/g, "")
                 }`}
                 onDelete={() => setPendingDelete(tour)}
+                margin={getMarginDisplay(tour, costs)}
               />
             ))}
           </div>
